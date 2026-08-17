@@ -182,7 +182,7 @@ const HoverMenuItem = React.memo(({
         </StyledListItemButton>
       </Tooltip>
 
-      {visibleSubItems.length > 1 && (
+      {visibleSubItems.length > 0 && (
         <Collapse in={!!isExpanded} timeout="auto" unmountOnExit>
           <SubMenuList data-category-key={itemKey} onMouseEnter={onSubMenuMouseEnter}>
             {visibleSubItems.map((subItem, index) => {
@@ -631,7 +631,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         return true;
       }) : [];
 
-      if (visibleSubItems.length === 1) {
+      const hasDirectChildren = visibleSubItems.length === 1 && (!visibleSubItems[0].subItems || visibleSubItems[0].subItems.length === 0);
+      if (hasDirectChildren) {
         const targetPath = findFirstNavigablePath(visibleSubItems[0]);
         if (targetPath) {
           const moduleCode = moduleItem.codeRouter || moduleItem.title;
@@ -721,7 +722,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       if (item.subItems && !item.path) return filterSubItems(item.subItems);
       return true;
     });
-    return visibleSubItems.length > 1;
+    return visibleSubItems.length > 1 || (visibleSubItems.length === 1 && visibleSubItems[0]?.subItems?.length > 0);
   }, [isModuleNamesOpen, hoveredModule, filterSubItems]);
 
   const effectiveIsOpen = (isMobile ? isOpen : false) || isSidebarHovered;
