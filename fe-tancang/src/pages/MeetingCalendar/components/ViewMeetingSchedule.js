@@ -1019,35 +1019,6 @@ const ViewMeetingSchedule = ({
     setOpenDelegationModal(false);
   }, []);
 
-  const [openCancelJoinConfirm, setOpenCancelJoinConfirm] = useState(false);
-
-  const handleOpenCancelJoinConfirm = useCallback(() => {
-    setOpenCancelJoinConfirm(true);
-  }, []);
-
-  const handleCloseCancelJoinConfirm = useCallback(() => {
-    setOpenCancelJoinConfirm(false);
-  }, []);
-
-  const handleCancelJoinMeeting = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const payload = {
-        meetingId: meetingId,
-        actionCode: "HUY_THAM_GIA",
-        assigneeUserId: workItem?.assigneeUserId || ""
-      };
-      await axiosInstance.post(`${API_ADD_MEETING_SCHEDULE}/${meetingId}/${workItem?.id}/user-cancel-join`, payload);
-      toast("Đã hủy tham gia cuộc họp", "success");
-      setOpenCancelJoinConfirm(false);
-      handleReloadAll();
-    } catch (error) {
-      toast(error?.response?.data?.message || "Lỗi khi hủy tham gia cuộc họp", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [meetingId, workItem, toast, handleReloadAll]);
-
   const recurrenceSummary = useMemo(() => {
     return getRecurrenceSummaryText(meetingData?.recurrence);
   }, [meetingData?.recurrence]);
@@ -2222,6 +2193,35 @@ setTotalParticipants(data?.totalParticipants || 0);
     setOpenUpdateMeeting(false);
     handleReloadAll();
   }, [handleReloadAll]);
+
+  const [openCancelJoinConfirm, setOpenCancelJoinConfirm] = useState(false);
+
+  const handleOpenCancelJoinConfirm = useCallback(() => {
+    setOpenCancelJoinConfirm(true);
+  }, []);
+
+  const handleCloseCancelJoinConfirm = useCallback(() => {
+    setOpenCancelJoinConfirm(false);
+  }, []);
+
+  const handleCancelJoinMeeting = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const payload = {
+        meetingId: meetingId,
+        actionCode: "HUY_THAM_GIA",
+        assigneeUserId: workItem?.assigneeUserId || ""
+      };
+      await axiosInstance.post(`${API_ADD_MEETING_SCHEDULE}/${meetingId}/${workItem?.id}/user-cancel-join`, payload);
+      toast("Đã hủy tham gia cuộc họp", "success");
+      setOpenCancelJoinConfirm(false);
+      handleReloadAll();
+    } catch (error) {
+      toast(error?.response?.data?.message || "Lỗi khi hủy tham gia cuộc họp", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [meetingId, workItem, toast, handleReloadAll]);
 
   const handleClose = useCallback(() => {
     onSuccess?.();

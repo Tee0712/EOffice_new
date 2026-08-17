@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, lazy, useMemo } from "react";
 import Loading from "@components/Loading/Loading";
-import { People, ReceiptLong, Menu as MenuIcon, Restaurant } from "@mui/icons-material";
+import { People, ReceiptLong, Menu as MenuIcon, Restaurant, Campaign } from "@mui/icons-material";
 import { Navigate, useRoutes, useLocation, useNavigate } from "react-router-dom";
 import useDynamicMenuRoutes from "@hooks/useDynamicMenuRoutes";
 import ProtectedRoute from "@AuthContext/ProtectedRoute";
@@ -280,143 +280,6 @@ export const routes = [
         element: <CanteenSystemSettings />,
         title: "Cài đặt hệ thống",
         codeRouter: "CANTEEN_SETTINGS",
-      },
-      {
-        path: "/dashboard-asxh",
-        element: <DashboardASXH />,
-        title: "Dashboard",
-        codeRouter: "dashboard-asxh",
-      },
-      {
-        path: "/asxh-management",
-        element: <ASXHManagement />,
-        title: "Quản lý Chương trình",
-        codeRouter: "quan-ly-chuong-trinh-asxh",
-      },
-      {
-        path: "/asxh/workflow-management",
-        element: <ASXHWorkflowManagement />,
-        title: "Quản lý luồng xử lý",
-        codeRouter: "quan-ly-luong-asxh",
-      },
-      {
-        path: "/asxh/workflow-mapping",
-        element: <ASXHWorkflowMapping />,
-        title: "Thiết lập luồng Module",
-        codeRouter: "thiet-lap-luong-asxh-mapping",
-        hidden: true,
-      },
-      {
-        path: "/asxh/workflow-wizard/:processKey?",
-        element: <ASXHWorkflowWizard />,
-        title: "Cấu hình luồng xử lý",
-        codeRouter: "cau-hinh-luong-asxh-wizard",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship",
-        element: <ASXHEducationalSponsorship />,
-        title: "Tài trợ giáo dục và học bổng",
-        codeRouter: "tai-tro-giao-duc-hoc-bong",
-      },
-      {
-        path: "/asxh-registration",
-        element: <ASXHRegistration />,
-        title: "Đăng ký Chương trình",
-        codeRouter: "dang-ky-chuong-trinh-asxh",
-        hidden: true,
-      },
-      {
-        path: "/asxh-registration/edit/:id",
-        element: <ASXHRegistration />,
-        title: "Chỉnh sửa Chương trình",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/disbursement",
-        element: <ASXHDisbursement />,
-        title: "Chi tiết Giải ngân & Biên bản",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/disbursement/create",
-        element: <ASXHCreateDisbursement />,
-        title: "Tạo đợt giải ngân mới",
-        codeRouter: "tao-moi-giai-ngan-asxh",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/disbursement/edit/:disbursementId",
-        element: <ASXHCreateDisbursement />,
-        title: "Chỉnh sửa đợt giải ngân",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/assets",
-        element: <ASXHAssetManagement />,
-        title: "Quản lý Hiện vật",
-        codeRouter: "quan-ly-hien-vat-asxh",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId",
-        element: <ASXHProgramDetail />,
-        title: "Chi tiết Chương trình",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship/partner/add",
-        element: <ASXHPartnerForm />,
-        title: "Thêm Trường đối tác",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship/partner/edit/:id",
-        element: <ASXHPartnerForm />,
-        title: "Chỉnh sửa Trường đối tác",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship/partners",
-        element: <ASXHPartnerList />,
-        title: "Danh sách Trường đối tác",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship/candidate/add",
-        element: <ASXHCandidateForm />,
-        title: "Thêm Ứng viên",
-        hidden: true,
-      },
-      {
-        path: "/asxh/educational-sponsorship/candidate/edit/:id",
-        element: <ASXHCandidateForm />,
-        title: "Chỉnh sửa Ứng viên",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/assets/add",
-        element: <ASXHAddAsset />,
-        title: "Thêm Hạng mục Hiện vật",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/assets/:assetId/edit",
-        element: <ASXHAssetEdit />,
-        title: "Chỉnh sửa Hạng mục Hiện vật",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/assets/schedule-handover",
-        element: <ASXHScheduleHandover />,
-        title: "Lên lịch Bàn giao Hiện vật",
-        hidden: true,
-      },
-      {
-        path: "/asxh/programs/:programId/assets/schedule-handover/:id",
-        element: <ASXHScheduleHandover />,
-        title: "Chỉnh sửa Lên lịch Bàn giao Hiện vật",
-        hidden: true,
       },
       {
         path: "/vpp-reports",
@@ -979,6 +842,157 @@ export const routes = [
   //   title: "Gantt",
   //   codeRouter: "gantt",
   // },
+
+  {
+    title: "Truyền thông",
+    icon: <Campaign />,
+    codeRouter: "truyen-thong",
+    subItems: [
+      {
+        title: "An sinh xã hội",
+        codeRouter: "an-sinh-xa-hoi",
+        subItems: [
+          {
+            path: "/dashboard-asxh",
+            element: <DashboardASXH />,
+            title: "Dashboard ASXH",
+            codeRouter: "dashboard-asxh",
+          },
+          {
+            path: "/asxh-management",
+            element: <ASXHManagement />,
+            title: "Quản lý Chương trình",
+            codeRouter: "quan-ly-chuong-trinh-asxh",
+          },
+          {
+            path: "/asxh/workflow-management",
+            element: <ASXHWorkflowManagement />,
+            title: "Quản lý luồng xử lý",
+            codeRouter: "quan-ly-luong-asxh",
+          },
+          {
+            path: "/asxh/workflow-mapping",
+            element: <ASXHWorkflowMapping />,
+            title: "Thiết lập luồng Module",
+            codeRouter: "thiet-lap-luong-asxh-mapping",
+            hidden: true,
+          },
+          {
+            path: "/asxh/workflow-wizard/:processKey?",
+            element: <ASXHWorkflowWizard />,
+            title: "Cấu hình luồng xử lý",
+            codeRouter: "cau-hinh-luong-asxh-wizard",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship",
+            element: <ASXHEducationalSponsorship />,
+            title: "Tài trợ giáo dục & học bổng",
+            codeRouter: "tai-tro-giao-duc-hoc-bong",
+          },
+          {
+            path: "/asxh-registration",
+            element: <ASXHRegistration />,
+            title: "Đăng ký Chương trình",
+            codeRouter: "dang-ky-chuong-trinh-asxh",
+            hidden: true,
+          },
+          {
+            path: "/asxh-registration/edit/:id",
+            element: <ASXHRegistration />,
+            title: "Chỉnh sửa Chương trình",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/disbursement",
+            element: <ASXHDisbursement />,
+            title: "Chi tiết Giải ngân & Biên bản",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/disbursement/create",
+            element: <ASXHCreateDisbursement />,
+            title: "Tạo đợt giải ngân mới",
+            codeRouter: "tao-moi-giai-ngan-asxh",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/disbursement/edit/:disbursementId",
+            element: <ASXHCreateDisbursement />,
+            title: "Chỉnh sửa đợt giải ngân",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/assets",
+            element: <ASXHAssetManagement />,
+            title: "Quản lý Hiện vật",
+            codeRouter: "quan-ly-hien-vat-asxh",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId",
+            element: <ASXHProgramDetail />,
+            title: "Chi tiết Chương trình",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship/partner/add",
+            element: <ASXHPartnerForm />,
+            title: "Thêm Trường đối tác",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship/partner/edit/:id",
+            element: <ASXHPartnerForm />,
+            title: "Chỉnh sửa Trường đối tác",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship/partners",
+            element: <ASXHPartnerList />,
+            title: "Danh sách Trường đối tác",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship/candidate/add",
+            element: <ASXHCandidateForm />,
+            title: "Thêm Ứng viên",
+            hidden: true,
+          },
+          {
+            path: "/asxh/educational-sponsorship/candidate/edit/:id",
+            element: <ASXHCandidateForm />,
+            title: "Chỉnh sửa Ứng viên",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/assets/add",
+            element: <ASXHAddAsset />,
+            title: "Thêm Hạng mục Hiện vật",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/assets/:assetId/edit",
+            element: <ASXHAssetEdit />,
+            title: "Chỉnh sửa Hạng mục Hiện vật",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/assets/schedule-handover",
+            element: <ASXHScheduleHandover />,
+            title: "Lên lịch Bàn giao Hiện vật",
+            hidden: true,
+          },
+          {
+            path: "/asxh/programs/:programId/assets/schedule-handover/:id",
+            element: <ASXHScheduleHandover />,
+            title: "Chỉnh sửa Lên lịch Bàn giao Hiện vật",
+            hidden: true,
+          },
+        ],
+      },
+    ],
+  },
 
   {
     // title: "Quản lý quy trình",
