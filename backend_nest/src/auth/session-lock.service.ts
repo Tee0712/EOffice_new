@@ -5,7 +5,7 @@ export class SessionLockService {
   private readonly logger = new Logger(SessionLockService.name);
   // In-memory session store (backed by Redis when REDIS_HOST is configured)
   private readonly activeSessions = new Map<string, { sessionId: string; ip?: string; userAgent?: string; updatedAt: number }>();
-  private isLockEnabled = true;
+  private isLockEnabled = false; // Disabled: allow multi-device login
 
   /**
    * Đăng ký phiên đăng nhập mới cho người dùng.

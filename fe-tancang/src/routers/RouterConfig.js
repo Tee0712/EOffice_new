@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, lazy, useMemo } from "react";
 import Loading from "@components/Loading/Loading";
-import { People, ReceiptLong, Menu as MenuIcon } from "@mui/icons-material";
+import { People, ReceiptLong, Menu as MenuIcon, Restaurant } from "@mui/icons-material";
 import { Navigate, useRoutes, useLocation, useNavigate } from "react-router-dom";
 import useDynamicMenuRoutes from "@hooks/useDynamicMenuRoutes";
 import ProtectedRoute from "@AuthContext/ProtectedRoute";
@@ -224,61 +224,62 @@ export const routes = [
         path: "/meals",
         element: <CanteenManagement />,
         title: "Ăn ca & Suất ăn",
-        codeRouter: "an-ca-suat-an",
+        codeRouter: "CANTEEN_LIST",
+        icon: Restaurant,
       },
       {
         path: "/meals/calendar",
         element: <CanteenCalendar />,
         title: "Lịch đăng ký",
-        codeRouter: "lich-dang-ky",
+        codeRouter: "CANTEEN_CALENDAR",
       },
       {
         path: "/meals/my-registrations",
         element: <CanteenMyRegistrations />,
         title: "Đăng ký của tôi",
-        codeRouter: "dang-ky-cua-toi",
+        codeRouter: "CANTEEN_MY_REG",
       },
       {
         path: "/meals/admin",
         element: <CanteenAdminDashboard />,
         title: "Dashboard Tổng hợp",
-        codeRouter: "dashboard-suat-an",
+        codeRouter: "CANTEEN_ADMIN",
       },
       {
         path: "/meals/check-in",
         element: <CanteenCheckIn />,
         title: "Check-in Suất ăn",
-        codeRouter: "check-in-suat-an",
+        codeRouter: "CANTEEN_CHECKIN",
       },
       {
         path: "/meals/menus",
         element: <CanteenMenuManagement />,
         title: "Quản lý Menu",
-        codeRouter: "quan-ly-menu-suat-an",
+        codeRouter: "CANTEEN_MENU",
       },
       {
         path: "/meals/reconciliation",
         element: <CanteenReconciliation />,
         title: "Đối soát suất ăn",
-        codeRouter: "doi-soat-suat-an",
+        codeRouter: "CANTEEN_RECONCILIATION",
       },
       {
         path: "/meals/suppliers",
         element: <CanteenSupplierManagement />,
         title: "Quản lý Nhà cung cấp",
-        codeRouter: "quan-ly-nha-cung-cap",
+        codeRouter: "CANTEEN_SUPPLIER",
       },
       {
         path: "/meals/history",
         element: <CanteenMealHistory />,
         title: "Lịch sử đăng ký",
-        codeRouter: "lich-su-dang-ky",
+        codeRouter: "CANTEEN_HISTORY",
       },
       {
         path: "/meals/settings",
         element: <CanteenSystemSettings />,
         title: "Cài đặt hệ thống",
-        codeRouter: "cai-dat-suat-an",
+        codeRouter: "CANTEEN_SETTINGS",
       },
       {
         path: "/dashboard-asxh",

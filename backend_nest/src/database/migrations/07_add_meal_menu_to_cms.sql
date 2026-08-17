@@ -1,6 +1,6 @@
 -- =====================================================
 -- Script: Them menu "An ca & Suat an" vao CMS sidebar
--- Chay trong SQL Server Management Studio (SSMS)
+-- Database: app_tancang
 -- =====================================================
 
 USE [app_tancang];
@@ -9,118 +9,134 @@ BEGIN TRANSACTION;
 
 PRINT '=== Them menu An ca & Suat an vao CMS ===';
 
--- 1. Kiem tra feature da ton tai chua
-DECLARE @MealListId NVARCHAR(100);
-SELECT @MealListId = id FROM feature_management WHERE code = 'MEAL_LIST';
+-- 1. Kiem tra da ton tai chua
+DECLARE @ExistCode VARCHAR(100);
+SELECT @ExistCode = code FROM menu_managers WHERE code = 'MEAL_LIST';
 
-IF @MealListId IS NULL
+IF @ExistCode IS NULL
 BEGIN
-    SET @MealListId = NEWID();
-
-    INSERT INTO feature_management (
-        id, code, name, url, api_url, feature_type,
-        status_feature, status, created_at, updated_at
-    ) VALUES (
-        @MealListId,
-        N'MEAL_LIST',
-        N'Quan ly An ca & Suat an',
-        N'/meals',
-        N'/v1/meals',
-        N'list',
-        N'1',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-
-    PRINT 'Da them feature MEAL_LIST';
-END
-ELSE
-BEGIN
-    PRINT 'Feature MEAL_LIST da ton tai';
-END
-
--- 2. Them menu item vao menu_managers (neu chua co)
-DECLARE @MenuId NVARCHAR(100);
-SELECT @MenuId = id FROM menu_managers WHERE menu_url = '/meals';
-
-IF @MenuId IS NULL
-BEGIN
-    SET @MenuId = NEWID();
-
+    -- 2. Them menu cha
     INSERT INTO menu_managers (
-        id,
-        menu_name,
-        menu_url,
-        menu_icon,
-        menu_action,
-        menu_parent_id,
-        menu_sort,
-        menu_type,
-        menu_status,
-        menu_position,
-        feature_id,
-        status,
-        created_at,
-        updated_at
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
     ) VALUES (
-        @MenuId,
+        NEWID(),
         N'An ca & Suat an',
-        N'/meals',
-        N'utensils',
-        N'/meals',
-        NULL,
+        'MEAL_LIST',
+        'utensils',
+        0,
+        0,
         99,
-        N'menu',
+        NULL,
+        NULL,
         1,
-        N'sidebar',
-        @MealListId,
-        1,
+        '/meals',
+        NULL,
+        NULL,
         GETDATE(),
-        GETDATE()
+        GETDATE(),
+        '/meals',
+        NULL,
+        'CMS',
+        0
     );
 
     PRINT 'Da them menu cha: An ca & Suat an';
 
-    -- 3. Them cac sub-menu items
-    INSERT INTO menu_managers (id, menu_name, menu_url, menu_icon, menu_action, menu_parent_id, menu_sort, menu_type, menu_status, menu_position, feature_id, status, created_at, updated_at)
-    VALUES
-        (NEWID(), N'Dang ky an', N'/meals/calendar', N'calendar', N'/meals/calendar', @MenuId, 1, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Dang ky cua toi', N'/meals/my-registrations', N'user-check', N'/meals/my-registrations', @MenuId, 2, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Lich su dang ky', N'/meals/history', N'history', N'/meals/history', @MenuId, 3, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE());
+    -- 3. Lay ID menu vua them
+    DECLARE @ParentId VARCHAR(100);
+    SELECT @ParentId = id FROM menu_managers WHERE code = 'MEAL_LIST';
 
-    PRINT 'Da them sub-menu: Dang ky an, Dang ky cua toi, Lich su';
+    -- 4. Them sub-menu: Dang ky an
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Dang ky an', 'MEAL_CALENDAR', 'calendar', 0, 0, 1, @ParentId, NULL, 1, '/meals/calendar', NULL, NULL, GETDATE(), GETDATE(), '/meals/calendar', NULL, 'CMS', 0);
 
-    -- 4. Sub-menu cho Admin
-    INSERT INTO menu_managers (id, menu_name, menu_url, menu_icon, menu_action, menu_parent_id, menu_sort, menu_type, menu_status, menu_position, feature_id, status, created_at, updated_at)
-    VALUES
-        (NEWID(), N'Dashboard Tong hop', N'/meals/admin', N'dashboard', N'/meals/admin', @MenuId, 10, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Quan ly Menu', N'/meals/menus', N'utensils', N'/meals/menus', @MenuId, 11, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Check-in Suat an', N'/meals/check-in', N'qr-code', N'/meals/check-in', @MenuId, 12, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Doi sot', N'/meals/reconciliation', N'file-text', N'/meals/reconciliation', @MenuId, 13, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Nha cung cap', N'/meals/suppliers', N'truck', N'/meals/suppliers', @MenuId, 14, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE()),
-        (NEWID(), N'Cai dat', N'/meals/settings', N'settings', N'/meals/settings', @MenuId, 99, N'menu', 1, N'sidebar', @MealListId, 1, GETDATE(), GETDATE());
+    -- 5. Them sub-menu: Dang ky cua toi
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Dang ky cua toi', 'MEAL_MY_REG', 'user-check', 0, 0, 2, @ParentId, NULL, 1, '/meals/my-registrations', NULL, NULL, GETDATE(), GETDATE(), '/meals/my-registrations', NULL, 'CMS', 0);
 
-    PRINT 'Da them sub-menu Admin';
+    -- 6. Them sub-menu: Lich su
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Lich su dang ky', 'MEAL_HISTORY', 'history', 0, 0, 3, @ParentId, NULL, 1, '/meals/history', NULL, NULL, GETDATE(), GETDATE(), '/meals/history', NULL, 'CMS', 0);
+
+    -- 7. Them sub-menu: Admin - Dashboard
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Dashboard Tong hop', 'MEAL_ADMIN', 'dashboard', 0, 0, 10, @ParentId, NULL, 1, '/meals/admin', NULL, NULL, GETDATE(), GETDATE(), '/meals/admin', NULL, 'CMS', 0);
+
+    -- 8. Them sub-menu: Quan ly Menu
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Quan ly Menu', 'MEAL_MENUS', 'utensils', 0, 0, 11, @ParentId, NULL, 1, '/meals/menus', NULL, NULL, GETDATE(), GETDATE(), '/meals/menus', NULL, 'CMS', 0);
+
+    -- 9. Them sub-menu: Check-in
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Check-in Suat an', 'MEAL_CHECKIN', 'qrcode', 0, 0, 12, @ParentId, NULL, 1, '/meals/check-in', NULL, NULL, GETDATE(), GETDATE(), '/meals/check-in', NULL, 'CMS', 0);
+
+    -- 10. Them sub-menu: Doi sot
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Doi sot', 'MEAL_RECONCILE', 'filetext', 0, 0, 13, @ParentId, NULL, 1, '/meals/reconciliation', NULL, NULL, GETDATE(), GETDATE(), '/meals/reconciliation', NULL, 'CMS', 0);
+
+    -- 11. Them sub-menu: Nha cung cap
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Nha cung cap', 'MEAL_SUPPLIERS', 'truck', 0, 0, 14, @ParentId, NULL, 1, '/meals/suppliers', NULL, NULL, GETDATE(), GETDATE(), '/meals/suppliers', NULL, 'CMS', 0);
+
+    -- 12. Them sub-menu: Cai dat
+    INSERT INTO menu_managers (
+        id, name, code, settingIcon, hidden, dynamicMenu,
+        "order", parent_id, function_code, status, path,
+        managers, groupUsers, created_at, updated_at,
+        code_router, roleGroupIds, code_app, collapsed
+    ) VALUES (NEWID(), N'Cai dat', 'MEAL_SETTINGS', 'settings', 0, 0, 99, @ParentId, NULL, 1, '/meals/settings', NULL, NULL, GETDATE(), GETDATE(), '/meals/settings', NULL, 'CMS', 0);
+
+    PRINT 'Da them 9 sub-menu';
 END
 ELSE
 BEGIN
-    PRINT 'Menu /meals da ton tai trong menu_managers';
+    PRINT 'Menu MEAL_LIST da ton tai, bo qua';
 END
 
 -- 5. Kiem tra ket qua
 PRINT '';
 PRINT '=== Danh sach menu An ca ===';
-SELECT id, menu_name, menu_url, menu_parent_id
+SELECT id, name, code, path, "order", parent_id
 FROM menu_managers
-WHERE menu_url LIKE '/meals%' OR menu_name LIKE N'%an ca%'
-ORDER BY menu_sort;
+WHERE code LIKE 'MEAL%' OR name LIKE N'%An ca%'
+ORDER BY "order";
 
 PRINT '';
 PRINT '=== Script hoan thanh! ===';
-PRINT '';
-PRINT '=== Huong dan ===';
-PRINT '1. Reload trang CMS de thay menu moi';
-PRINT '2. Neu menu khong hien, kiem tra quyen trong Role Management';
 
 COMMIT TRANSACTION;
