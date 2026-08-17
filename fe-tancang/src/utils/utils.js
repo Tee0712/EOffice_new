@@ -225,3 +225,48 @@ export const convertFilesToTreeData = (files) => {
   return flattenResult;
 };
 /* eslint-enable camelcase */
+
+/**
+ * Định dạng lỗi validation từ Backend
+ * @param {Object} error - Đối tượng error từ axios/callApi
+ * @param {string} defaultMsg - Thông báo mặc định
+ * @returns {string} Chuỗi thông báo lỗi đã được format
+ */
+export const formatValidationErrors = (error, defaultMsg = "Đã xảy ra lỗi!") => {
+  if (error?.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+    const fieldMap = {
+      name: "Tên mặt hàng",
+      sku: "Mã SKU",
+      unit: "Đơn vị tính",
+      categoryId: "Nhóm hàng",
+      notes: "Ghi chú",
+      reference_price: "Giá tham khảo",
+      quotaValue: "Định mức",
+      quotaUnit: "Đơn vị định mức",
+      supplier: "Nhà cung cấp",
+      invoiceNo: "Số hóa đơn",
+      reason: "Lý do",
+      comment: "Bình luận",
+      quantity: "Số lượng",
+      needDate: "Ngày cần",
+      priority: "Mức ưu tiên",
+      product_id: "Sản phẩm",
+      requested_quantity: "Số lượng yêu cầu",
+      note: "Ghi chú",
+      signature: "Chữ ký",
+      actual_quantity: "Số lượng thực tế"
+    };
+    
+    const details = error.response.data.errors
+      .map(err => {
+        const fieldName = fieldMap[err.field] || err.field;
+        return `- ${fieldName}: ${err.message}`;
+      })
+      .join("\n");
+      
+    return `${defaultMsg}\n\nChi tiết lỗi:\n${details}`;
+  }
+
+  const message = error?.response?.data?.message || error?.message || defaultMsg;
+  return Array.isArray(message) ? message.join("\n") : message;
+};

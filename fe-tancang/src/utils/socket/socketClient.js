@@ -56,7 +56,9 @@ export const getSocket = (namespace = SOCKET_NAMESPACES.NOTIFICATIONS, options =
     if (currentSocket.auth?.token !== token) {
       currentSocket.auth = { ...(currentSocket.auth || {}), token };
       currentSocket.disconnect();
-      currentSocket.connect();
+      if (token) {
+        currentSocket.connect();
+      }
     }
 
     return currentSocket;
@@ -71,14 +73,16 @@ export const getSocket = (namespace = SOCKET_NAMESPACES.NOTIFICATIONS, options =
     ...socketOptions
   } = options;
 
+  const hasToken = Boolean(token);
+
   const socket = io(socketUrl, {
     path: socketPath,
     transports: ["websocket"],
     withCredentials: true,
-    autoConnect: true,
-    reconnection: true,
-    reconnectionAttempts: 20,
-    reconnectionDelay: 1000,
+    autoConnect: hasToken,
+    reconnection: hasToken,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 3000,
     timeout: 10000,
     ...socketOptions,
     auth: (cb) => {
@@ -100,7 +104,14 @@ export const getSocket = (namespace = SOCKET_NAMESPACES.NOTIFICATIONS, options =
   socket.on("disconnect", (reason) => {
     logger.warn?.(`[socket] disconnected ${logLabel || namespace}:`, reason);
     if (reason === "io server disconnect") {
-      socket.connect();
+      const currentToken = getSocketToken();
+      if (currentToken) {
+        setTimeout(() => {
+          if (getSocketToken()) {
+            socket.connect();
+          }
+        }, 5000);
+      }
     }
   });
 

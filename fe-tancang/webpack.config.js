@@ -13,9 +13,10 @@ const webpack = require("webpack");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 const isProduction = process.env.NODE_ENV === "production";
-const stylesHandler = isProduction ? MiniCssExtractPlugin.loader : "style-loader";
+const stylesHandler = MiniCssExtractPlugin.loader;
 
 const config = {
+  target: "web",
   entry: "./src/index.js",
   cache: {
     type: "filesystem",
@@ -105,7 +106,10 @@ const config = {
       "Content-Security-Policy": "frame-ancestors 'self'; object-src 'none';"
     },
     client: {
-      overlay: true, // Hiển thị lỗi trực tiếp trên UI
+      overlay: {
+        errors: true,
+        warnings: false,
+      },
     },
     watchFiles: ["src/**/*"], // Theo dõi thay đổi file trong src
   },

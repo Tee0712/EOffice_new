@@ -40,7 +40,7 @@ export class AuthService {
       return null;
     }
 
-    if (user.status !== STATUS.ACTIVED && user.status !== 1) {
+    if (user.status === STATUS.LOCKED || user.status === STATUS.DELETED || user.status === STATUS.NOT_ACTIVED) {
       this.logger.warn(`[validateUser] User ${username} is inactive (status = ${user.status})`);
       throw new UnauthorizedException('Tài khoản chưa được kích hoạt hoặc đã bị khóa.');
     }

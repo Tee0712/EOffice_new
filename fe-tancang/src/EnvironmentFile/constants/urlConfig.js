@@ -878,3 +878,62 @@ export const API_EVENT_MANAGEMENT_NOTIFICATIONS = `${APP_BASE}/api/v1/notificati
 export const API_EVENT_MANAGEMENT_RECIPIENTS = `${APP_BASE}/api/v1/recipients`;
 export const API_EVENT_MANAGEMENT_LOGISTICS = `${APP_BASE}/api/v1/logistics`;
 export const API_EVENT_MANAGEMENT_DEPARTMENTS = `${APP_BASE}/api/v1/event-departments`;
+export const API_LOGIN_KEYCLOAK = `https://your-keycloak-server/auth/realms/your-realm/protocol/openid-connect/auth?client_id=your-client-id&response_type=code&redirect_uri=${window.location.origin}/login/callback`;
+export const API_LOCAL_LOGIN = `${APP_BASE}/api/auth-basic/local-login`;
+export const API_FAKE_DATA_SELECT_FOLDER = `${APP_BASE}/api/menu-manager/mock/parents`;
+export const API_FAKE_DATA_SELECT_FILE_IN_FOLDER = `${APP_BASE}/api/menu-manager/mock/children`;
+export const API_TASK_MAIL_TEMPLATES = `${APP_BASE}/api/task-mail-templates`;
+export const API_DOC_LIBRARY_ORG_UNITS = `${APP_BASE}/api/document-library/organization-units`;
+export const API_VPP_CATALOG_ITEMS = `${APP_BASE}/api/v1/vpp/catalog-items`;
+export const API_VPP_CATALOG = API_VPP_CATALOG_ITEMS;
+export const API_VPP_CATEGORIES = `${APP_BASE}/api/v1/vpp/categories`;
+export const API_VPP_INVENTORY = `${APP_BASE}/api/v1/vpp/inventory`;
+export const API_VPP_INVENTORY_IMPORT = `${APP_BASE}/api/v1/vpp/inventory/import`;
+export const API_VPP_PRODUCTS = `${APP_BASE}/api/v1/product`;
+export const API_VPP_PRODUCT_LIMITS = `${APP_BASE}/api/v1/product-limits`;
+export const API_VPP_TRANSACTIONS = `${APP_BASE}/api/v1/vpp/inventory-transactions`;
+export const API_VPP_GOODS_ISSUES = `${APP_BASE}/api/v1/vpp/goods-issues`;
+export const API_VPP_GOODS_ISSUE_DETAIL = `${APP_BASE}/api/v1/vpp/goods-issue`;
+export const API_VPP_INVENTORY_STATS = `${APP_BASE}/api/v1/vpp/inventory/stats`;
+export const API_VPP_INVENTORY_EXPORT = `${APP_BASE}/api/v1/vpp/inventory/export`;
+export const API_VPP_REPORTS_SUMMARY = `${APP_BASE}/api/v1/vpp/reports/summary`;
+export const API_VPP_REPORTS_STOCK = `${APP_BASE}/api/v1/vpp/reports/stock-movement`;
+export const API_VPP_REPORTS_DEPT = `${APP_BASE}/api/v1/vpp/reports/by-department`;
+export const API_VPP_REPORTS_QUOTA = `${APP_BASE}/api/v1/vpp/reports/actual-vs-quota`;
+export const API_VPP_REPORTS_EXPORT = `${APP_BASE}/api/v1/vpp/reports/export`;
+export const API_VPP_REPORTS_COST = `${APP_BASE}/api/v1/vpp/reports/cost-summary`;
+export const API_VPP_DASHBOARD_KPI = `${APP_BASE}/api/v1/dashboard/kpi`;
+export const API_VPP_DASHBOARD_CHART = `${APP_BASE}/api/v1/dashboard/cost-chart`;
+export const API_VPP_GOODS_ISSUES_EXPORT = `${APP_BASE}/api/v1/vpp/goods-issues/export`;
+export const API_VPP_DISTRIBUTION_EXPORT = `${APP_BASE}/api/v1/vpp/distribution/export`;
+export const API_VPP_REQUEST_INFO = `${APP_BASE}/api/v1/vpp/request/info`;
+export const API_VPP_INVENTORY_PICKER = `${APP_BASE}/api/v1/vpp/inventory/picker`;
+export const API_INFLOW_EXPECTED_USERS = `${APP_BASE}/api/v1/users/inflow-expected-users`;
+export const API_APPROVAL_FLOW_CONFIG = `${APP_BASE}/api/v1/approval-flow-config`;
+export const API_USER_INBOX_STATISTICS = `${APP_BASE}/api/user/inbox/statistics`;
+export const API_CATERING_SUPPLIERS = `${APP_BASE}/api/v1/catering-suppliers`;
+export const API_CATERING_CATEGORIES = `${APP_BASE}/api/v1/catering-categories`;
+export const API_CATERING_SUPPLIER_EVALUATION_STATS = `${APP_BASE}/api/v1/supplier-evaluations/stats`;
+export const API_CATERING_SUPPLIER_EVALUATIONS_NEW = `${APP_BASE}/api/v1/supplier-evaluations`;
+export const API_CATERING_SUPPLIER_EVALUATIONS_EXPORT = `${APP_BASE}/api/v1/supplier-evaluations/export-excel`;
+export const API_CATERING_DISHES = `${APP_BASE}/api/v1/dishes`;
+export const API_CATERING_SUPPLIERS_OVERVIEW = `${APP_BASE}/api/v1/suppliers/dashboard/overview`;
+export const API_CATERING_SUPPLIER_EXPORT = `${APP_BASE}/api/v1/catering-suppliers/export`;
+export const API_CATERING_SUPPLIER_DETAIL = (id) =>
+  `${APP_BASE}/api/v1/suppliers/item/${id}`;
+export const API_CATERING_SUPPLIER_CONTRACTS = (id) =>
+  `${APP_BASE}/api/v1/suppliers/${id}/contracts`;
+export const API_CATERING_SUPPLIER_PRICES = (id) =>
+  `${APP_BASE}/api/v1/suppliers/${id}/prices`;
+export const API_CATERING_CONTRACT_UPDATE = (id) =>
+  `${APP_BASE}/api/v1/contracts/${id}`;
+export const API_CATERING_SUPPLIER_EVALUATIONS = (id) =>
+  `${APP_BASE}/api/v1/suppliers/${id}/evaluations`;
+export const API_CATERING_SUPPLIER_ORDERS = (id) =>
+  `${APP_BASE}/api/v1/suppliers/${id}/orders`;
+export const API_CATERING_SUPPLIER_UNEVALUATED_DISHES = (id, orderId) =>
+  `${APP_BASE}/api/v1/suppliers/${id}/unevaluated-dishes${orderId ? `?orderId=${orderId}` : ""}`;
+export const API_CATERING_SUPPLIER_ORDERS_EXPORT = (id) =>
+  `${APP_BASE}/api/v1/catering-suppliers/${id}/orders/export`;
+export const API_CATERING_DISH_DETAIL = (id) =>
+  `${APP_BASE}/api/v1/dishes/${id}`;

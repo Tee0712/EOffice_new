@@ -1,7 +1,10 @@
 /* eslint-disable no-console */
 import dayjs from "dayjs";
 // import api from "api";
-import { API_LOG_DHVBTC, API_USER_LOGS } from "./EnvironmentFile/constants/urlConfig";
+import {
+  API_LOG_DHVBTC,
+  API_USER_LOGS,
+} from "./EnvironmentFile/constants/urlConfig";
 import api from "./services/api";
 /**
  * Xuất dữ liệu thành tệp XLSX (Excel).
@@ -100,6 +103,18 @@ export const exportToXLSX = (
   document.body.removeChild(a);
 };
 
+export const downloadBlob = (blob, fileName) => {
+  if (!blob) return;
+  const url = window.URL.createObjectURL(new Blob([blob]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
 /**
  * Xuất dữ liệu thành tệp PDF.
  * @param {Array} data - Dữ liệu cần xuất, phải là một mảng các đối tượng.
@@ -125,7 +140,7 @@ export const exportToPDF = async (data, fileName, columns) => {
              <title>${displayFileName}</title>
              <style>
                  body { 
-                     font-family: Arial, sans-serif; 
+                     font-family: "Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif; 
                      padding: 0; 
                      margin: 0; 
                      width: 100%;
@@ -284,18 +299,18 @@ export async function updateVariables(apiUrl, processInstanceId, variables) {
 export const createAuditLog = async ({
   action,
   details,
-  method = 'GET',
-  status = 'success',
+  method = "GET",
+  status = "success",
 }) => {
   try {
     // 1. Lấy thông tin người dùng từ localStorage
-    const storedUser = localStorage.getItem('user');
+    const storedUser = localStorage.getItem("user");
     const user = storedUser ? JSON.parse(storedUser) : {};
     const userInfoPayload = {
-      fullName: user?.name || user?.username || '',
-      userName: user?.username || '',
-      organization: user?.organizationName || '',
-      ipAddress: '192.168.0.1', // IP sẽ được backend tự điền
+      fullName: user?.name || user?.username || "",
+      userName: user?.username || "",
+      organization: user?.organizationName || "",
+      ipAddress: "192.168.0.1", // IP sẽ được backend tự điền
     };
 
     // 3. Tạo payload
@@ -304,17 +319,19 @@ export const createAuditLog = async ({
       details,
       method,
       status,
-      type: 'DHVBTC',
-      subType: 'DHVBTC',
+      type: "DHVBTC",
+      subType: "DHVBTC",
       userInfo: userInfoPayload,
       timestamp: new Date().toISOString(),
     };
 
     // Gửi log
     await api.post(API_LOG_DHVBTC, logPayload);
-
   } catch (error) {
-    console.error('Lỗi khi gửi audit log:', error.response?.data || error.message);
+    console.error(
+      "Lỗi khi gửi audit log:",
+      error.response?.data || error.message
+    );
     // Không ném lỗi ra ngoài để không ảnh hưởng đến luồng chính của ứng dụng
   }
 };

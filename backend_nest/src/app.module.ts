@@ -261,6 +261,11 @@ import { MeetingRoomModule } from './meeting-rooms/meeting-rooms.module';
 import { CanteenModule } from './canteen/canteen.module';
 import { BulletinsModule } from './bulletins/bulletins.module';
 import { EventManagementModule } from './event-management/event-management.module';
+import { AsxhModule } from './asxh/asxh.module';
+import { VppModule } from './vpp/vpp.module';
+import { MediaMonitoringModule } from './media-monitoring/media-monitoring.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { CommonWorkflowModule } from './common-workflow/common-workflow.module';
 import { MeetingScheduleModule } from './meeting-schedule/meeting-schedule.module';
 import { BlocksModule } from './block/block.module';
 import { IntergrationSignatureModule } from './Intergration-signature/intergration-signature.module';
@@ -485,6 +490,11 @@ import { MobileConfigModule } from './mobile-config/mobile-config.module';
         CanteenModule,
         BulletinsModule,
         EventManagementModule,
+        AsxhModule,
+        VppModule,
+        MediaMonitoringModule,
+        AnnouncementsModule,
+        CommonWorkflowModule,
         CacheModule.register({
             // store: redisStore as any,
             // host: 'localhost',
