@@ -258,7 +258,7 @@ import { RecordExploitationModule } from './record-exploitation/record-exploitat
 import { StorageConfigModule } from './storage-config/storage-config.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { MeetingRoomModule } from './meeting-rooms/meeting-rooms.module';
-import { CanteenModule } from './canteen/canteen.module';
+import { MealModule } from './meal/meal.module';
 import { BulletinsModule } from './bulletins/bulletins.module';
 import { EventManagementModule } from './event-management/event-management.module';
 import { AsxhModule } from './asxh/asxh.module';
@@ -487,7 +487,7 @@ import { MobileConfigModule } from './mobile-config/mobile-config.module';
         }),
         SignOtpModule,
         CustomSenderUnitModule,
-        CanteenModule,
+        MealModule,
         BulletinsModule,
         EventManagementModule,
         AsxhModule,

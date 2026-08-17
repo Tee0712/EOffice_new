@@ -9,7 +9,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import PersonIcon from '@mui/icons-material/Person';
 import moment from 'moment';
-import { canteenService } from '../../../services/canteenService';
+import { mealBookingService as canteenService } from '../../../services/mealBookingService';
 
 const CheckIn = () => {
   const [userId, setUserId] = useState('');

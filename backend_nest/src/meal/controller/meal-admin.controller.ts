@@ -14,9 +14,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/oauth/jwt.guard';
-import { CanteenAdminService } from '../service/canteen-admin.service';
-import { CanteenRegistrationService } from '../service/canteen-registration.service';
-import { CanteenService } from '../canteen.service';
+import { MealAdminService } from '../service/meal-admin.service';
+import { MealBookingService } from '../service/meal-booking.service';
+import { MealService } from '../meal.service';
 import { SystemLogServiceSql } from 'src/systemLogManagement/system-log-service-sql';
 import { ZodValidationPipe } from '../zod-validation.pipe';
 import {
@@ -36,15 +36,15 @@ import {
   UpdateUserSettingDto,
 } from '../dto';
 
-@ApiTags('🔧 Canteen Admin - Quản trị bếp ăn')
+@ApiTags('🔧 Meal Admin - Quản trị bếp ăn')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('v1/canteen/admin')
-export class CanteenAdminController {
+@Controller('v1/meals/admin')
+export class MealAdminController {
   constructor(
-    private readonly adminService: CanteenAdminService,
-    private readonly registrationService: CanteenRegistrationService,
-    private readonly canteenService: CanteenService,
+    private readonly adminService: MealAdminService,
+    private readonly registrationService: MealBookingService,
+    private readonly mealService: MealService,
     private readonly systemLogService: SystemLogServiceSql,
   ) {}
 
@@ -218,7 +218,7 @@ export class CanteenAdminController {
     }
 
     const targetDate = date || new Date().toISOString().slice(0, 10);
-    const legacy = await this.canteenService.findAllRegistrations({ date: targetDate, dept, slot, q } as any);
+    const legacy = await this.mealService.findAllRegistrations({ date: targetDate, dept, slot, q } as any);
     const normalized = (legacy || []).map((r: any) => ({
       id: r.id,
       user_id: r.user_id,
@@ -256,7 +256,7 @@ export class CanteenAdminController {
       return { success: true, data };
     }
     const targetDate = date || new Date().toISOString().slice(0, 10);
-    const legacy = await this.canteenService.getDailySummary(targetDate);
+    const legacy = await this.mealService.getDailySummary(targetDate);
     return { success: true, data: legacy };
   }
 

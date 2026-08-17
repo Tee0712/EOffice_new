@@ -36,7 +36,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { canteenService } from "../../services/canteenService";
+import { mealBookingService as canteenService } from "@services/mealBookingService";
 import { trackAction } from "../../utils/trackAction";
 
 const VI = {

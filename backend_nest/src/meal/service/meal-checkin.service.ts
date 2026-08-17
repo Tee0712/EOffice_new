@@ -7,25 +7,25 @@ import {
 } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
-import { CanteenRegistrationService } from './canteen-registration.service';
+import { MealBookingService } from './meal-booking.service';
 import { MealCheckInEntity as MealCheckinEntity } from '../entities/meal-checkin.entity';
 import { MealRegistrationEntity } from '../entities/meal-registration.entity';
-import { CanteenRegistrationEntity } from '../entities/canteen-registration.entity';
+import { MealBookingEntity } from '../entities/meal-booking.entity';
 import { MealCheckinDto, UpdateCheckinStatusDto } from '../dto';
 import * as moment from 'moment';
 
 @Injectable()
-export class CanteenCheckinService {
+export class MealCheckinService {
   constructor(
     @InjectRepository(MealCheckinEntity, 'mssqlConnection')
     private readonly checkinRepo: Repository<MealCheckinEntity>,
-    @InjectRepository(CanteenRegistrationEntity, 'mssqlConnection')
-    private readonly registrationRepo: Repository<CanteenRegistrationEntity>,
+    @InjectRepository(MealBookingEntity, 'mssqlConnection')
+    private readonly registrationRepo: Repository<MealBookingEntity>,
     @InjectRepository(MealRegistrationEntity, 'mssqlConnection')
     private readonly legacyRegistrationRepo: Repository<MealRegistrationEntity>,
     @InjectDataSource('mssqlConnection')
     private readonly dataSource: DataSource,
-    private readonly registrationService: CanteenRegistrationService,
+    private readonly registrationService: MealBookingService,
   ) { }
 
   private getInitials(name: string): string {
@@ -99,7 +99,7 @@ export class CanteenCheckinService {
         menuPriceRows.forEach(row => menuPriceMap.set(Number(row.id), Number(row.price) || 0));
         console.log(`[DEBUG] menus price lookup: ${JSON.stringify(menuPriceRows)}`);
       } catch (e) {
-        console.warn('[CanteenCheckinService] Không thể lấy giá từ menus:', e?.message);
+        console.warn('[MealCheckinService] Không thể lấy giá từ menus:', e?.message);
       }
     }
 
@@ -235,7 +235,7 @@ export class CanteenCheckinService {
           await queryRunner.manager.save(checkin);
         }
 
-        await queryRunner.manager.update(CanteenRegistrationEntity, regId, { status: 'completed' });
+        await queryRunner.manager.update(MealBookingEntity, regId, { status: 'completed' });
         await queryRunner.manager.update(MealRegistrationEntity, regId, { status: 'registered' });
 
         await queryRunner.commitTransaction();
@@ -247,7 +247,7 @@ export class CanteenCheckinService {
       }
 
       if (dto.status === 'absent') {
-        await queryRunner.manager.update(CanteenRegistrationEntity, regId, {
+        await queryRunner.manager.update(MealBookingEntity, regId, {
           status: 'cancelled',
           cancelledAt: new Date(),
           cancelReason: dto.note || 'Admin đánh dấu vắng',
@@ -258,7 +258,7 @@ export class CanteenCheckinService {
           cancel_reason: dto.note || 'Admin đánh dấu vắng',
         });
       } else if (dto.status === 'pending') {
-        await queryRunner.manager.update(CanteenRegistrationEntity, regId, {
+        await queryRunner.manager.update(MealBookingEntity, regId, {
           status: 'upcoming',
           cancelledAt: null,
           cancelReason: null,

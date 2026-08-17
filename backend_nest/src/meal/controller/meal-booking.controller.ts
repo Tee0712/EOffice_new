@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/oauth/jwt.guard';
-import { CanteenRegistrationService } from '../service/canteen-registration.service';
-import { CanteenService } from '../canteen.service';
+import { MealBookingService } from '../service/meal-booking.service';
+import { MealService } from '../meal.service';
 import { SystemLogServiceSql } from 'src/systemLogManagement/system-log-service-sql';
 import { ZodValidationPipe } from '../zod-validation.pipe';
 import {
@@ -29,14 +29,14 @@ import {
   DashboardFilterDto,
 } from '../dto';
 
-@ApiTags('🍽️ Canteen - Đăng ký suất ăn')
+@ApiTags('🍽️ Meal - Đăng ký suất ăn')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('v1/canteen')
-export class CanteenRegistrationController {
+@Controller('v1/meals')
+export class MealBookingController {
   constructor(
-    private readonly registrationService: CanteenRegistrationService,
-    private readonly canteenService: CanteenService,
+    private readonly registrationService: MealBookingService,
+    private readonly mealService: MealService,
     private readonly systemLogService: SystemLogServiceSql,
   ) {}
 
@@ -89,7 +89,7 @@ export class CanteenRegistrationController {
   @Get('suppliers-dashboard/summary')
   @ApiOperation({ summary: 'Lấy thống kê tổng quát nhà cung cấp (Dashboard)' })
   async getDashboardSummary(@Query(new ZodValidationPipe(DashboardFilterSchema)) query: DashboardFilterDto) {
-    const data = await this.canteenService.getSuppliersDashboardSummary(query);
+    const data = await this.mealService.getSuppliersDashboardSummary(query);
     return { success: true, data };
   }
 

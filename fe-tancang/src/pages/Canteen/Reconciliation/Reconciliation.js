@@ -16,7 +16,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
-import { canteenService } from '../../../services/canteenService';
+import { mealBookingService as canteenService } from '../../../services/mealBookingService';
 
 ChartJS.register(
   CategoryScale,

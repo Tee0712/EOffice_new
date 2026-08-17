@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import 'moment/locale/vi';
 import { BarChart, Bar, CartesianGrid, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { canteenService } from '../../../services/canteenService';
+import { mealBookingService as canteenService } from '../../../services/mealBookingService';
 
 moment.locale('vi');
 
@@ -116,7 +116,7 @@ const CanteenAdminDashboardPage = () => {
           <Button variant='outlined' onClick={() => setDate(moment().format('YYYY-MM-DD'))}>
             Hôm nay
           </Button>
-          <Button variant='contained' onClick={() => navigate('/canteen/admin/menus')}>
+          <Button variant='contained' onClick={() => navigate('/meals/admin/menus')}>
             Quản lý menu
           </Button>
         </Stack>
@@ -208,7 +208,7 @@ const CanteenAdminDashboardPage = () => {
       <Paper sx={{ p: 2.2, borderRadius: 2.5 }}>
         <Stack direction='row' justifyContent='space-between' alignItems='center' mb={1}>
           <Typography fontWeight={800} fontSize={22}>Danh sách đăng ký hôm nay</Typography>
-          <Button variant='contained' onClick={() => navigate('/canteen/admin/registrations')}>
+          <Button variant='contained' onClick={() => navigate('/meals/admin/registrations')}>
             Xem tất cả
           </Button>
         </Stack>

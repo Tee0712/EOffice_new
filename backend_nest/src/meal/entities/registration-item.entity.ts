@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { CanteenRegistrationEntity } from './canteen-registration.entity';
+import { MealBookingEntity } from './meal-booking.entity';
 import { MealSessionEntity } from './meal-session.entity';
 import { DailyMenuEntity } from './daily-menu.entity';
 
@@ -33,9 +33,9 @@ export class RegistrationItemEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => CanteenRegistrationEntity, (r) => r.items)
+  @ManyToOne(() => MealBookingEntity, (r) => r.items)
   @JoinColumn({ name: 'registration_id' })
-  registration: CanteenRegistrationEntity;
+  registration: MealBookingEntity;
 
   @ManyToOne(() => MealSessionEntity, (s) => s.registrationItems)
   @JoinColumn({ name: 'meal_session_id' })

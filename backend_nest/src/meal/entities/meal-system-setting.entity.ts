@@ -5,8 +5,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('canteen_system_settings')
-export class CanteenSystemSettingEntity {
+@Entity('meal_system_settings')
+export class MealSystemSettingEntity {
   @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 

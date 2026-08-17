@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MealSessionEntity } from '../entities/meal-session.entity';
 import { DailyMenuEntity } from '../entities/daily-menu.entity';
-import { CanteenSystemSettingEntity } from '../entities/canteen-system-setting.entity';
-import { CanteenUserSettingEntity } from '../entities/canteen-user-setting.entity';
+import { MealSystemSettingEntity } from '../entities/meal-system-setting.entity';
+import { MealUserSettingEntity } from '../entities/meal-user-setting.entity';
 import { MealTemplateEntity } from '../entities/meal-template.entity';
 import {
   CreateMealSessionDto,
@@ -17,16 +17,16 @@ import {
 } from '../dto';
 
 @Injectable()
-export class CanteenAdminService {
+export class MealAdminService {
   constructor(
     @InjectRepository(MealSessionEntity, 'mssqlConnection')
     private readonly sessionRepo: Repository<MealSessionEntity>,
     @InjectRepository(DailyMenuEntity, 'mssqlConnection')
     private readonly dailyMenuRepo: Repository<DailyMenuEntity>,
-    @InjectRepository(CanteenSystemSettingEntity, 'mssqlConnection')
-    private readonly systemSettingRepo: Repository<CanteenSystemSettingEntity>,
-    @InjectRepository(CanteenUserSettingEntity, 'mssqlConnection')
-    private readonly userSettingRepo: Repository<CanteenUserSettingEntity>,
+    @InjectRepository(MealSystemSettingEntity, 'mssqlConnection')
+    private readonly systemSettingRepo: Repository<MealSystemSettingEntity>,
+    @InjectRepository(MealUserSettingEntity, 'mssqlConnection')
+    private readonly userSettingRepo: Repository<MealUserSettingEntity>,
     @InjectRepository(MealTemplateEntity, 'mssqlConnection')
     private readonly templateRepo: Repository<MealTemplateEntity>,
   ) {}

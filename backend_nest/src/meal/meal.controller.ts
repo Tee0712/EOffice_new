@@ -18,8 +18,8 @@ import {
   Res,
 } from '@nestjs/common';
 
-import { CanteenService } from './canteen.service';
-import { CanteenAdminService } from './service/canteen-admin.service';
+import { MealService } from './meal.service';
+import { MealAdminService } from './service/meal-admin.service';
 import {
   CreateWeeklyMenuDto, CreateWeeklyMenuSchema,
   CreateTemplateDto, CreateTemplateSchema,
@@ -50,19 +50,19 @@ import { Public } from 'src/oauth/decorator/public.decorator';
 import { Request, Response } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import * as moment from 'moment';
-import { CanteenEvaluationAccessGuard } from './guard/canteen-evaluation-access.guard';
+import { MealEvaluationAccessGuard } from './guard/meal-evaluation-access.guard';
 
 
 
 
-@ApiTags('Canteen - Meal Management')
+@ApiTags('Meal - Meal Management')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('v1')
-export class CanteenController {
+export class MealController {
   constructor(
-    private readonly canteenService: CanteenService,
-    private readonly canteenAdminService: CanteenAdminService,
+    private readonly mealService: MealService,
+    private readonly mealAdminService: MealAdminService,
     private readonly systemLogService: SystemLogServiceSql,
   ) { }
 
@@ -75,10 +75,10 @@ export class CanteenController {
    *     summary: Lấy toàn bộ cài đặt hệ thống Canteen
    *     tags: [Canteen]
    */
-  @ApiOperation({ summary: 'Lấy toàn bộ cài đặt hệ thống Canteen' })
+  @ApiOperation({ summary: 'Lấy toàn bộ cài đặt hệ thống Meal' })
   @Get('meal-settings')
   async getAllSettings() {
-    const data = await this.canteenService.getSettings();
+    const data = await this.mealService.getSettings();
     return { success: true, data };
   }
 
@@ -93,7 +93,7 @@ export class CanteenController {
   @Post('meal-settings/bulk')
   async updateSettingsBulk(@Body() settings: any[], @Req() req: Request) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.updateSettings(settings);
+    const data = await this.mealService.updateSettings(settings);
     await this.trackAction(req, 'POST', `Cập nhật hàng loạt ${settings.length} cài đặt`, 'SETTINGS_UPDATE');
     return { success: true, data };
   }
@@ -101,7 +101,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Xuất Excel thực đơn ngày' })
   @Get('menus/daily-export-excel')
   async exportDailyMenuExcel(@Query('date') date: string, @Res() res: Response) {
-    const file = await this.canteenService.exportDailyMenuExcel(date);
+    const file = await this.mealService.exportDailyMenuExcel(date);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
     return res.send(file.buffer);
@@ -110,14 +110,14 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy dữ liệu in thực đơn ngày' })
   @Get('menus/daily-print-data')
   async getDailyMenuPrintData(@Query('date') date: string) {
-    const data = await this.canteenService.getDailyMenuPrintData(date);
+    const data = await this.mealService.getDailyMenuPrintData(date);
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Thống kê đăng ký theo phòng ban' })
   @Get('registrations/department-summary')
   async getDepartmentRegistrationSummary(@Query('date') date: string) {
-    const data = await this.canteenService.getDepartmentRegistrationSummary(date);
+    const data = await this.mealService.getDepartmentRegistrationSummary(date);
     return { success: true, data };
   }
 
@@ -125,15 +125,15 @@ export class CanteenController {
    * @swagger
    * /api/v1/menus/sync-db:
    *   get:
-   *     summary: Đồng bộ cấu trúc CSDL Canteen
+   *     summary: Đồng bộ cấu trúc CSDL Meal
    *     tags: [Canteen]
    */
   @Public()
   @Get('menus/sync-db')
   @ApiOperation({ summary: 'Trình kích hoạt đồng bộ CSDL thủ công' })
   async syncDb(@Req() req: Request) {
-    await this.canteenService.onModuleInit();
-    await this.trackAction(req, 'GET', 'Kích hoạt đồng bộ CSDL Canteen', 'DB_SYNC');
+    await this.mealService.onModuleInit();
+    await this.trackAction(req, 'GET', 'Kích hoạt đồng bộ CSDL Meal', 'DB_SYNC');
     return { success: true, message: 'Database sync triggered. Check logs.' };
   }
 
@@ -147,7 +147,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy các món ăn đang hoạt động' })
   @Get('dishes')
   async getDishes() {
-    const data = await this.canteenService.findAllDishes();
+    const data = await this.mealService.findAllDishes();
     return { success: true, data };
   }
 
@@ -161,7 +161,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy danh sách nhà cung cấp' })
   @Get('suppliers')
   async getSuppliers(@Query() query: any) {
-    const data = await this.canteenService.findAllSuppliers(query);
+    const data = await this.mealService.findAllSuppliers(query);
     return { success: true, data };
   }
 
@@ -176,7 +176,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy thống kê tổng quan nhà cung cấp' })
   @Get('suppliers/dashboard/overview')
   async getSuppliersOverview() {
-    const data = await this.canteenService.getSuppliersOverview();
+    const data = await this.mealService.getSuppliersOverview();
     return { success: true, data };
   }
 
@@ -184,21 +184,21 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy chi tiết nhà cung cấp (Header & Metrics)' })
   @Get('suppliers/item/:id')
   async getSupplierDetail(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.canteenService.getSupplierDetail(id);
+    const data = await this.mealService.getSupplierDetail(id);
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Lấy danh sách hợp đồng của nhà cung cấp' })
   @Get('suppliers/:id/contracts')
   async getSupplierContracts(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.canteenService.getSupplierContracts(id);
+    const data = await this.mealService.getSupplierContracts(id);
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Xuất Excel danh sách đánh giá nhà cung cấp' })
   @Get('supplier-evaluations/export-excel')
   async exportSupplierEvaluationsExcel(@Query() query: any, @Res() res: Response) {
-    const { fileName, buffer } = await this.canteenService.exportSupplierEvaluationsExcel(query);
+    const { fileName, buffer } = await this.mealService.exportSupplierEvaluationsExcel(query);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=${encodeURIComponent(fileName)}`);
     res.send(buffer);
@@ -207,7 +207,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy dánh sách món của nhà cung cấp' })
   @Get('suppliers/:id/prices')
   async getSupplierPrices(@Param('id', ParseIntPipe) id: number) {
-    const data = await this.canteenService.findAllDishesSupplier(id);
+    const data = await this.mealService.findAllDishesSupplier(id);
     return { success: true, data };
   }
 
@@ -217,7 +217,7 @@ export class CanteenController {
     @Param('id', ParseIntPipe) id: number,
     @Query('orderId') orderId?: string,
   ) {
-    const data = await this.canteenService.getUnevaluatedDishes(id, orderId ? Number(orderId) : undefined);
+    const data = await this.mealService.getUnevaluatedDishes(id, orderId ? Number(orderId) : undefined);
     return { success: true, data };
   }
 
@@ -225,7 +225,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy lịch sử đơn hàng của nhà cung cấp' })
   @Get('suppliers/:id/orders')
   async getSupplierOrders(@Param('id', ParseIntPipe) id: number, @Query() query: any) {
-    const data = await this.canteenService.getSupplierOrders(id, query);
+    const data = await this.mealService.getSupplierOrders(id, query);
     return { success: true, data };
   }
 
@@ -241,7 +241,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy thực đơn tuần (lịch tuần)' })
   @Get('menus/week')
   async getWeeklyMenu(@Query('week_start') weekStart: string) {
-    const data = await this.canteenService.findWeeklyMenu(weekStart);
+    const data = await this.mealService.findWeeklyMenu(weekStart);
     return { success: true, data };
   }
 
@@ -255,7 +255,7 @@ export class CanteenController {
     @Query('mealTypeId') mealTypeId?: string,
     @Query('supplierId') supplierId?: string,
   ) {
-    const data = await this.canteenService.findMenusForReview({
+    const data = await this.mealService.findMenusForReview({
       status,
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 20,
@@ -269,28 +269,28 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy thực đơn tuần (Phiên bản mới)' })
   @Get('menus/weekly')
   async getWeeklyMenuV2(@Query(new ZodValidationPipe(StartDateQuerySchema)) query: StartDateQueryDto) {
-    const data = await this.canteenService.getWeeklyMenuV2(query.startDate);
+    const data = await this.mealService.getWeeklyMenuV2(query.startDate);
     return data;
   }
 
   @ApiOperation({ summary: 'Lấy món ăn theo ngày' })
   @Get('menus/day-item')
   async getDailyMenuDetail(@Query(new ZodValidationPipe(DateQuerySchema)) query: DateQueryDto) {
-    const data = await this.canteenService.getDailyMenuDetail(query.date);
+    const data = await this.mealService.getDailyMenuDetail(query.date);
     return data;
   }
 
   @ApiOperation({ summary: 'Lấy chi tiết menu theo ID (phục vụ màn đánh giá bữa ăn)' })
   @Get('menus/:id')
   async getMenuDetail(@Param('id') id: string) {
-    const data = await this.canteenService.findMenuDetailForReview(Number(id));
+    const data = await this.mealService.findMenuDetailForReview(Number(id));
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Lấy danh sách tùy chọn filter cho màn đánh giá bữa ăn' })
   @Get('meal-review-filters/options')
   async getMealReviewFilterOptions() {
-    const data = await this.canteenService.getMealReviewFilterOptions();
+    const data = await this.mealService.getMealReviewFilterOptions();
     return { success: true, data };
   }
 
@@ -301,7 +301,7 @@ export class CanteenController {
     @Query('sortBy') _sortBy?: string,
     @Query('sortOrder') _sortOrder?: string,
   ) {
-    const data = await this.canteenService.getMealReviewCriteria();
+    const data = await this.mealService.getMealReviewCriteria();
     return { success: true, data };
   }
 
@@ -309,7 +309,7 @@ export class CanteenController {
   @Post('meal-reviews')
   async createMealReview(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.createMealReview(userId, dto);
+    const data = await this.mealService.createMealReview(userId, dto);
     return { success: true, data, message: 'Gửi đánh giá thành công.' };
   }
 
@@ -331,7 +331,7 @@ export class CanteenController {
       serviceScore: dto.serviceScore ?? scores.service ?? 0,
       commentText: dto.commentText ?? dto.comment ?? '',
     };
-    const data = await this.canteenService.createMealReview(userId, payload);
+    const data = await this.mealService.createMealReview(userId, payload);
     return { success: true, data, message: 'Gửi đánh giá thành công.' };
   }
 
@@ -344,7 +344,7 @@ export class CanteenController {
     @Req() req?: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.getMyCurrentReview(userId, {
+    const data = await this.mealService.getMyCurrentReview(userId, {
       menuId: Number(menuId),
       includeImages: includeImages === 'true',
       includeReplies: includeReplies === 'true',
@@ -356,7 +356,7 @@ export class CanteenController {
   @Put('meal-reviews/my-current')
   async updateMyCurrentReview(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.updateMyCurrentReview(userId, dto);
+    const data = await this.mealService.updateMyCurrentReview(userId, dto);
     return { success: true, data, message: 'Cập nhật đánh giá thành công.' };
   }
 
@@ -366,41 +366,41 @@ export class CanteenController {
     const userId = (req as any).user?.userId || 'System';
     const reviewId = Number(id);
     if (!Number.isFinite(reviewId)) throw new BadRequestException('ID đánh giá không hợp lệ.');
-    const data = await this.canteenService.updateReviewById(userId, reviewId, dto);
+    const data = await this.mealService.updateReviewById(userId, reviewId, dto);
     return { success: true, data, message: 'Cập nhật đánh giá thành công.' };
   }
 
   @ApiOperation({ summary: 'Tổng hợp đánh giá theo bữa ăn' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews/summary')
   async getMealReviewSummary(@Query() query: any) {
-    const data = await this.canteenService.getMealReviewSummary(query);
+    const data = await this.mealService.getMealReviewSummary(query);
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Điểm trung bình theo tiêu chí' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews/criteria-averages')
   async getMealReviewCriteriaAverages(@Query() query: any) {
-    const data = await this.canteenService.getMealReviewCriteriaAverages(query);
+    const data = await this.mealService.getMealReviewCriteriaAverages(query);
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Danh sách đánh giá bữa ăn' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews')
   async getMealReviews(@Query() query: any) {
-    const data = await this.canteenService.getMealReviews(query);
+    const data = await this.mealService.getMealReviews(query);
     return { success: true, ...data };
   }
 
   @ApiOperation({ summary: 'Chi tiết đánh giá bữa ăn' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews/:id')
   async getMealReviewDetail(@Param('id') id: string) {
     const reviewId = Number(id);
     if (!Number.isFinite(reviewId)) throw new BadRequestException('ID đánh giá không hợp lệ.');
-    const data = await this.canteenService.getMealReviewDetail(reviewId);
+    const data = await this.mealService.getMealReviewDetail(reviewId);
     return { success: true, data };
   }
 
@@ -408,14 +408,14 @@ export class CanteenController {
   @Post('meal-reviews/:reviewId/replies')
   async createMealReviewReply(@Param('reviewId') reviewId: string, @Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.createMealReviewReply(userId, Number(reviewId), dto);
+    const data = await this.mealService.createMealReviewReply(userId, Number(reviewId), dto);
     return { success: true, data, message: 'Gửi phản hồi thành công.' };
   }
 
   @ApiOperation({ summary: 'Danh sách phản hồi của đánh giá' })
   @Get('meal-reviews/:reviewId/replies')
   async getMealReviewReplies(@Param('reviewId') reviewId: string) {
-    const data = await this.canteenService.getMealReviewReplies(Number(reviewId));
+    const data = await this.mealService.getMealReviewReplies(Number(reviewId));
     return { success: true, data };
   }
 
@@ -429,7 +429,7 @@ export class CanteenController {
   ) {
     const userId = (req as any).user?.userId || 'System';
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const data = await this.canteenService.uploadMealReviewImages(userId, Number(reviewId), files || [], baseUrl);
+    const data = await this.mealService.uploadMealReviewImages(userId, Number(reviewId), files || [], baseUrl);
     return { success: true, data, message: 'Tải ảnh thành công.' };
   }
 
@@ -437,25 +437,25 @@ export class CanteenController {
   @Delete('meal-review-images/:imageId')
   async deleteMealReviewImage(@Param('imageId') imageId: string, @Req() req: Request) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.deleteMealReviewImage(userId, Number(imageId));
+    const data = await this.mealService.deleteMealReviewImage(userId, Number(imageId));
     return { success: true, data, message: 'Đã xóa ảnh đính kèm.' };
   }
 
   @ApiOperation({ summary: 'Xuất Excel báo cáo đánh giá bữa ăn' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews/export-excel')
   async exportMealReviewsExcel(@Query() query: any, @Res() res: Response) {
-    const file = await this.canteenService.exportMealReviewsExcel(query);
+    const file = await this.mealService.exportMealReviewsExcel(query);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
     return res.send(file.buffer);
   }
 
   @ApiOperation({ summary: 'Dữ liệu in báo cáo đánh giá bữa ăn' })
-  @UseGuards(CanteenEvaluationAccessGuard)
+  @UseGuards(MealEvaluationAccessGuard)
   @Get('meal-reviews/print-report')
   async getMealReviewPrintReport(@Query() query: any) {
-    const data = await this.canteenService.getMealReviewPrintReport(query);
+    const data = await this.mealService.getMealReviewPrintReport(query);
     return { success: true, data };
   }
 
@@ -473,7 +473,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.saveWeeklyMenu(dto, userId);
+    const data = await this.mealService.saveWeeklyMenu(dto, userId);
     await this.trackAction(req, 'POST', `Lưu thực đơn tuần bắt đầu từ ${dto.week_start}`, 'MENU_SAVE');
     return { success: true, data };
   }
@@ -487,7 +487,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.saveWeeklyMenuV2(dto, userId);
+    const data = await this.mealService.saveWeeklyMenuV2(dto, userId);
     await this.trackAction(req, 'POST', `Lưu thực đơn tuần bắt đầu từ ${dto.startDate}`, 'MENU_SAVE_V2');
     return { success: true, data };
   }
@@ -502,7 +502,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy danh sách bản mẫu thực đơn' })
   @Get('menus/templates')
   async getTemplates() {
-    const data = await this.canteenService.findAllTemplates();
+    const data = await this.mealService.findAllTemplates();
     return { success: true, data };
   }
 
@@ -520,7 +520,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.saveAsTemplate(dto, userId);
+    const data = await this.mealService.saveAsTemplate(dto, userId);
     await this.trackAction(req, 'POST', `Lưu bản mẫu thực đơn mới: ${dto.name}`, 'TEMPLATE_SAVE');
     return { success: true, data };
   }
@@ -538,7 +538,7 @@ export class CanteenController {
     @Body(new ZodValidationPipe(ApplyTemplateSchema)) dto: ApplyTemplateDto,
     @Req() req: Request,
   ) {
-    const data = await this.canteenService.applyTemplate(dto);
+    const data = await this.mealService.applyTemplate(dto);
     await this.trackAction(req, 'POST', `Áp dụng bản mẫu ID ${dto.template_id} cho tuần ${dto.week_start}`, 'TEMPLATE_APPLY');
     return { success: true, data };
   }
@@ -557,7 +557,7 @@ export class CanteenController {
     @Body('week_start') weekStart: string,
     @Req() req: Request
   ) {
-    const data = await this.canteenService.publishMenu(weekStart);
+    const data = await this.mealService.publishMenu(weekStart);
     await this.trackAction(req, 'POST', `Công bố thực đơn tuần ${weekStart}`, 'MENU_PUBLISH');
     return { success: true, data };
   }
@@ -574,9 +574,9 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy thực đơn của một ngày' })
   @Get('menus/day')
   async getDailyMenu(@Query('date') date: string) {
-    console.log(`[CanteenController] getDailyMenu called for date: ${date}`);
-    const data = await this.canteenService.findDailyMenuV2(date);
-    console.log(`[CanteenController] getDailyMenu result:`, data ? 'Object found' : 'null');
+    console.log(`[MealController] getDailyMenu called for date: ${date}`);
+    const data = await this.mealService.findDailyMenuV2(date);
+    console.log(`[MealController] getDailyMenu result:`, data ? 'Object found' : 'null');
     return { success: true, data };
   }
 
@@ -594,7 +594,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.saveDailyMenu(dto, userId);
+    const data = await this.mealService.saveDailyMenu(dto, userId);
     await this.trackAction(req, 'POST', `Lưu thực đơn ngày ${dto.date}`, 'DAILY_MENU_SAVE');
     return { success: true, data };
   }
@@ -606,7 +606,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.saveDailyMenuSetup(dto, userId);
+    const data = await this.mealService.saveDailyMenuSetup(dto, userId);
     await this.trackAction(req, 'POST', `Thiết lập thực đơn ngày ${dto.date}`, 'DAILY_MENU_SETUP_SAVE');
     return { success: true, data };
   }
@@ -623,7 +623,7 @@ export class CanteenController {
   @Delete('menus/day/:id')
   @ApiParam({ name: 'id', type: 'number' })
   async deleteMenu(@Param('id') id: string, @Req() req: Request) {
-    const data = await this.canteenService.deleteMenu(Number(id));
+    const data = await this.mealService.deleteMenu(Number(id));
     await this.trackAction(req, 'DELETE', `Xóa bữa ăn ID ${id}`, 'MENU_DELETE');
     return { success: true, data };
   }
@@ -643,7 +643,7 @@ export class CanteenController {
     @Body(new ZodValidationPipe(UpdateMenuStatusSchema)) dto: UpdateMenuStatusDto,
     @Req() req: Request,
   ) {
-    const data = await this.canteenService.updateMenuStatus(Number(id), dto.status);
+    const data = await this.mealService.updateMenuStatus(Number(id), dto.status);
     await this.trackAction(req, 'PATCH', `Cập nhật trạng thái bữa ăn ID ${id} thành ${dto.status}`, 'MENU_STATUS_UPDATE');
     return { success: true, data };
   }
@@ -662,7 +662,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.copyDailyMenu(dto, userId);
+    const data = await this.mealService.copyDailyMenu(dto, userId);
     await this.trackAction(req, 'POST', `Sao chép thực đơn từ ${dto.from_date} sang ${dto.to_date}`, 'DAILY_MENU_COPY');
     return { success: true, data };
   }
@@ -680,7 +680,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy danh sách đăng ký của tôi (theo tháng)' })
   async getMyRegistrations(@Query('month') month: string, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.findMyRegistrations(userId, month);
+    const data = await this.mealService.findMyRegistrations(userId, month);
     return { success: true, data };
   }
 
@@ -698,7 +698,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.registerMeal(userId, dto as any);
+    const data = await this.mealService.registerMeal(userId, dto as any);
     await this.trackAction(req, 'POST', `Đăng ký suất ăn cho menu ID ${(dto as any).menu_id}`, 'MEAL_REGISTER');
     return { success: true, data };
   }
@@ -718,7 +718,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.bulkRegister(userId, dto as any);
+    const data = await this.mealService.bulkRegister(userId, dto as any);
     await this.trackAction(req, 'POST', `Đăng ký nhanh từ ${(dto as any).start_date} đến ${(dto as any).end_date}`, 'MEAL_BULK_REGISTER');
     return { success: true, data };
   }
@@ -740,7 +740,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.cancelRegistration(userId, Number(id), dto.reason);
+    const data = await this.mealService.cancelRegistration(userId, Number(id), dto.reason);
     await this.trackAction(req, 'POST', `Hủy đăng ký suất ăn ID ${id}. Lý do: ${dto.reason}`, 'MEAL_CANCEL');
     return { success: true, data };
   }
@@ -761,7 +761,7 @@ export class CanteenController {
     @Query('q') q?: string,
     @Req() req?: Request,
   ) {
-    const data = await this.canteenService.findAllRegistrations({ date, dept, slot, q });
+    const data = await this.mealService.findAllRegistrations({ date, dept, slot, q });
     if (req) await this.trackAction(req, 'GET', `Xem danh sách đăng ký ngày ${date}`, 'ADMIN_VIEW_REGISTRATIONS');
     return { success: true, data };
   }
@@ -776,7 +776,7 @@ export class CanteenController {
   @Get('registrations/summary')
   @ApiOperation({ summary: 'Lấy tóm tắt đăng ký suất ăn hàng ngày (Admin)' })
   async getDailySummary(@Query('date') date: string) {
-    const data = await this.canteenService.getDailySummary(date);
+    const data = await this.mealService.getDailySummary(date);
     return { success: true, data };
   }
 
@@ -790,11 +790,11 @@ export class CanteenController {
   @Get('canteen/departments')
   @ApiOperation({ summary: 'Lấy danh sách phòng ban' })
   async getDepartments() {
-    const data = await this.canteenService.findAllDepartments();
+    const data = await this.mealService.findAllDepartments();
     return { success: true, data };
   }
 
-  // --- API v2 for FE Canteen pages ---
+  // --- API v2 for FE Meal pages ---
 
   @Get('canteen/calendar')
   @ApiOperation({ summary: 'Lấy lịch đăng ký theo khoảng ngày (FE v2)' })
@@ -804,7 +804,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.getCalendarV2(userId, startDate, endDate);
+    const data = await this.mealService.getCalendarV2(userId, startDate, endDate);
     return { success: true, data };
   }
 
@@ -812,7 +812,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy danh sách đăng ký của tôi (FE v2)' })
   async getMyRegistrationsV2(@Query() query: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.getMyRegistrationsV2(userId, query || {});
+    const data = await this.mealService.getMyRegistrationsV2(userId, query || {});
     return { success: true, data };
   }
 
@@ -824,7 +824,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.getMyStatsV2(userId, startDate, endDate);
+    const data = await this.mealService.getMyStatsV2(userId, startDate, endDate);
     return { success: true, data };
   }
 
@@ -833,7 +833,7 @@ export class CanteenController {
   async registerByDateV2(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
     try {
-      const data = await this.canteenService.registerByDateV2(userId, {
+      const data = await this.mealService.registerByDateV2(userId, {
         date: dto?.date,
         meal_session_ids: dto?.meal_session_ids || [],
         note: dto?.note || null,
@@ -850,7 +850,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Đăng ký suất ăn theo ngày (FE v2 - stable route)' })
   async registerByDateV2Stable(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.registerByDateV2(userId, {
+    const data = await this.mealService.registerByDateV2(userId, {
       date: dto?.date,
       meal_session_ids: dto?.meal_session_ids || [],
       note: (dto as any).note ?? null,
@@ -866,7 +866,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.updateRegistrationV2(userId, id, dto || {});
+    const data = await this.mealService.updateRegistrationV2(userId, id, dto || {});
     return { success: true, data };
   }
 
@@ -878,7 +878,7 @@ export class CanteenController {
     @Req() req: Request,
   ) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.cancelRegistration(userId, id, dto?.reason || null);
+    const data = await this.mealService.cancelRegistration(userId, id, dto?.reason || null);
     return { success: true, data };
   }
 
@@ -886,7 +886,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Đăng ký nhanh cả tuần (FE v2)' })
   async quickRegisterWeekV2(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.quickRegisterWeekV2(userId, dto || {});
+    const data = await this.mealService.quickRegisterWeekV2(userId, dto || {});
     return { success: true, data };
   }
 
@@ -894,7 +894,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Đăng ký nhanh cả tháng (FE v2)' })
   async quickRegisterMonthV2(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.quickRegisterMonthV2(userId, dto || {});
+    const data = await this.mealService.quickRegisterMonthV2(userId, dto || {});
     return { success: true, data };
   }
 
@@ -910,7 +910,7 @@ export class CanteenController {
       (Array.isArray(dto?.meal_session_ids) || dto?.template_id);
 
     if (hasFilterPayload) {
-      const data = await this.canteenService.bulkRegisterByFiltersV2(userId, {
+      const data = await this.mealService.bulkRegisterByFiltersV2(userId, {
         start_date: dto.start_date,
         end_date: dto.end_date,
         days_of_week: dto.days_of_week,
@@ -921,12 +921,12 @@ export class CanteenController {
     }
 
     if (String(dto?.period || '').toUpperCase() === 'WEEK') {
-      const data = await this.canteenService.quickRegisterWeekV2(userId, {
+      const data = await this.mealService.quickRegisterWeekV2(userId, {
         week_start_date: dto?.start_date || moment().startOf('isoWeek').format('YYYY-MM-DD'),
       });
       return { success: true, data };
     }
-    const data = await this.canteenService.quickRegisterMonthV2(userId, {
+    const data = await this.mealService.quickRegisterMonthV2(userId, {
       month: dto?.month || moment().format('YYYY-MM'),
     });
     return { success: true, data };
@@ -936,7 +936,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Đăng ký hàng loạt theo bộ lọc (FE v2 - stable route)' })
   async bulkRegisterByFiltersStable(@Body() dto: any, @Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const data = await this.canteenService.bulkRegisterByFiltersV2(userId, {
+    const data = await this.mealService.bulkRegisterByFiltersV2(userId, {
       start_date: dto?.start_date,
       end_date: dto?.end_date,
       days_of_week: Array.isArray(dto?.days_of_week) ? dto.days_of_week : [1, 2, 3, 4, 5],
@@ -949,7 +949,7 @@ export class CanteenController {
   @Get('canteen/admin/settings')
   @ApiOperation({ summary: 'Lấy cài đặt hệ thống canteen (FE v2)' })
   async getSystemSettingsV2() {
-    const settings = await this.canteenService.getSettings();
+    const settings = await this.mealService.getSettings();
     const settingRows = Object.values(settings || {}).flatMap((group: any) =>
       Object.entries(group || {}).map(([key, entry]: [string, any]) => ({
         key,
@@ -1027,7 +1027,7 @@ export class CanteenController {
       if (['refund_on_time_rate', 'refund_late_rate', 'refund_rate_on_time', 'refund_rate_late'].includes(key)) {
         return 'refund';
       }
-      return 'canteen_system';
+      return 'meal_system';
     };
 
     const items = Array.isArray(dto)
@@ -1052,7 +1052,7 @@ export class CanteenController {
         };
       })
       .filter(Boolean);
-    const data = await this.canteenService.updateSettings(settings as any);
+    const data = await this.mealService.updateSettings(settings as any);
     await this.trackAction(req, 'PATCH', 'Update canteen admin settings (v2)', 'SETTINGS_UPDATE_V2');
     return { success: true, data };
   }
@@ -1061,7 +1061,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy cài đặt tự động cá nhân (FE v2)' })
   async getUserSettingsV2(@Req() req: Request) {
     const userId = (req as any).user?.userId;
-    const settings = await this.canteenAdminService.getUserSettings(userId);
+    const settings = await this.mealAdminService.getUserSettings(userId);
     return {
       success: true,
       data: {
@@ -1083,7 +1083,7 @@ export class CanteenController {
       receive_email_notification: dto?.receiveEmailNotification ?? dto?.receive_email_notification,
       remind_before_1_day: dto?.remindBefore1Day ?? dto?.remind_before_1_day,
     };
-    const data = await this.canteenAdminService.updateUserSettings(userId, payload as any);
+    const data = await this.mealAdminService.updateUserSettings(userId, payload as any);
     return { success: true, data };
   }
 
@@ -1095,14 +1095,14 @@ export class CanteenController {
     @Query('slot') slot?: string,
     @Query('q') q?: string,
   ) {
-    const data = await this.canteenService.findAllRegistrations({ date, dept, slot, q } as any);
+    const data = await this.mealService.findAllRegistrations({ date, dept, slot, q } as any);
     return { success: true, data };
   }
 
   @Get('canteen/admin/registrations/summary')
   @ApiOperation({ summary: 'Tóm tắt đăng ký suất ăn theo ngày cho admin (FE v2)' })
   async getAdminDailySummaryV2(@Query('date') date: string) {
-    const data = await this.canteenService.getDailySummary(date || moment().format('YYYY-MM-DD'));
+    const data = await this.mealService.getDailySummary(date || moment().format('YYYY-MM-DD'));
     return { success: true, data };
   }
 
@@ -1112,7 +1112,7 @@ export class CanteenController {
   @Post('check-in')
   async checkIn(@Body(new ZodValidationPipe(CheckInSchema)) dto: CheckInDto, @Req() req: Request) {
     const adminId = (req as any).user?.userId;
-    const data = await this.canteenService.checkIn(dto, adminId);
+    const data = await this.mealService.checkIn(dto, adminId);
     await this.trackAction(req, 'POST', `Check-in cho user ${dto.user_id}, menu ${dto.menu_id}`, 'CHECKIN');
     return { success: true, data };
   }
@@ -1121,7 +1121,7 @@ export class CanteenController {
   @Post('actual-serving')
   async recordActualServing(@Body(new ZodValidationPipe(ActualServingSchema)) dto: ActualServingDto, @Req() req: Request) {
     const adminId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.recordActualServing(dto, adminId);
+    const data = await this.mealService.recordActualServing(dto, adminId);
     await this.trackAction(req, 'POST', `Ghi nhận suất ăn thực tế cho menu ${dto.menu_id}: ${dto.actual_qty}`, 'ACTUAL_SERVING');
     return { success: true, data };
   }
@@ -1129,7 +1129,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy báo cáo đối soát' })
   @Get('reconciliation')
   async getReconciliation(@Query('start_date') start: string, @Query('end_date') end: string) {
-    const data = await this.canteenService.getReconciliationReport(start, end);
+    const data = await this.mealService.getReconciliationReport(start, end);
     return { success: true, data };
   }
 
@@ -1139,7 +1139,7 @@ export class CanteenController {
   @Post('suppliers/:id/contracts')
   async manageContract(@Param('id') id: string, @Body(new ZodValidationPipe(SupplierContractSchema)) dto: SupplierContractDto, @Req() req: Request) {
     const adminId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.manageSupplierContract(dto, adminId);
+    const data = await this.mealService.manageSupplierContract(dto, adminId);
     await this.trackAction(req, 'POST', `Quản lý hợp đồng cho NCC ID ${id}`, 'SUPPLIER_CONTRACT');
     return { success: true, data };
   }
@@ -1149,7 +1149,7 @@ export class CanteenController {
   @Post('supplier-orders')
   async createOrder(@Body(new ZodValidationPipe(SupplierOrderSchema)) dto: SupplierOrderDto, @Req() req: Request) {
     const adminId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.createSupplierOrder(dto, adminId);
+    const data = await this.mealService.createSupplierOrder(dto, adminId);
     await this.trackAction(req, 'POST', `Tạo đơn hàng NCC cho ngày ${dto.order_date}`, 'SUPPLIER_ORDER');
     return { success: true, data };
   }
@@ -1157,7 +1157,7 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy thống kê đánh giá nhà cung cấp' })
   @Get('supplier-evaluations/stats')
   async getSupplierEvaluationStats() {
-    const data = await this.canteenService.getSupplierEvaluationDashboardStats();
+    const data = await this.mealService.getSupplierEvaluationDashboardStats();
     return { success: true, data };
   }
 
@@ -1189,7 +1189,7 @@ export class CanteenController {
       dto.evaluation_status = 'submitted';
     }
 
-    const data = await this.canteenService.submitEvaluation(dto, adminId);
+    const data = await this.mealService.submitEvaluation(dto, adminId);
     await this.trackAction(req, 'POST', `Gửi đánh giá cho NCC ID ${dto.supplier_id}`, 'SUPPLIER_EVALUATION');
     return { success: true, data };
   }
@@ -1219,7 +1219,7 @@ export class CanteenController {
       dto.evaluation_status = 'submitted';
     }
 
-    const data = await this.canteenService.submitEvaluation(dto, adminId);
+    const data = await this.mealService.submitEvaluation(dto, adminId);
     await this.trackAction(req, 'PUT', `Cập nhật đánh giá ID ${id}`, 'SUPPLIER_EVAL_UPDATE');
     return { success: true, data };
   }
@@ -1227,14 +1227,14 @@ export class CanteenController {
   @ApiOperation({ summary: 'Lấy tổng quan đánh giá nhà cung cấp (Counts)' })
   @Get('supplier-evaluations/overview')
   async getEvaluationsOverview() {
-    const data = await this.canteenService.getSupplierEvaluationsOverview();
+    const data = await this.mealService.getSupplierEvaluationsOverview();
     return { success: true, data };
   }
 
   @ApiOperation({ summary: 'Lấy danh sách đánh giá NCC' })
   @Get('supplier-evaluations')
   async getEvaluations(@Query() query: any) {
-    const result = await this.canteenService.findAllEvaluations(query);
+    const result = await this.mealService.findAllEvaluations(query);
     return { success: true, ...result };
   }
 
@@ -1242,7 +1242,7 @@ export class CanteenController {
   @Get('supplier-evaluations/:id')
   @ApiParam({ name: 'id', type: 'number' })
   async getEvaluationDetail(@Param('id') id: string) {
-    const data = await this.canteenService.findEvaluationDetail(Number(id));
+    const data = await this.mealService.findEvaluationDetail(Number(id));
     return { success: true, data };
   }
 
@@ -1251,7 +1251,7 @@ export class CanteenController {
   @ApiParam({ name: 'id', type: 'number' })
   async deleteEvaluation(@Param('id') id: string, @Req() req: Request) {
     const adminId = (req as any).user?.userId || 'System';
-    const data = await this.canteenService.deleteEvaluation(Number(id), adminId);
+    const data = await this.mealService.deleteEvaluation(Number(id), adminId);
     await this.trackAction(req, 'DELETE', `Xóa đánh giá ID ${id}`, 'SUPPLIER_EVAL_DELETE');
     return { success: true, data };
   }
@@ -1260,7 +1260,7 @@ export class CanteenController {
   @Get('suppliers/:id/evaluation-stats')
   @ApiParam({ name: 'id', type: 'number' })
   async getSupplierStats(@Param('id') id: string) {
-    const data = await this.canteenService.getSupplierEvaluationStats(Number(id));
+    const data = await this.mealService.getSupplierEvaluationStats(Number(id));
     return { success: true, data };
   }
 
@@ -1280,7 +1280,7 @@ export class CanteenController {
         timestamp: new Date().toISOString(),
       });
     } catch (e) {
-      console.error('Failed to log canteen action:', e);
+      console.error('Failed to log meal action:', e);
     }
   }
 }

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # SQL Server 2019
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: eoffice_sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=LTLT@2025
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'SELECT 1' | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'LTLT@2025'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: eoffice_redis
+    command: redis-server --requirepass LTLT@2026
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "LTLT@2026", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  sqlserver_data:
+  redis_data:

@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/oauth/jwt.guard';
-import { CanteenCheckinService } from '../service/canteen-checkin.service';
+import { MealCheckinService } from '../service/meal-checkin.service';
 import { ZodValidationPipe } from '../zod-validation.pipe';
 import { SystemLogServiceSql } from 'src/systemLogManagement/system-log-service-sql';
 import { Request } from 'express';
@@ -24,15 +24,15 @@ import {
   CheckinListQueryDto,
   UpdateCheckinStatusSchema,
   UpdateCheckinStatusDto,
-} from '../dto/canteen.dto';
+} from '../dto/meal.dto';
 
-@ApiTags('🍽️ Canteen - Check-in Xuất ăn')
+@ApiTags('🍽️ Meal - Check-in Xuất ăn')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller('v1/canteen/checkin')
-export class CanteenCheckinController {
+@Controller('v1/meals/checkins')
+export class MealCheckinController {
   constructor(
-    private readonly checkinService: CanteenCheckinService,
+    private readonly checkinService: MealCheckinService,
     private readonly systemLogService: SystemLogServiceSql,
   ) { }
 
@@ -52,7 +52,7 @@ export class CanteenCheckinController {
         timestamp: new Date().toISOString(),
       });
     } catch (e) {
-      console.error('[CanteenCheckinController] Logging failed:', e);
+      console.error('[MealCheckinController] Logging failed:', e);
     }
   }
 

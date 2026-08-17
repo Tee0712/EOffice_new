@@ -8,7 +8,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import HistoryIcon from '@mui/icons-material/History';
-import { canteenService } from '../../../services/canteenService';
+import { mealBookingService as canteenService } from '../../../services/mealBookingService';
 
 const SupplierManagement = () => {
   const [tab, setTab] = useState(0);

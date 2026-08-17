@@ -6,8 +6,8 @@ import {
   Index,
 } from 'typeorm';
 
-@Entity('canteen_user_settings')
-export class CanteenUserSettingEntity {
+@Entity('meal_user_settings')
+export class MealUserSettingEntity {
   @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 

@@ -34,7 +34,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import viLocale from "@fullcalendar/core/locales/vi";
 import moment from "moment";
-import { canteenService } from "../../../services/canteenService";
+import { mealBookingService as canteenService } from "../../../services/mealBookingService";
 import RegisterModal from "../MyRegistrations/components/RegisterModal";
 
 moment.locale("vi");

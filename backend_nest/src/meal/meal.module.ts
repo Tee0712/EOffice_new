@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 // ── Legacy & Base Entities ──
-import { CanteenController } from './canteen.controller';
-import { CanteenService } from './canteen.service';
+import { MealController } from './meal.controller';
+import { MealService } from './meal.service';
 import { DishEntity } from './entities/dish.entity';
 import { SupplierEntity } from './entities/supplier.entity';
 import { MenuEntity } from './entities/menu.entity';
@@ -25,12 +25,13 @@ import { MealEvaluationEntity } from './entities/meal-evaluation.entity';
 // ── SRS doc159 Entities ──
 import { MealSessionEntity } from './entities/meal-session.entity';
 import { DailyMenuEntity } from './entities/daily-menu.entity';
-import { CanteenRegistrationEntity } from './entities/canteen-registration.entity';
+import { MealBookingEntity } from './entities/meal-booking.entity';
 import { RegistrationItemEntity } from './entities/registration-item.entity';
 import { RegistrationHistoryEntity } from './entities/registration-history.entity';
 import { MealTemplateEntity } from './entities/meal-template.entity';
-import { CanteenSystemSettingEntity } from './entities/canteen-system-setting.entity';
-import { CanteenUserSettingEntity } from './entities/canteen-user-setting.entity';
+import { MealSystemSettingEntity } from './entities/meal-system-setting.entity';
+import { MealUserSettingEntity } from './entities/meal-user-setting.entity';
+import { MealReconciliationEntity } from './entities/meal-reconciliation.entity';
 
 // ── External Modules & Entities ──
 import { SystemLogSqlModule } from '../systemLogManagement/system-log.module';
@@ -40,12 +41,12 @@ import { GroupUserEntity } from '../group-users/entities/group-users.entity';
 import { ListRoleEntity } from '../list-role/entities/list-role.entity';
 
 // ── Services & Controllers ──
-import { CanteenRegistrationService } from './service/canteen-registration.service';
-import { CanteenAdminService } from './service/canteen-admin.service';
-import { CanteenRegistrationController } from './controller/canteen-registration.controller';
-import { CanteenAdminController } from './controller/canteen-admin.controller';
-import { CanteenCheckinController } from './controller/canteen-checkin.controller';
-import { CanteenCheckinService } from './service/canteen-checkin.service';
+import { MealBookingService } from './service/meal-booking.service';
+import { MealAdminService } from './service/meal-admin.service';
+import { MealBookingController } from './controller/meal-booking.controller';
+import { MealAdminController } from './controller/meal-admin.controller';
+import { MealCheckinController } from './controller/meal-checkin.controller';
+import { MealCheckinService } from './service/meal-checkin.service';
 
 @Module({
   imports: [
@@ -73,12 +74,13 @@ import { CanteenCheckinService } from './service/canteen-checkin.service';
         MealEvaluationEntity,
         MealSessionEntity,
         DailyMenuEntity,
-        CanteenRegistrationEntity,
+        MealBookingEntity,
         RegistrationItemEntity,
         RegistrationHistoryEntity,
         MealTemplateEntity,
-        CanteenSystemSettingEntity,
-        CanteenUserSettingEntity,
+        MealSystemSettingEntity,
+        MealUserSettingEntity,
+        MealReconciliationEntity,
         UserEntity,
         GroupUserEntity,
         ListRoleEntity,
@@ -87,22 +89,22 @@ import { CanteenCheckinService } from './service/canteen-checkin.service';
     ),
   ],
   controllers: [
-    CanteenController,
-    CanteenRegistrationController,
-    CanteenAdminController,
-    CanteenCheckinController,
+    MealController,
+    MealBookingController,
+    MealAdminController,
+    MealCheckinController,
   ],
   providers: [
-    CanteenService,
-    CanteenRegistrationService,
-    CanteenAdminService,
-    CanteenCheckinService,
+    MealService,
+    MealBookingService,
+    MealAdminService,
+    MealCheckinService,
   ],
   exports: [
-    CanteenService,
-    CanteenRegistrationService,
-    CanteenAdminService,
-    CanteenCheckinService,
+    MealService,
+    MealBookingService,
+    MealAdminService,
+    MealCheckinService,
   ],
 })
-export class CanteenModule {}
+export class MealModule {}

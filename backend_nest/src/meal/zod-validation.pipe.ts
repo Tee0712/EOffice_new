@@ -1,8 +1,9 @@
 import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
 import { ZodSchema } from 'zod';
 import * as fs from 'fs';
+import * as path from 'path';
 
-const LOG_FILE = 'c:\\Users\\TestLX\\Documents\\EOffice\\be_eoffice_ptsc\\canteen_debug.log';
+const LOG_FILE = path.join(process.cwd(), 'meal_debug.log');
 const logDetail = (msg: string) => {
   try {
     const timestamp = new Date().toISOString();

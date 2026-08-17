@@ -22,7 +22,7 @@ import SummaryCards from "../../components/Canteen/SummaryCards";
 import FilterBar from "../../components/Canteen/FilterBar";
 import RegistrationTable from "../../components/Canteen/RegistrationTable";
 import EditModal from "../../components/Canteen/EditModal";
-import { canteenService } from "../../services/canteenService";
+import { mealBookingService as canteenService } from "@services/mealBookingService";
 import { trackAction } from "../../utils/trackAction";
 import { filterParamsSchema } from "../../schemas/canteenSchemas";
 
@@ -271,7 +271,7 @@ const Management = () => {
             }}
             onClick={() => {
               trackAction("NAVIGATE_TO_CHECKIN");
-              navigate("/canteen/check-in");
+              navigate("/meals/check-in");
             }}
           >
             Check-in Suất ăn

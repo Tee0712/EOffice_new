@@ -10,9 +10,9 @@ import {
 import { RegistrationItemEntity } from './registration-item.entity';
 import { RegistrationHistoryEntity } from './registration-history.entity';
 
-@Entity('canteen_registrations')
+@Entity('meal_bookings')
 @Index(['userId', 'date'], { unique: true })
-export class CanteenRegistrationEntity {
+export class MealBookingEntity {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 

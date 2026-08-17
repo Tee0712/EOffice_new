@@ -29,7 +29,7 @@ import {
   CalendarToday
 } from '@mui/icons-material';
 import moment from 'moment';
-import { canteenService } from '@services/canteenService';
+import { mealBookingService as canteenService } from '@services/mealBookingService';
 
 const MealRegistrationHistory = () => {
   const [registrations, setRegistrations] = useState([]);
@@ -84,7 +84,7 @@ const MealRegistrationHistory = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <IconButton onClick={() => window.location.href = '/canteen/registration'}>
+        <IconButton onClick={() => window.location.href = '/meals/registration'}>
           <ArrowBack />
         </IconButton>
         <Box>

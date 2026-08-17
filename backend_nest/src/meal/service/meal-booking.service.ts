@@ -8,12 +8,12 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, IsNull } from 'typeorm';
 import { MealSessionEntity } from '../entities/meal-session.entity';
 import { DailyMenuEntity } from '../entities/daily-menu.entity';
-import { CanteenRegistrationEntity } from '../entities/canteen-registration.entity';
+import { MealBookingEntity } from '../entities/meal-booking.entity';
 import { RegistrationItemEntity } from '../entities/registration-item.entity';
 import { RegistrationHistoryEntity } from '../entities/registration-history.entity';
 import { MealTemplateEntity } from '../entities/meal-template.entity';
-import { CanteenSystemSettingEntity } from '../entities/canteen-system-setting.entity';
-import { CanteenUserSettingEntity } from '../entities/canteen-user-setting.entity';
+import { MealSystemSettingEntity } from '../entities/meal-system-setting.entity';
+import { MealUserSettingEntity } from '../entities/meal-user-setting.entity';
 import {
   RegisterMealDto,
   BulkRegisterDto,
@@ -22,29 +22,29 @@ import {
 } from '../dto';
 
 @Injectable()
-export class CanteenRegistrationService {
+export class MealBookingService {
   constructor(
     @InjectRepository(MealSessionEntity, 'mssqlConnection')
     private readonly sessionRepo: Repository<MealSessionEntity>,
     @InjectRepository(DailyMenuEntity, 'mssqlConnection')
     private readonly dailyMenuRepo: Repository<DailyMenuEntity>,
-    @InjectRepository(CanteenRegistrationEntity, 'mssqlConnection')
-    private readonly registrationRepo: Repository<CanteenRegistrationEntity>,
+    @InjectRepository(MealBookingEntity, 'mssqlConnection')
+    private readonly registrationRepo: Repository<MealBookingEntity>,
     @InjectRepository(RegistrationItemEntity, 'mssqlConnection')
     private readonly itemRepo: Repository<RegistrationItemEntity>,
     @InjectRepository(RegistrationHistoryEntity, 'mssqlConnection')
     private readonly historyRepo: Repository<RegistrationHistoryEntity>,
-    @InjectRepository(CanteenSystemSettingEntity, 'mssqlConnection')
-    private readonly systemSettingRepo: Repository<CanteenSystemSettingEntity>,
+    @InjectRepository(MealSystemSettingEntity, 'mssqlConnection')
+    private readonly systemSettingRepo: Repository<MealSystemSettingEntity>,
     @InjectDataSource('mssqlConnection')
     private readonly dataSource: DataSource,
   ) { }
 
   // ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ Helpers ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬
 
-  private async getSettings(): Promise<CanteenSystemSettingEntity> {
+  private async getSettings(): Promise<MealSystemSettingEntity> {
     const setting = await this.systemSettingRepo.findOne({ where: { id: 1 } });
-    if (!setting) throw new BadRequestException('Canteen system settings not configured');
+    if (!setting) throw new BadRequestException('Meal system settings not configured');
     return setting;
   }
 
@@ -225,7 +225,7 @@ export class CanteenRegistrationService {
     };
   }
 
-  private summarizeDaily(regs: CanteenRegistrationEntity[]) {
+  private summarizeDaily(regs: MealBookingEntity[]) {
     const result = { breakfast: 0, lunch: 0, dinner: 0, total: 0, cancelled: 0 };
     for (const reg of regs) {
       if (reg.status === 'cancelled') {
@@ -304,7 +304,7 @@ export class CanteenRegistrationService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const registration = await queryRunner.manager.save(CanteenRegistrationEntity, {
+      const registration = await queryRunner.manager.save(MealBookingEntity, {
         userId,
         date: (dto as any).date,
         status: 'upcoming',
@@ -419,7 +419,7 @@ export class CanteenRegistrationService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       try {
-        const registration = await queryRunner.manager.save(CanteenRegistrationEntity, {
+        const registration = await queryRunner.manager.save(MealBookingEntity, {
           userId,
           date: dateStr,
           status: 'upcoming',
@@ -495,7 +495,7 @@ export class CanteenRegistrationService {
       );
       await queryRunner.manager.save(RegistrationItemEntity, items);
 
-      await queryRunner.manager.update(CanteenRegistrationEntity, reg.id, {
+      await queryRunner.manager.update(MealBookingEntity, reg.id, {
         totalCost,
         note: dto.note ?? reg.note,
       });
@@ -521,12 +521,44 @@ export class CanteenRegistrationService {
 
   async cancelRegistration(userId: string, registrationId: number, dto: CancelRegistrationDto) {
     const settings = await this.getSettings();
-    const reg = await this.registrationRepo.findOne({ where: { id: registrationId, userId } });
+    const reg = await this.registrationRepo.findOne({
+      where: { id: registrationId, userId },
+      relations: ['items', 'items.mealSession'],
+    });
     if (!reg) throw new NotFoundException('Không tìm thấy đăng ký');
     if (reg.status === 'cancelled') throw new BadRequestException('Đăng ký đã bị hủy rồi');
 
     if (settings.requireCancelReason && !dto.reason) {
       throw new BadRequestException('Bắt buộc nhập lý do hủy');
+    }
+
+    // Validation: Hủy phải trước 4 tiếng so với giờ bắt đầu ca ăn sớm nhất
+    if (reg.items && reg.items.length > 0) {
+      const now = new Date();
+      let earliestSessionTime: Date | null = null;
+
+      for (const item of reg.items) {
+        if (item.mealSession?.timeStart) {
+          const sessionDate = new Date(reg.date);
+          const [h, m] = item.mealSession.timeStart.split(':').map(Number);
+          sessionDate.setHours(h, m, 0, 0);
+
+          if (!earliestSessionTime || sessionDate < earliestSessionTime) {
+            earliestSessionTime = sessionDate;
+          }
+        }
+      }
+
+      if (earliestSessionTime) {
+        const fourHoursBefore = new Date(earliestSessionTime.getTime() - 4 * 60 * 60 * 1000);
+
+        if (now > fourHoursBefore) {
+          const hoursRemaining = Math.max(0, (earliestSessionTime.getTime() - now.getTime()) / (1000 * 60 * 60));
+          throw new BadRequestException(
+            `Không thể hủy: Còn ${hoursRemaining.toFixed(1)} giờ đến giờ ăn. Phải hủy trước ít nhất 4 tiếng trước giờ bắt đầu ca ăn sớm nhất.`,
+          );
+        }
+      }
     }
 
     const now = new Date();
@@ -1155,7 +1187,7 @@ export class CanteenRegistrationService {
       .andWhere('r.date >= :startDate AND r.date <= :endDate', { startDate, endDate })
       .getMany();
 
-    const countMeals = (r: CanteenRegistrationEntity) =>
+    const countMeals = (r: MealBookingEntity) =>
       Array.isArray(r.items) && r.items.length > 0 ? r.items.length : 0;
 
     const registrationIds = regs

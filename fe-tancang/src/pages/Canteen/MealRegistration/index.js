@@ -39,7 +39,7 @@ import { PickersDay } from '@mui/x-date-pickers/PickersDay';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import moment from 'moment';
-import { canteenService } from '@services/canteenService';
+import { mealBookingService as canteenService } from '@services/mealBookingService';
 
 const MealRegistrationPage = () => {
   const [selectedDate, setSelectedDate] = useState(moment());
@@ -185,7 +185,7 @@ const MealRegistrationPage = () => {
         <Button 
           variant="outlined" 
           startIcon={<History />}
-          onClick={() => window.location.href = '/canteen/history'}
+          onClick={() => window.location.href = '/meals/history'}
         >
           Lịch sử đăng ký
         </Button>

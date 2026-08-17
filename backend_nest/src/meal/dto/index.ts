@@ -14,4 +14,4 @@ export {
   MealCheckinDto,
   UpdateCheckinStatusSchema,
   UpdateCheckinStatusDto,
-} from './canteen.dto';
+} from './meal.dto';

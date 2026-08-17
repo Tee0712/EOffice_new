@@ -16,7 +16,7 @@ export const ActualServingSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
-// From old canteen.dto.ts
+// From old meal.dto.ts
 export const MealCheckinSchema = z.object({
   user_id: z.string().min(1),
   menu_id: z.number().int().positive(),

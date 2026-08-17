@@ -41,7 +41,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import RateReviewIcon from "@mui/icons-material/RateReview";
 import moment from "moment";
-import { canteenService } from "../../../services/canteenService";
+import { mealBookingService as canteenService } from "@services/mealBookingService";
 import { SessionChips } from "../../../components/Canteen/SessionChip";
 import RegistrationDetailModal from "../../../components/Canteen/RegistrationDetailModal";
 import EditRegistrationModal from "../../../components/Canteen/EditRegistrationModal";
@@ -1289,7 +1289,7 @@ const MyRegistrationsPage = () => {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => navigate("/canteen/calendar")}
+                onClick={() => navigate("/meals/calendar")}
                 sx={{
                   borderRadius: 1.5,
                   textTransform: "none",

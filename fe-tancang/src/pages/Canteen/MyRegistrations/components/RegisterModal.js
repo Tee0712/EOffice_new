@@ -15,7 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import moment from "moment";
 import "moment/locale/vi";
-import { canteenService } from "../../../../services/canteenService";
+import { mealBookingService as canteenService } from "@services/mealBookingService";
 
 moment.locale("vi");
 

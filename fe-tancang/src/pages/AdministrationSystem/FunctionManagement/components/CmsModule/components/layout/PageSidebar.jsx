@@ -137,7 +137,8 @@ export function PageSidebar({ showPageMenu, headerConfig, activePage, setActiveP
           { label: "Lịch sự kiện", href: ROUTES.CALENDAR, isSystem: true },
           { label: "Video", href: ROUTES.VIDEO, isSystem: true },
           { label: "Album", href: ROUTES.ALBUM, isSystem: true },
-          { label: "Topic", href: ROUTES.TOPIC_PREFIX, isSystem: true }
+          { label: "Topic", href: ROUTES.TOPIC_PREFIX, isSystem: true },
+          { label: "Ăn ca & Suất ăn", href: "/meals", isSystem: true, icon: "🍽️" },
         ].map(p => (
           <div key={p.href} style={{
             display: 'flex',

@@ -18,7 +18,7 @@ export const ApplyTemplateSchema = z.object({
   week_start: z.string(),
 });
 
-// From old canteen.dto.ts
+// From old meal.dto.ts
 export const CreateMealTemplateSchema = z.object({
   name: z.string().min(1).max(200),
   meal_session_ids: z.array(z.number().int().positive()).min(1),

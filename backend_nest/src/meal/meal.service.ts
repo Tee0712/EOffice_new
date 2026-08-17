@@ -36,7 +36,7 @@ import * as ExcelJS from 'exceljs';
 
 
 
-const LOG_FILE = path.join(process.cwd(), 'canteen_debug.log');
+const LOG_FILE = path.join(process.cwd(), 'meal_debug.log');
 const log = (msg: string) => {
   try {
     const timestamp = new Date().toISOString();
@@ -47,7 +47,7 @@ const log = (msg: string) => {
 };
 
 @Injectable()
-export class CanteenService implements OnModuleInit {
+export class MealService implements OnModuleInit {
   private readonly mealSessionMap: Record<number, string> = {
     1: 'breakfast',
     2: 'lunch',
@@ -108,7 +108,7 @@ export class CanteenService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    log('[CanteenService] onModuleInit started');
+    log('[MealService] onModuleInit started');
     const safeQuery = async (query: string, description: string) => {
       try {
         await this.dataSource.query(query);
@@ -119,7 +119,7 @@ export class CanteenService implements OnModuleInit {
     };
 
     try {
-      log('[CanteenService] Starting robust database sync...');
+      log('[MealService] Starting robust database sync...');
 
       // 1. Ensure tables exist (CREATE IF NOT EXISTS)
       await safeQuery(`IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'system_settings') CREATE TABLE system_settings (id INT IDENTITY(1,1) PRIMARY KEY, [group] NVARCHAR(50), [key] NVARCHAR(100), [value] NVARCHAR(MAX), value_type NVARCHAR(50), label NVARCHAR(150), description NVARCHAR(255), is_public TINYINT DEFAULT 0, created_at DATETIME DEFAULT GETDATE(), updated_at DATETIME DEFAULT GETDATE());`, 'Create system_settings');
@@ -428,7 +428,7 @@ export class CanteenService implements OnModuleInit {
       );
 
       // 9. Seeding logic (Move to end)
-      log('[CanteenService] Checking seeds...');
+      log('[MealService] Checking seeds...');
 
       const dishCount = await this.dataSource.query('SELECT COUNT(*) as count FROM dishes');
       if (dishCount[0].count === 0) {
@@ -445,9 +445,9 @@ export class CanteenService implements OnModuleInit {
         await safeQuery(`INSERT INTO system_settings ([group], [key], value, value_type, label, description, is_public) VALUES ('meal_session', 'lunch_active', 'true', 'boolean', N'Bá»¯a trÆ°a', N'Bá»¯a trÆ°a cÃ³ hoáº¡t Ä‘á»™ng', 1);`, 'Seed setting');
       }
 
-      log('[CanteenService] Database sync completed.');
+      log('[MealService] Database sync completed.');
     } catch (error) {
-      log(`[CanteenService] onModuleInit FATAL error: ${error.stack}`);
+      log(`[MealService] onModuleInit FATAL error: ${error.stack}`);
     }
   }
 
@@ -1979,7 +1979,7 @@ export class CanteenService implements OnModuleInit {
     } catch (error) {
       log(`findWeeklyMenu error: ${error.message}`);
       log(error.stack);
-      console.error('[CanteenService] Error finding weekly menu:', error);
+      console.error('[MealService] Error finding weekly menu:', error);
       throw error;
     }
   }
@@ -2131,13 +2131,13 @@ export class CanteenService implements OnModuleInit {
   }
 
   async findDailyMenuV2(date: string) {
-    log(`[CanteenService] findDailyMenu called for date: ${date}`);
+    log(`[MealService] findDailyMenu called for date: ${date}`);
     const menus = await this.menuRepo.find({
       where: { menu_date: Between(date, date) as any },
       relations: ['items', 'items.dish', 'supplier'],
       order: { meal_slot: 'ASC' },
     });
-    log(`[CanteenService] findDailyMenu found ${menus.length} slots`);
+    log(`[MealService] findDailyMenu found ${menus.length} slots`);
 
     return {
       date,
@@ -2349,7 +2349,7 @@ export class CanteenService implements OnModuleInit {
         .getOne();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      log(`[CanteenService] getAbsenceRecordForDate fallback: ${message}`);
+      log(`[MealService] getAbsenceRecordForDate fallback: ${message}`);
       return null;
     }
   }
@@ -3217,7 +3217,7 @@ export class CanteenService implements OnModuleInit {
 
       const reminderTime = await this.getStringSettingValue('notification', 'reminder_time', '');
       if (this.isCurrentMinuteMatched(reminderTime, now)) {
-        await this.trySendCanteenAnnouncementOncePerDay({
+        await this.trySendMealAnnouncementOncePerDay({
           category: 'canteen_registration_reminder',
           title: 'Nháº¯c nhá»Ÿ Ä‘Äƒng kÃ½ suáº¥t Äƒn',
           content:
@@ -3230,7 +3230,7 @@ export class CanteenService implements OnModuleInit {
       const menuNotifyTime = await this.getStringSettingValue('notification', 'daily_menu_notify_time', '');
       if (this.isCurrentMinuteMatched(menuNotifyTime, now)) {
         const displayDate = now.format('DD/MM/YYYY');
-        await this.trySendCanteenAnnouncementOncePerDay({
+        await this.trySendMealAnnouncementOncePerDay({
           category: 'canteen_daily_menu_notice',
           title: `ThÃ´ng bÃ¡o thá»±c Ä‘Æ¡n ngÃ y ${displayDate}`,
           content:
@@ -3240,11 +3240,11 @@ export class CanteenService implements OnModuleInit {
         });
       }
     } catch (error) {
-      log(`[CanteenService] dispatchInternalInboxNotifications error: ${(error as any)?.message || error}`);
+      log(`[MealService] dispatchInternalInboxNotifications error: ${(error as any)?.message || error}`);
     }
   }
 
-  private async trySendCanteenAnnouncementOncePerDay(params: {
+  private async trySendMealAnnouncementOncePerDay(params: {
     category: string;
     title: string;
     content: string;
@@ -3803,7 +3803,7 @@ export class CanteenService implements OnModuleInit {
     }
   }
   async getWeeklyMenuV2(startDate: string) {
-    log(`[CanteenService] getWeeklyMenuV2 called for startDate: ${startDate}`);
+    log(`[MealService] getWeeklyMenuV2 called for startDate: ${startDate}`);
     try {
       const start = moment(startDate).startOf('day');
       const end = moment(start).add(6, 'days').endOf('day');
@@ -3843,13 +3843,13 @@ export class CanteenService implements OnModuleInit {
         daysMenu,
       };
     } catch (error) {
-      log(`[CanteenService] ERROR in getWeeklyMenuV2: ${error.message}`);
+      log(`[MealService] ERROR in getWeeklyMenuV2: ${error.message}`);
       throw error;
     }
   }
 
   async getDailyMenuDetail(date: string) {
-    log(`[CanteenService] getDailyMenuDetail called for date: ${date}`);
+    log(`[MealService] getDailyMenuDetail called for date: ${date}`);
     try {
       const menus = await this.menuRepo.find({
         where: {
@@ -3857,7 +3857,7 @@ export class CanteenService implements OnModuleInit {
         },
         relations: ['items', 'items.dish', 'items.supplier', 'items.dish.supplier'],
       });
-      log(`[CanteenService] Found ${menus.length} menus for date ${date}`);
+      log(`[MealService] Found ${menus.length} menus for date ${date}`);
 
       const menuObj = {
         breakfast: [],
@@ -3871,7 +3871,7 @@ export class CanteenService implements OnModuleInit {
         const slot = menu.meal_slot; // 'breakfast', 'lunch', 'dinner'
         if (menu.note) dayNote = menu.note;
 
-        log(`[CanteenService] Processing menu ID ${menu.id}, slot: ${slot}`);
+        log(`[MealService] Processing menu ID ${menu.id}, slot: ${slot}`);
 
         if (menuObj[slot]) {
           // Fetch actual servings for this menu
@@ -3931,7 +3931,7 @@ export class CanteenService implements OnModuleInit {
         menu: menuObj,
       };
     } catch (e) {
-      log(`[CanteenService] ERROR in getDailyMenuDetail: ${e.message}\nStack: ${e.stack}`);
+      log(`[MealService] ERROR in getDailyMenuDetail: ${e.message}\nStack: ${e.stack}`);
       throw e;
     }
   }
@@ -3939,7 +3939,7 @@ export class CanteenService implements OnModuleInit {
 
   async saveDailyMenuSetup(dto: DailyMenuSetupSaveDto, userId: string) {
     this.validateMenuNotLocked(dto.date);
-    log(`[CanteenService] saveDailyMenuSetup called by user ${userId} for date ${dto.date}`);
+    log(`[MealService] saveDailyMenuSetup called by user ${userId} for date ${dto.date}`);
     try {
       const { date, note, meals } = dto;
 
@@ -4029,14 +4029,14 @@ export class CanteenService implements OnModuleInit {
 
       return { success: true };
     } catch (error) {
-      log(`[CanteenService] ERROR in saveDailyMenuSetup: ${error.message}`);
+      log(`[MealService] ERROR in saveDailyMenuSetup: ${error.message}`);
       throw error;
     }
   }
 
   async saveWeeklyMenuV2(dto: WeeklyMenuSaveDto, userId: string) {
     this.validateMenuNotLocked(dto.startDate);
-    log(`[CanteenService] saveWeeklyMenuV2 called by user ${userId} for startDate ${dto.startDate}`);
+    log(`[MealService] saveWeeklyMenuV2 called by user ${userId} for startDate ${dto.startDate}`);
     try {
       const { startDate, days } = dto;
 
@@ -4093,7 +4093,7 @@ export class CanteenService implements OnModuleInit {
 
       return { success: true };
     } catch (error) {
-      log(`[CanteenService] ERROR in saveWeeklyMenuV2: ${error.message}`);
+      log(`[MealService] ERROR in saveWeeklyMenuV2: ${error.message}`);
       throw error;
     }
   }

@@ -31,7 +31,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/vi';
 import MealSlotDetail from '../../../components/Canteen/Menu/MealSlotDetail';
 import apiClient from '../../../services/api-client';
-import { canteenService } from '../../../services/canteenService';
+import { mealBookingService as canteenService } from '../../../services/mealBookingService';
 
 dayjs.locale('vi');
 

@@ -23,7 +23,7 @@ const ALLOWED_ROLE_KEYWORDS = [
   'company',
   'admin',
   'bep',
-  'canteen',
+  'meal',
 ];
 
 const DENIED_ROLE_KEYWORDS = ['nhanvien', 'employee', 'staff'];
@@ -36,7 +36,7 @@ const normalizeToken = (value: unknown): string =>
     .replace(/[^a-z0-9]/g, '');
 
 @Injectable()
-export class CanteenEvaluationAccessGuard implements CanActivate {
+export class MealEvaluationAccessGuard implements CanActivate {
   constructor(
     @InjectRepository(UserEntity, 'mssqlConnection')
     private readonly userRepo: Repository<UserEntity>,

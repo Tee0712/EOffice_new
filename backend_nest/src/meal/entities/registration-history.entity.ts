@@ -7,7 +7,7 @@ import {
   Index,
   CreateDateColumn,
 } from 'typeorm';
-import { CanteenRegistrationEntity } from './canteen-registration.entity';
+import { MealBookingEntity } from './meal-booking.entity';
 
 @Entity('registration_history')
 export class RegistrationHistoryEntity {
@@ -30,7 +30,7 @@ export class RegistrationHistoryEntity {
   @CreateDateColumn({ name: 'changed_at' })
   changedAt: Date;
 
-  @ManyToOne(() => CanteenRegistrationEntity, (r) => r.history)
+  @ManyToOne(() => MealBookingEntity, (r) => r.history)
   @JoinColumn({ name: 'registration_id' })
-  registration: CanteenRegistrationEntity;
+  registration: MealBookingEntity;
 }

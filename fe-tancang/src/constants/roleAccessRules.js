@@ -12,6 +12,8 @@ export const ROLE_ACCESS_RULES = {
     allowKeywords: [
       "super_admin",
       "admin",
+      "meal_admin",
+      "meal_manager",
       "canteen_admin",
       "canteen_manager",
       "quan_ly_an_ca",
