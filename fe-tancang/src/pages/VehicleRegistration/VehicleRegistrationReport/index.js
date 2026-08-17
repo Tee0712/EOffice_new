@@ -21,8 +21,13 @@ const VehicleRegistrationReport = () => {
     const { dataViewConfig } = useSelector((state) => state.viewConfig)
     logger.log('dataViewConfig', dataViewConfig)
 
-    const { dataUser: authUser } = useSelector((state) => state.auth || {});
-    const userData = authUser || {};
+    const userData = useMemo(() => {
+        try {
+            return JSON.parse(localStorage.getItem("userData"));
+        } catch (e) {
+            return null;
+        }
+    }, []);
 
     const user = useMemo(() => userData?.user || {}, [userData]);
     const groupCodes = useMemo(() => user?.groupCodes || [], [user]);
@@ -117,8 +122,7 @@ const VehicleRegistrationReport = () => {
                     viewConfigCode: processFn,
                     exportType: exportType,
                 },
-                responseType: 'blob',
-                timeout: 60000,
+                responseType: 'blob'
             })
 
             return response.data;
@@ -138,7 +142,6 @@ const VehicleRegistrationReport = () => {
     return (
         <PageContainer>
             <CustomTableReports
-                codeModule={selectedTable}
                 columns={column}
                 fetchData={fetchDataTable}
                 filter={activeFilterConfig}

@@ -9,6 +9,9 @@ import { SystemLogSqlModule } from "src/systemLogManagement/system-log.module";
 import { OutgoingDocumentsModule } from "src/outgoing-documents/outgoing-documents.module";
 import { CallbackAuthGuard } from "./guards/callback-auth.guard";
 
+import { UsbTokenSignService } from "./usb-token/usb-token-sign.service";
+import { UsbTokenSignController } from "./usb-token/usb-token-sign.controller";
+
 @Module({
   imports: [
     forwardRef(() => DatabaseModule),
@@ -18,9 +21,9 @@ import { CallbackAuthGuard } from "./guards/callback-auth.guard";
     forwardRef(() => WorkItemsModule),
     forwardRef(() => OutgoingDocumentsModule),
   ],
-  controllers: [IntergrationSignatureController],
-  providers: [IntegrationSignatureService, CallbackAuthGuard],
-  exports: [IntegrationSignatureService],
+  controllers: [IntergrationSignatureController, UsbTokenSignController],
+  providers: [IntegrationSignatureService, UsbTokenSignService, CallbackAuthGuard],
+  exports: [IntegrationSignatureService, UsbTokenSignService],
 })
 
 export class IntergrationSignatureModule { } 

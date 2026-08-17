@@ -30,6 +30,8 @@ import { GroupUsersModule } from 'src/group-users/group-users.module';
 import { NotificationModule } from 'src/notifycation/notification.module';
 import { TaskModule } from 'src/task/task.module';
 import { OutgoingDocumentsModule } from 'src/outgoing-documents/outgoing-documents.module';
+import { FaxGatewayController } from './fax-gateway.controller';
+
 @Module({
   imports: [
     CacheModule.register({
@@ -54,7 +56,7 @@ import { OutgoingDocumentsModule } from 'src/outgoing-documents/outgoing-documen
     forwardRef(() => OutgoingDocumentsModule),
     TypeOrmModule.forFeature([BpmnDesignEntity, FeatureManagementEntity, OrganizationUnitEntity, UserEntity, RoleFeatureEntity, AgencyEntity, Audit], 'mssqlConnection'), // ← để tạo token mssqlConnection_BpmnDesignRepository
   ],
-  controllers: [IncomingController],
+  controllers: [IncomingController, FaxGatewayController],
   providers: [MSSQLRepository, IncomingService, IncomingDocumentReminderService],
   exports: [IncomingService],
 })

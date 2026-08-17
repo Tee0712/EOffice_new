@@ -99,6 +99,15 @@ export class FilesManagementController {
     private readonly bpmnEngine: BpmnEngineService,
   ) { }
 
+  @Post('inspect-quality')
+  @UseInterceptors(FileInterceptor('file'))
+  async inspectQuality(@UploadedFile() file: Express.Multer.File) {
+    if (!file || !file.buffer) {
+      throw new BadRequestException('Vui lòng chọn file PDF để kiểm tra chất lượng.');
+    }
+    return this.fileService.inspectDocumentQuality(file.buffer);
+  }
+
   private upsertNgayVanBanReplacement(replacements: any[], align?: string, required?: boolean): void {
     const target: any = { keyWord: '[NgayVanBan]', type: 'CURRENT_DATE', required: required || false, isOverride: true };
 

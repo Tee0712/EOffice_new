@@ -14,13 +14,11 @@ import {
   // StyledDirectionsCarIcon,
   // StyledEventSeatIcon,
   // StyledPhoneIcon,
-  // VehicleSectionTitle as JobSectionTitle,
+  VehicleSectionTitle as JobSectionTitle,
   SelectionTable,
   TableWrapper,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
-import { 
-  StyledHeaderContent,
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
+
 /**
  * Dialog xác nhận điều phối yêu cầu đăng ký xe.
  *
@@ -47,7 +45,6 @@ const ConfirmCoordinateRequestsDialog = ({
   actionCode = "",
   workItem = {},
   vehicleRegistrationId,
-  documentId,
   requestTypeOptions = [],
   priorityOptions = [],
 }) => {
@@ -72,12 +69,11 @@ const ConfirmCoordinateRequestsDialog = ({
   }, []);
 
   // Tổng số ghế từ danh sách xe đã chọn
-  const totalSeats = selectedCars.reduce((sum, c) => sum + (Number(c.seatCount) || 0), 0);
+  const totalSeats = selectedCars.reduce((sum, c) => sum + (Number(c.seat_count) || 0), 0);
 
   // --- API call ---
   const handleConfirm = useCallback(async () => {
-    const requestId = vehicleRegistrationId || documentId;
-    if (!requestId) {
+    if (!vehicleRegistrationId) {
       toast("Thiếu ID yêu cầu!", "error");
       return;
     }
@@ -96,7 +92,7 @@ const ConfirmCoordinateRequestsDialog = ({
       };
 
       await api.patch(
-        `${API_VEHICLE_REQUEST}/${requestId}/coordination-information`,
+        `${API_VEHICLE_REQUEST}/${vehicleRegistrationId}/coordination-information`,
         payload
       );
 
@@ -114,7 +110,7 @@ const ConfirmCoordinateRequestsDialog = ({
       setIsSubmitting(false);
     }
   }, [
-    vehicleRegistrationId, documentId, selectedCars, selectedDriverMap,
+    vehicleRegistrationId, selectedCars, selectedDriverMap,
     actionCode, workItem, noteDetail, toast, onClose, onSuccess
   ]);
 
@@ -170,9 +166,9 @@ const ConfirmCoordinateRequestsDialog = ({
 
         {/* ── Kết quả điều phối ── */}
         <CoordinatedSummaryMini>
-          <StyledHeaderContent variant="h6" mb={0}>
+          <JobSectionTitle variant="h6" mb={0}>
             KẾT QUẢ ĐIỀU PHỐI
-          </StyledHeaderContent>
+          </JobSectionTitle>
           <SummaryVehicleStats>
             <StatItem>
               <svg width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">

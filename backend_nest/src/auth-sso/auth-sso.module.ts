@@ -17,6 +17,8 @@ import { AuthorityDocumentEntity } from "src/authority-documents";
 
 import { NotificationConfigModule } from "src/notifycation/notification-config/notification-config.module";
 
+import { SessionLockService } from "../auth/session-lock.service";
+
 @Module({
   imports: [
     AuthConfigModule,
@@ -28,7 +30,7 @@ import { NotificationConfigModule } from "src/notifycation/notification-config/n
   ],
 
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtStrategy, JwtModule, PassportModule, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, SessionLockService],
+  exports: [AuthService, JwtStrategy, JwtModule, PassportModule, JwtAuthGuard, SessionLockService],
 })
 export class AuthModule { }

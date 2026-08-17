@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCSG Digital Office — Ma trận Phân quyền</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff4ff;
+  --accent-muted: #93b4f6;
+  --bg: #f0f4f9;
+  --bg-alt: #eef2f8;
+  --card: #ffffff;
+  --border: #d8e3f0;
+  --border-light: #e8eef6;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #d97706;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --purple: #7c3aed;
+  --purple-bg: #f5f3ff;
+  --purple-border: #ddd6fe;
+  --teal: #0d9488;
+  --teal-bg: #f0fdfa;
+  --pink: #be185d;
+  --pink-bg: #fdf2f8;
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 16px rgba(15,23,42,.06);
+  --shadow-lg: 0 8px 32px rgba(15,23,42,.08);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --font: 'Be Vietnam Pro', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: var(--font); background: var(--bg); color: var(--text-primary); line-height: 1.6; min-height: 100vh; }
+
+/* ─── Topbar ─── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 56px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: var(--accent); white-space: nowrap; }
+.topbar-logo .logo-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), #6366f1); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 13px; }
+.topbar-divider { width: 1px; height: 24px; background: var(--border); }
+.breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+.breadcrumb a { color: var(--text-secondary); text-decoration: none; }
+.breadcrumb a:hover { color: var(--accent); }
+.breadcrumb .sep { font-size: 11px; }
+.breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.topbar-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); transition: all .15s; }
+.topbar-btn:hover { background: var(--bg); color: var(--accent); border-color: var(--accent-muted); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #6366f1); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; }
+
+/* ─── Main ─── */
+.main { max-width: 1400px; margin: 0 auto; padding: 28px 32px 48px; }
+
+/* ─── Page Header ─── */
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.page-subtitle { font-size: 13.5px; color: var(--text-secondary); }
+.header-actions { display: flex; gap: 8px; }
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-size: 13.5px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; font-family: var(--font); box-shadow: 0 1px 3px rgba(37,99,235,.3); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 3px 8px rgba(37,99,235,.25); }
+.btn-primary svg { width: 16px; height: 16px; }
+.btn-secondary { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--card); font-size: 13.5px; font-weight: 500; color: var(--text-secondary); cursor: pointer; font-family: var(--font); transition: all .15s; }
+.btn-secondary:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.btn-secondary svg { width: 16px; height: 16px; }
+
+/* ─── Department Tabs ─── */
+.dept-tabs {
+  display: flex; gap: 6px; margin-bottom: 20px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 5px;
+  box-shadow: var(--shadow-sm); overflow-x: auto;
+}
+.dept-tab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  border: none; background: transparent;
+  font-size: 13px; font-weight: 500; color: var(--text-muted);
+  cursor: pointer; white-space: nowrap; transition: all .15s;
+  font-family: var(--font);
+}
+.dept-tab:hover { color: var(--text-secondary); background: var(--bg-alt); }
+.dept-tab.active { color: var(--accent); background: var(--accent-light); font-weight: 600; }
+.dept-tab .tab-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dept-tab .tab-count { font-size: 11px; font-family: var(--mono); background: var(--bg-alt); padding: 1px 6px; border-radius: 10px; }
+.dept-tab.active .tab-count { background: rgba(37,99,235,.15); color: var(--accent); }
+
+/* ─── Legend ─── */
+.legend-bar {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+  padding: 10px 16px; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12.5px; color: var(--text-muted);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-icon { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+.legend-icon.granted { background: var(--success-bg); border: 1px solid var(--success-border); }
+.legend-icon.granted svg { color: var(--success); width: 13px; height: 13px; }
+.legend-icon.denied { background: var(--bg-alt); border: 1px solid var(--border); }
+.legend-icon.denied svg { color: var(--text-muted); width: 11px; height: 11px; }
+
+.legend-sep { width: 1px; height: 16px; background: var(--border); }
+
+/* ─── Matrix Table ─── */
+.matrix-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.matrix-wrapper { overflow-x: auto; }
+.matrix-table { width: 100%; border-collapse: collapse; min-width: 920px; }
+
+.matrix-table thead th {
+  padding: 0; text-align: center; background: var(--bg-alt);
+  border-bottom: 1px solid var(--border); font-size: 12px;
+  font-weight: 600; color: var(--text-secondary);
+  position: relative;
+}
+.matrix-table thead th:first-child {
+  text-align: left; width: 220px; min-width: 220px;
+  position: sticky; left: 0; z-index: 3; background: var(--bg-alt);
+}
+.col-header {
+  padding: 14px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.col-header .col-icon {
+  width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+}
+.col-header .col-icon svg { width: 15px; height: 15px; }
+.col-header .col-icon.blue { background: var(--accent-light); color: var(--accent); }
+.col-header .col-icon.teal { background: var(--teal-bg); color: var(--teal); }
+.col-header .col-icon.purple { background: var(--purple-bg); color: var(--purple); }
+.col-header .col-icon.green { background: var(--success-bg); color: var(--success); }
+.col-header .col-icon.red { background: var(--danger-bg); color: var(--danger); }
+.col-header .col-icon.amber { background: var(--warning-bg); color: var(--warning); }
+.col-header .col-icon.pink { background: var(--pink-bg); color: var(--pink); }
+.col-header .col-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); line-height: 1.3; }
+
+/* Group header row */
+.matrix-table .group-row td {
+  background: var(--bg-alt); padding: 8px 16px;
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.matrix-table .group-row td:first-child { position: sticky; left: 0; z-index: 2; background: var(--bg-alt); }
+
+/* Role rows */
+.matrix-table tbody td {
+  padding: 0; text-align: center; border-bottom: 1px solid var(--border-light);
+  vertical-align: middle; height: 56px;
+}
+.matrix-table tbody td:first-child {
+  text-align: left; padding: 0 16px;
+  position: sticky; left: 0; z-index: 2; background: var(--card);
+}
+.matrix-table tbody tr:hover td { background: #f8fafd; }
+.matrix-table tbody tr:hover td:first-child { background: #f8fafd; }
+
+.role-cell { display: flex; align-items: center; gap: 10px; }
+.role-badge {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px; color: #fff; flex-shrink: 0;
+  letter-spacing: -.3px;
+}
+.role-badge.admin { background: linear-gradient(135deg, #dc2626, #f87171); }
+.role-badge.approver { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.role-badge.editor { background: linear-gradient(135deg, #2563eb, #6366f1); }
+.role-badge.author { background: linear-gradient(135deg, #0d9488, #06b6d4); }
+.role-badge.viewer { background: linear-gradient(135deg, #64748b, #94a3b8); }
+.role-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.role-desc { font-size: 11.5px; color: var(--text-muted); }
+.role-member-count { font-size: 11px; color: var(--text-muted); font-family: var(--mono); margin-left: auto; padding-right: 4px; }
+
+/* Permission Toggles */
+.perm-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px; border: none;
+  cursor: pointer; transition: all .18s; position: relative;
+}
+.perm-toggle.granted {
+  background: var(--success-bg); border: 1.5px solid var(--success-border);
+  color: var(--success);
+}
+.perm-toggle.granted:hover { background: #dcfce7; border-color: #86efac; transform: scale(1.08); }
+.perm-toggle.denied {
+  background: var(--bg-alt); border: 1.5px solid var(--border);
+  color: var(--text-muted);
+}
+.perm-toggle.denied:hover { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); transform: scale(1.08); }
+
+.perm-toggle svg { width: 16px; height: 16px; }
+.perm-toggle .lock-indicator {
+  position: absolute; top: -3px; right: -3px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--warning); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px;
+}
+.perm-toggle .lock-indicator svg { width: 8px; height: 8px; }
+
+/* ─── Matrix Footer ─── */
+.matrix-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px; border-top: 1px solid var(--border-light);
+  font-size: 12.5px; color: var(--text-muted);
+}
+.change-count { display: flex; align-items: center; gap: 6px; }
+.change-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warning); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+.footer-actions { display: flex; gap: 8px; }
+.btn-sm { padding: 6px 14px; font-size: 12.5px; border-radius: var(--radius-sm); font-family: var(--font); cursor: pointer; transition: all .15s; }
+.btn-sm.outline { border: 1px solid var(--border); background: var(--card); color: var(--text-secondary); font-weight: 500; }
+.btn-sm.outline:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.btn-sm.primary { border: none; background: var(--accent); color: #fff; font-weight: 600; box-shadow: 0 1px 3px rgba(37,99,235,.3); }
+.btn-sm.primary:hover { background: var(--accent-hover); }
+
+/* ─── Role Detail Panel ─── */
+.detail-section {
+  margin-top: 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.detail-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.detail-card-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; gap: 10px;
+}
+.detail-card-header h3 { font-size: 14px; font-weight: 700; }
+.detail-card-header .card-badge {
+  margin-left: auto; font-size: 11px; font-family: var(--mono);
+  padding: 2px 8px; border-radius: 10px; background: var(--bg-alt);
+  color: var(--text-muted); font-weight: 500;
+}
+.detail-card-body { padding: 16px 20px; }
+
+/* Roles summary list */
+.role-summary-list { display: flex; flex-direction: column; gap: 10px; }
+.role-summary-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light); transition: all .15s;
+}
+.role-summary-item:hover { border-color: var(--accent-muted); background: #fafbfe; }
+.role-summary-avatar {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 11px; color: #fff; flex-shrink: 0;
+}
+.role-summary-info { flex: 1; min-width: 0; }
+.role-summary-name { font-size: 13px; font-weight: 600; }
+.role-summary-perms { font-size: 11.5px; color: var(--text-muted); }
+.role-summary-count {
+  font-size: 12px; font-family: var(--mono); font-weight: 600;
+  color: var(--text-secondary); background: var(--bg-alt);
+  padding: 2px 8px; border-radius: 10px;
+}
+
+/* Activity log */
+.activity-list { display: flex; flex-direction: column; gap: 0; }
+.activity-item {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12.5px;
+}
+.activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+.activity-time { font-family: var(--mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; min-width: 72px; padding-top: 1px; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-dot.add { background: var(--success); }
+.activity-dot.remove { background: var(--danger); }
+.activity-dot.change { background: var(--warning); }
+.activity-dot.create { background: var(--accent); }
+.activity-content { flex: 1; color: var(--text-secondary); line-height: 1.5; }
+.activity-content strong { color: var(--text-primary); font-weight: 600; }
+
+/* ─── Tooltip ─── */
+.tooltip-wrapper { position: relative; display: inline-flex; }
+.tooltip-wrapper .tooltip {
+  display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  background: var(--text-primary); color: #fff; padding: 6px 10px;
+  border-radius: 6px; font-size: 11.5px; white-space: nowrap; z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.tooltip-wrapper .tooltip::after {
+  content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--text-primary);
+}
+.tooltip-wrapper:hover .tooltip { display: block; }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .detail-section { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-icon">TC</div>
+    Digital Office
+  </div>
+  <div class="topbar-divider"></div>
+  <nav class="breadcrumb">
+    <a href="#">Quản lý Bản tin</a>
+    <span class="sep">›</span>
+    <a href="#">Phân quyền</a>
+    <span class="sep">›</span>
+    <span class="current">Ma trận phân quyền</span>
+  </nav>
+  <div class="topbar-right">
+    <button class="topbar-btn" title="Thông báo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+    <div class="avatar">HN</div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Ma trận Phân quyền</h1>
+      <p class="page-subtitle">Cấu hình quyền hạn chi tiết cho từng vai trò theo phòng ban</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Tạo vai trò mới
+      </button>
+      <button class="btn-primary" id="btnSave" style="display:none" onclick="saveChanges()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Lưu thay đổi
+      </button>
+    </div>
+  </div>
+
+  <!-- Department Tabs -->
+  <div class="dept-tabs">
+    <button class="dept-tab active" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#2563eb,#6366f1)"></span>
+      Ban Biên tập
+      <span class="tab-count">12</span>
+    </button>
+    <button class="dept-tab" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#0d9488,#06b6d4)"></span>
+      Team Truyền thông CĐS
+      <span class="tab-count">8</span>
+    </button>
+    <button class="dept-tab" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)"></span>
+      Phòng HC-NS
+      <span class="tab-count">5</span>
+    </button>
+    <button class="dept-tab" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#d97706,#f59e0b)"></span>
+      Phòng Kỹ thuật
+      <span class="tab-count">4</span>
+    </button>
+    <button class="dept-tab" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#dc2626,#f87171)"></span>
+      Phòng AT-MT
+      <span class="tab-count">3</span>
+    </button>
+    <button class="dept-tab" onclick="switchDept(this)">
+      <span class="tab-dot" style="background:linear-gradient(135deg,#059669,#34d399)"></span>
+      Đoàn Thanh niên
+      <span class="tab-count">2</span>
+    </button>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-bar">
+    <span style="font-weight:600;color:var(--text-secondary)">Chú thích:</span>
+    <div class="legend-item">
+      <div class="legend-icon granted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
+      Được cấp quyền
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon denied"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+      Không có quyền
+    </div>
+    <div class="legend-sep"></div>
+    <div class="legend-item" style="color:var(--text-secondary)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--text-muted)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Click vào ô để thay đổi quyền
+    </div>
+  </div>
+
+  <!-- Matrix Table -->
+  <div class="matrix-card">
+    <div class="matrix-wrapper">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>
+              <div style="padding:14px 16px;text-align:left;font-size:12px">VAI TRÒ / QUYỀN →</div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+                <span class="col-label">Tạo<br>bản tin</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                <span class="col-label">Chỉnh<br>sửa</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div>
+                <span class="col-label">Phê<br>duyệt</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></div>
+                <span class="col-label">Đăng<br>tải</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg></div>
+                <span class="col-label">Gỡ<br>bài</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
+                <span class="col-label">Xem<br>thống kê</span>
+              </div>
+            </th>
+            <th>
+              <div class="col-header">
+                <div class="col-icon pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+                <span class="col-label">Quản lý<br>thành viên</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Group: Quản trị -->
+          <tr class="group-row">
+            <td colspan="8">Nhóm quản trị</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-cell">
+                <div class="role-badge admin">QT</div>
+                <div>
+                  <div class="role-name">Quản trị viên</div>
+                  <div class="role-desc">Toàn quyền quản lý</div>
+                </div>
+                <span class="role-member-count">2</span>
+              </div>
+            </td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+            <td><div class="tooltip-wrapper"><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg><span class="lock-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></button><span class="tooltip">Quyền cố định — Quản trị viên</span></div></td>
+          </tr>
+
+          <!-- Group: Biên tập & Phê duyệt -->
+          <tr class="group-row">
+            <td colspan="8">Biên tập & Phê duyệt</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-cell">
+                <div class="role-badge approver">PD</div>
+                <div>
+                  <div class="role-name">Phê duyệt viên</div>
+                  <div class="role-desc">Duyệt & kiểm soát nội dung</div>
+                </div>
+                <span class="role-member-count">3</span>
+              </div>
+            </td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-cell">
+                <div class="role-badge editor">BT</div>
+                <div>
+                  <div class="role-name">Biên tập viên</div>
+                  <div class="role-desc">Soạn & chỉnh sửa bản tin</div>
+                </div>
+                <span class="role-member-count">4</span>
+              </div>
+            </td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+          </tr>
+
+          <!-- Group: Nội dung -->
+          <tr class="group-row">
+            <td colspan="8">Nội dung</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-cell">
+                <div class="role-badge author">TV</div>
+                <div>
+                  <div class="role-name">Tác viên</div>
+                  <div class="role-desc">Soạn bản tin mới</div>
+                </div>
+                <span class="role-member-count">2</span>
+              </div>
+            </td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle granted" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+          </tr>
+
+          <!-- Group: Xem -->
+          <tr class="group-row">
+            <td colspan="8">Chỉ xem</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-cell">
+                <div class="role-badge viewer">NX</div>
+                <div>
+                  <div class="role-name">Người xem</div>
+                  <div class="role-desc">Chỉ đọc bản tin</div>
+                </div>
+                <span class="role-member-count">1</span>
+              </div>
+            </td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+            <td><button class="perm-toggle denied" onclick="togglePerm(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="matrix-footer" id="matrixFooter">
+      <div class="change-count" id="changeIndicator" style="visibility:hidden">
+        <span class="change-dot"></span>
+        <span><strong id="changeNum">0</strong> thay đổi chưa lưu</span>
+      </div>
+      <div class="footer-actions" id="footerActions" style="visibility:hidden">
+        <button class="btn-sm outline" onclick="resetChanges()">Hoàn tác</button>
+        <button class="btn-sm primary" onclick="saveChanges()">Lưu thay đổi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Section -->
+  <div class="detail-section">
+    <!-- Roles Summary -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--accent)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <h3>Tổng hợp vai trò — Ban Biên tập</h3>
+        <span class="card-badge">5 vai trò</span>
+      </div>
+      <div class="detail-card-body">
+        <div class="role-summary-list">
+          <div class="role-summary-item">
+            <div class="role-summary-avatar" style="background:linear-gradient(135deg,#dc2626,#f87171)">QT</div>
+            <div class="role-summary-info">
+              <div class="role-summary-name">Quản trị viên</div>
+              <div class="role-summary-perms">Toàn quyền (7/7 quyền) — Không thể thu hồi</div>
+            </div>
+            <span class="role-summary-count">2</span>
+          </div>
+          <div class="role-summary-item">
+            <div class="role-summary-avatar" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)">PD</div>
+            <div class="role-summary-info">
+              <div class="role-summary-name">Phê duyệt viên</div>
+              <div class="role-summary-perms">6/7 quyền — Trừ Quản lý thành viên</div>
+            </div>
+            <span class="role-summary-count">3</span>
+          </div>
+          <div class="role-summary-item">
+            <div class="role-summary-avatar" style="background:linear-gradient(135deg,#2563eb,#6366f1)">BT</div>
+            <div class="role-summary-info">
+              <div class="role-summary-name">Biên tập viên</div>
+              <div class="role-summary-perms">3/7 quyền — Tạo, Sửa, Thống kê</div>
+            </div>
+            <span class="role-summary-count">4</span>
+          </div>
+          <div class="role-summary-item">
+            <div class="role-summary-avatar" style="background:linear-gradient(135deg,#0d9488,#06b6d4)">TV</div>
+            <div class="role-summary-info">
+              <div class="role-summary-name">Tác viên</div>
+              <div class="role-summary-perms">2/7 quyền — Tạo, Sửa bài của mình</div>
+            </div>
+            <span class="role-summary-count">2</span>
+          </div>
+          <div class="role-summary-item">
+            <div class="role-summary-avatar" style="background:linear-gradient(135deg,#64748b,#94a3b8)">NX</div>
+            <div class="role-summary-info">
+              <div class="role-summary-name">Người xem</div>
+              <div class="role-summary-perms">0/7 quyền — Chỉ đọc bản tin đã đăng</div>
+            </div>
+            <span class="role-summary-count">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div class="detail-card">
+      <div class="detail-card-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--warning)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <h3>Lịch sử thay đổi quyền</h3>
+        <span class="card-badge">Gần đây</span>
+      </div>
+      <div class="detail-card-body">
+        <div class="activity-list">
+          <div class="activity-item">
+            <span class="activity-time">14:32 hôm nay</span>
+            <span class="activity-dot add"></span>
+            <div class="activity-content"><strong>Nguyễn Văn An</strong> cấp quyền <strong>Xem thống kê</strong> cho vai trò <strong>Biên tập viên</strong></div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-time">09:15 hôm nay</span>
+            <span class="activity-dot remove"></span>
+            <div class="activity-content"><strong>Trần Minh Đức</strong> thu hồi quyền <strong>Đăng tải</strong> từ vai trò <strong>Biên tập viên</strong></div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-time">16:48 hôm qua</span>
+            <span class="activity-dot change"></span>
+            <div class="activity-content"><strong>Lê Thu Hà</strong> cấp quyền <strong>Chỉnh sửa</strong> cho vai trò <strong>Tác viên</strong></div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-time">11:20 14/03</span>
+            <span class="activity-dot create"></span>
+            <div class="activity-content"><strong>Nguyễn Văn An</strong> tạo vai trò mới <strong>Tác viên</strong> với 2 quyền mặc định</div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-time">08:30 13/03</span>
+            <span class="activity-dot add"></span>
+            <div class="activity-content"><strong>Trần Minh Đức</strong> cấp quyền <strong>Gỡ bài</strong> cho vai trò <strong>Phê duyệt viên</strong></div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-time">15:05 12/03</span>
+            <span class="activity-dot change"></span>
+            <div class="activity-content"><strong>Lê Thu Hà</strong> cập nhật bộ quyền <strong>Phê duyệt viên</strong> — thêm 2 quyền, bỏ 1 quyền</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let changeCount = 0;
+const originalStates = new Map();
+
+function togglePerm(btn) {
+  // Don't toggle locked (admin) permissions
+  if (btn.querySelector('.lock-indicator')) return;
+
+  const wasGranted = btn.classList.contains('granted');
+
+  const key = btn;
+  if (!originalStates.has(key)) {
+    originalStates.set(key, { granted: wasGranted });
+  }
+
+  btn.classList.remove('granted', 'denied');
+
+  if (wasGranted) {
+    btn.classList.add('denied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  } else {
+    btn.classList.add('granted');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+  }
+
+  // Check if current state differs from original
+  const orig = originalStates.get(key);
+  const currentGranted = btn.classList.contains('granted');
+
+  // Recalculate total changes
+  changeCount = 0;
+  originalStates.forEach((orig, el) => {
+    const g = el.classList.contains('granted');
+    if (orig.granted !== g) changeCount++;
+  });
+
+  updateChangeUI();
+}
+
+function updateChangeUI() {
+  const indicator = document.getElementById('changeIndicator');
+  const actions = document.getElementById('footerActions');
+  const btnSave = document.getElementById('btnSave');
+
+  if (changeCount > 0) {
+    indicator.style.visibility = 'visible';
+    actions.style.visibility = 'visible';
+    btnSave.style.display = 'inline-flex';
+    document.getElementById('changeNum').textContent = changeCount;
+  } else {
+    indicator.style.visibility = 'hidden';
+    actions.style.visibility = 'hidden';
+    btnSave.style.display = 'none';
+  }
+}
+
+function resetChanges() {
+  originalStates.forEach((orig, btn) => {
+    btn.classList.remove('granted', 'denied');
+    if (orig.granted) {
+      btn.classList.add('granted');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+    } else {
+      btn.classList.add('denied');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    }
+  });
+  originalStates.clear();
+  changeCount = 0;
+  updateChangeUI();
+}
+
+function saveChanges() {
+  originalStates.clear();
+  changeCount = 0;
+  updateChangeUI();
+  // Visual feedback
+  const footer = document.getElementById('matrixFooter');
+  const msg = document.createElement('span');
+  msg.style.cssText = 'color:var(--success);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:5px;';
+  msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:15px;height:15px"><path d="M20 6 9 17l-5-5"/></svg>Đã lưu thành công';
+  footer.prepend(msg);
+  setTimeout(() => msg.remove(), 2500);
+}
+
+function switchDept(tab) {
+  document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+}
+</script>
+</body>
+</html>

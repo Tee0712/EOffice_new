@@ -1,9 +1,6 @@
 import React, { useEffect, useCallback, useMemo } from "react";
 import {
   SkyGrid as Grid,
-  SkyMenu as Menu,
-  SkyMenuItem as MenuItem,
-  SkyListItemText as ListItemText,
 } from "@styles/SkyStyles";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -13,6 +10,11 @@ import { useToast } from "@components/common/ToastProvider";
 // import ClearIcon from "@mui/icons-material/Clear";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Visibility, DeleteOutline } from "@mui/icons-material";
+import {
+  SkyMenu as Menu,
+  SkyMenuItem as MenuItem,
+  SkyListItemText as ListItemText,
+} from "@styles/SkyStyles";
 
 import {
   API_LIST_DRIVERS,
@@ -22,29 +24,19 @@ import {
 //   APP_BASE
 } from '@EnvironmentFile/constants/urlConfig';
 import dayjs from "dayjs";
-import { 
-  FlexGrowBox,
-  FooterActions
-} from "@styles/BaseSwiper/BaseSwiper.style";
-import { 
-  StyledIconWrapper,
-  StyledHeaderContent,
-  StyledDivider
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
-
 import {
   JobMainContent,
-  // VehicleSectionTitle as StyledHeaderContent,
+  VehicleSectionTitle as JobSectionTitle,
   StyledBoxContainerContent,
   SectionHeaderContainer,
-  // BlueActionButton,
+  BlueActionButton,
   // ImageGalleryContainer,
   // GalleryImageItem,
   // ImageCloseButton,
   // ImagePlaceholderText,
   HiddenInput,
   // StyledGalleryImage,
-  // JobButtonContainer,
+  JobButtonContainer,
   JobUploadPlaceholderBox,
   JobPlaceholderText as JobPlaceholderTextBase,
   StyledMenuIcon,
@@ -59,7 +51,7 @@ import LoadingDialog from "@components/LoadingDialog";
 // import { useSelector } from "react-redux";
 import axiosInstance from "@utils/axiosInstance";
 import { useSelector } from "react-redux";
-import { withFormWrapper } from "@components/common/FormWrapper";
+
 const AddDrivers = ({
   open,
   onClose,
@@ -68,22 +60,12 @@ const AddDrivers = ({
   title = "Thêm mới tài xế",
 }) => {
   const {
-    BaseSwipper,
-    InputComponents: BaseInput,
-    DatePicker: BaseDatePicker,
-    AsyncAutoCompleted: BaseAsyncAutoCompleted,
-    ButtonOutline
+    CustomSwipper,
+    InputComponents,
+    DatePicker,
+    AsyncAutoCompleted,
   } = sharedComponents;
-  const InputComponents = React.useMemo(() => {
-      return withFormWrapper(BaseInput, "input");
-    }, [BaseInput]);
-  
-    const DatePicker = React.useMemo(() => {
-      return withFormWrapper(BaseDatePicker, "date");
-    }, [BaseDatePicker]);
-      const AsyncAutoCompleted = React.useMemo(() => {
-          return withFormWrapper(BaseAsyncAutoCompleted, "asyncSelect");
-        }, [BaseAsyncAutoCompleted]);
+
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const { crmSource } = useSelector((state) => state.config);
@@ -104,18 +86,17 @@ const AddDrivers = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const schema = yup.object().shape({
-    fullName: yup.string().required("Vui lòng chọn tài xế"),
+    fullName: yup.mixed().required("Vui lòng chọn tài xế"),
     phoneNumber: yup.string().required("Vui lòng nhập số điện thoại").transform((value) => value.replace(/\s/g, '')).matches(/^(0|84)[0-9]{8,10}$/, "Số điện thoại không đúng định dạng (Bắt đầu bằng 0 hoặc 84, từ 9-11 số)"),
     idCard: yup.string().required("Vui lòng nhập số CMND/CCCD").max(12, "Số CMND/CCCD không được vượt quá 12 ký tự"),
     email: yup.string().email("Email không hợp lệ").nullable(),
     address: yup.string().max(500, "Địa chỉ không được vượt quá 500 ký tự"),
-    licenseNumber: yup.string().required("Vui lòng nhập số bằng lái").max(12, "Số bằng lái không được vượt quá 12 ký tự"),
+    licenseNumber: yup.string().required("Vui lòng nhập số bằng lái").max(50, "Số bằng lái không được vượt quá 50 ký tự"),
     licenseClass: yup.string().required("Vui lòng chọn Loại bằng"),
     licenseIssuedDate: yup.date()
       .required("Vui lòng chọn ngày cấp bằng")
-      .max(new Date(), "Ngày cấp bằng không được là ngày tương lai")
       .typeError("Ngày cấp bằng không hợp lệ"),
-    note: yup.string().max(500, "Ghi chú không được vượt quá 500 ký tự"),
+    note: yup.string().max(1000, "Ghi chú không được vượt quá 1000 ký tự"),
   });
 
   const {
@@ -204,7 +185,7 @@ const AddDrivers = ({
 
   const handleImageUpload = useCallback((event) => {
      const files = Array.from(event.target.files);
-     const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png"];
+     const ALLOWED_EXTENSIONS = ["pdf", "doc", "xls", "xlsx", "jpg", "jpeg", "png"];
      const MAX_SIZE_MB = 10;
      const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
@@ -212,7 +193,7 @@ const AddDrivers = ({
      for (const file of files) {
        const extension = file.name.split(".").pop().toLowerCase();
        if (!ALLOWED_EXTENSIONS.includes(extension)) {
-         toast(`Định dạng tệp ${file.name} không được hỗ trợ. Chỉ chấp nhận pdf, doc, docx, xls, xlsx, jpg, jpeg, png.`, "error");
+         toast(`Định dạng tệp ${file.name} không được hỗ trợ. Chỉ chấp nhận pdf, doc, xls, xlsx, jpg, jpeg, png.`, "error");
          continue;
        }
        if (file.size > MAX_SIZE_BYTES) {
@@ -220,12 +201,6 @@ const AddDrivers = ({
          continue;
        }
        validFiles.push(file);
-     }
-     
-     if (driverImages.length + validFiles.length > 10) {
-       toast("Vượt số lượng cho phép 10 file", "error");
-       event.target.value = null;
-       return;
      }
 
      if (validFiles.length > 0) {
@@ -238,7 +213,7 @@ const AddDrivers = ({
        setDriverImages(prev => [...prev, ...newImages]);
      }
      event.target.value = null;
-  }, [toast, driverImages.length]);
+  }, [toast]);
 
   const handleFileMenuClick = useCallback((event) => {
     const fileId = event.currentTarget.getAttribute('data-file-id');
@@ -312,21 +287,16 @@ const AddDrivers = ({
         if (img.url) URL.revokeObjectURL(img.url);
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUploadClick = useCallback(() => {
-    if (driverImages.length >= 10) {
-      toast("Vượt số lượng cho phép 10 file", "error");
-      return;
-    }
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, [driverImages.length, toast]);
+  }, []);
 
   return (
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={onClose}
@@ -334,41 +304,25 @@ const AddDrivers = ({
       type="add"
       hideBackdrop
       isLoading={isLoading}
-      footer={
-              <>
-                              <FlexGrowBox />
-                              <FooterActions>
-        <ButtonOutline
+      moreActions={
+        <BlueActionButton
           onClick={handleSave}
           disabled={isLoading}
           variant="contained"
         >
           Lưu
-        </ButtonOutline>
-                              </FooterActions>
-                            </>
+        </BlueActionButton>
       }
     >
       <JobMainContent>
         {/* SECTION 1: THÔNG TIN TÀI XẾ */}
         <StyledBoxContainerContent>
           <SectionHeaderContainer>
-             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                        <StyledIconWrapper>
-                                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M2.53027 16.6411L2.53027 3.36109C2.53027 2.7007 2.7928 2.06756 3.25977 1.60059C3.72673 1.13362 4.35988 0.871094 5.02027 0.871094L12.4903 0.871094L12.5721 0.875144C12.7622 0.893977 12.9409 0.978023 13.0771 1.11426L17.2271 5.26426C17.3828 5.41992 17.4703 5.63096 17.4703 5.85109L17.4703 16.6411C17.4703 17.3015 17.2077 17.9346 16.7408 18.4016C16.2738 18.8686 15.6407 19.1311 14.9803 19.1311L5.02027 19.1311C4.35988 19.1311 3.72673 18.8686 3.25977 18.4016C2.7928 17.9346 2.53027 17.3014 2.53027 16.6411ZM4.19027 16.6411C4.19027 16.8612 4.27778 17.0723 4.43344 17.2279C4.5891 17.3836 4.80014 17.4711 5.02027 17.4711L14.9803 17.4711C15.2004 17.4711 15.4115 17.3836 15.5671 17.2279C15.7228 17.0723 15.8103 16.8612 15.8103 16.6411L15.8103 6.19476L12.1466 2.53109L5.02027 2.53109C4.80014 2.53109 4.5891 2.6186 4.43344 2.77426C4.27778 2.92992 4.19027 3.14096 4.19027 3.36109L4.19027 16.6411Z" fill="#2364B0"/>
-                                            <path d="M10.8506 5.00156L10.8506 1.68156C10.8506 1.22317 11.2222 0.851563 11.6806 0.851563C12.139 0.851563 12.5106 1.22317 12.5106 1.68156L12.5106 5.00156C12.5106 5.22169 12.5981 5.43274 12.7538 5.5884C12.9094 5.74406 13.1205 5.83156 13.3406 5.83156L16.6606 5.83156C17.119 5.83156 17.4906 6.20317 17.4906 6.66156C17.4906 7.11995 17.119 7.49156 16.6606 7.49156L13.3406 7.49156C12.6802 7.49156 12.047 7.22903 11.5801 6.76207C11.1131 6.2951 10.8506 5.66195 10.8506 5.00156Z" fill="#2364B0"/>
-                                            <path d="M8.32984 6.67188C8.78825 6.67188 9.15984 7.04348 9.15984 7.50187C9.15984 7.96027 8.78825 8.33187 8.32984 8.33187H6.66984C6.21145 8.33187 5.83984 7.96027 5.83984 7.50187C5.83984 7.04348 6.21145 6.67188 6.66984 6.67188L8.32984 6.67188Z" fill="#2364B0"/>
-                                            <path d="M13.3206 10C13.779 10 14.1506 10.3716 14.1506 10.83C14.1506 11.2884 13.779 11.66 13.3206 11.66L6.68059 11.66C6.22219 11.66 5.85059 11.2884 5.85059 10.83C5.85059 10.3716 6.22219 10 6.68059 10L13.3206 10Z" fill="#2364B0"/>
-                                            <path d="M13.3206 13.3398C13.779 13.3398 14.1506 13.7114 14.1506 14.1698C14.1506 14.6283 13.779 14.9998 13.3206 14.9998L6.68059 14.9998C6.22219 14.9998 5.85059 14.6283 5.85059 14.1698C5.85059 13.7114 6.22219 13.3398 6.68059 13.3398L13.3206 13.3398Z" fill="#2364B0"/>
-                                          </svg>
-                                          </StyledIconWrapper>
-            <StyledHeaderContent variant="h6">
+            <JobSectionTitle variant="h6">
               THÔNG TIN TÀI XẾ
-            </StyledHeaderContent>
-            </div>
+            </JobSectionTitle>
           </SectionHeaderContainer>
-<StyledDivider />
+
           <Grid container spacing={2}>
             {/* ROW 1: fullName, phoneNumber, idCard */}
             <Grid item xs={12} md={4}>
@@ -544,22 +498,9 @@ const AddDrivers = ({
 
         {/* SECTION 2: HÌNH ẢNH BẰNG LÁI */}
         <StyledBoxContainerContent styledMarginTop>
-                    <Grid item xs={12}>
-           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                      <StyledIconWrapper>
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                          <path d="M2.53027 16.6411L2.53027 3.36109C2.53027 2.7007 2.7928 2.06756 3.25977 1.60059C3.72673 1.13362 4.35988 0.871094 5.02027 0.871094L12.4903 0.871094L12.5721 0.875144C12.7622 0.893977 12.9409 0.978023 13.0771 1.11426L17.2271 5.26426C17.3828 5.41992 17.4703 5.63096 17.4703 5.85109L17.4703 16.6411C17.4703 17.3015 17.2077 17.9346 16.7408 18.4016C16.2738 18.8686 15.6407 19.1311 14.9803 19.1311L5.02027 19.1311C4.35988 19.1311 3.72673 18.8686 3.25977 18.4016C2.7928 17.9346 2.53027 17.3014 2.53027 16.6411ZM4.19027 16.6411C4.19027 16.8612 4.27778 17.0723 4.43344 17.2279C4.5891 17.3836 4.80014 17.4711 5.02027 17.4711L14.9803 17.4711C15.2004 17.4711 15.4115 17.3836 15.5671 17.2279C15.7228 17.0723 15.8103 16.8612 15.8103 16.6411L15.8103 6.19476L12.1466 2.53109L5.02027 2.53109C4.80014 2.53109 4.5891 2.6186 4.43344 2.77426C4.27778 2.92992 4.19027 3.14096 4.19027 3.36109L4.19027 16.6411Z" fill="#2364B0"/>
-                                          <path d="M10.8506 5.00156L10.8506 1.68156C10.8506 1.22317 11.2222 0.851563 11.6806 0.851563C12.139 0.851563 12.5106 1.22317 12.5106 1.68156L12.5106 5.00156C12.5106 5.22169 12.5981 5.43274 12.7538 5.5884C12.9094 5.74406 13.1205 5.83156 13.3406 5.83156L16.6606 5.83156C17.119 5.83156 17.4906 6.20317 17.4906 6.66156C17.4906 7.11995 17.119 7.49156 16.6606 7.49156L13.3406 7.49156C12.6802 7.49156 12.047 7.22903 11.5801 6.76207C11.1131 6.2951 10.8506 5.66195 10.8506 5.00156Z" fill="#2364B0"/>
-                                          <path d="M8.32984 6.67188C8.78825 6.67188 9.15984 7.04348 9.15984 7.50187C9.15984 7.96027 8.78825 8.33187 8.32984 8.33187H6.66984C6.21145 8.33187 5.83984 7.96027 5.83984 7.50187C5.83984 7.04348 6.21145 6.67188 6.66984 6.67188L8.32984 6.67188Z" fill="#2364B0"/>
-                                          <path d="M13.3206 10C13.779 10 14.1506 10.3716 14.1506 10.83C14.1506 11.2884 13.779 11.66 13.3206 11.66L6.68059 11.66C6.22219 11.66 5.85059 11.2884 5.85059 10.83C5.85059 10.3716 6.22219 10 6.68059 10L13.3206 10Z" fill="#2364B0"/>
-                                          <path d="M13.3206 13.3398C13.779 13.3398 14.1506 13.7114 14.1506 14.1698C14.1506 14.6283 13.779 14.9998 13.3206 14.9998L6.68059 14.9998C6.22219 14.9998 5.85059 14.6283 5.85059 14.1698C5.85059 13.7114 6.22219 13.3398 6.68059 13.3398L13.3206 13.3398Z" fill="#2364B0"/>
-                                        </svg>
-                                      </StyledIconWrapper>
-           <StyledHeaderContent variant="h6">
+           <JobSectionTitle variant="h6">
                HÌNH ẢNH BẰNG LÁI
-           </StyledHeaderContent>
-           </div>
+           </JobSectionTitle>
            <HiddenInput 
               type="file" 
               multiple 
@@ -592,24 +533,22 @@ const AddDrivers = ({
                     </GalleryImageItem>
                 ))}
            </ImageGalleryContainer> */}
-        
-              <ButtonOutline
+           <JobButtonContainer>
+              <BlueActionButton
                  variant="contained"
                  startIcon={<CloudUploadIcon />}
                  onClick={handleUploadClick}
               >
                  Tải Lên
-              </ButtonOutline>
-              </div>
-              <StyledDivider />
-              </Grid>
+              </BlueActionButton>
+           </JobButtonContainer>
+
            {driverImages.length > 0 ? (
                 <>
                     <FileTreeTable
                         data={fileTreeData}
                         onFileMenuClick={handleFileMenuClick}
                         MenuIcon={StyledMenuIcon}
-                        showStt
                     />
                     <Menu
                         anchorEl={fileMenuAnchor}
@@ -661,7 +600,7 @@ const AddDrivers = ({
       <LoadingDialog open={isLoading}>
         Đang xử lý, vui lòng đợi...
       </LoadingDialog>
-    </BaseSwipper>
+    </CustomSwipper>
   );
 };
 

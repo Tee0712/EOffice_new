@@ -42,6 +42,13 @@ export class VehicleRegistrationController {
     return this.service.getActionAvailableByUser(originalUserId);
   }
 
+  @Get('group-suggestions')
+  @RequireVehiclePermission(VehicleRegistrationPermissionAction.VIEW)
+  @ApiOperation({ summary: 'Gợi ý gom xe / gom khách tối ưu lộ trình' })
+  async getGroupingSuggestions(@Query('date') date?: string) {
+    return this.service.getGroupingSuggestions(date);
+  }
+
   @Get('list-registration')
   @RequireVehiclePermission(VehicleRegistrationPermissionAction.VIEW)
   @CheckAuthority(AuthorityStages.VEHICLE_REGISTRATION)

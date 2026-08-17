@@ -7,12 +7,13 @@ import {
     SkyMenu as Menu,
     SkyMenuItem as MenuItem,
     SkyListItemText as ListItemText,
+    SkyErrorText,
 } from "@styles/SkyStyles";
 import {
     HealthDialogContainer,
     HealthAttachmentSection,
     HealthAttachmentTitle,
-    // BlueActionButton,
+    BlueActionButton,
     HiddenInput,
     StyledMenuIcon,
     StyledListItemIcon,
@@ -24,10 +25,14 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 // import { Visibility, DeleteOutline } from "@mui/icons-material";
 import FileTreeTable from "@components/FileTreeTable";
 import FilePreviewDialog from "@components/UploadFile/components/FilePreviewDialog";
-import dayjs from "dayjs";
-import { callApi } from "@services/api";
-import { API_DOC_TO_PDF, API_XLSX_TO_PDF } from "@EnvironmentFile/constants/urlConfig";
+// import dayjs from "dayjs";
+import { styled } from "@mui/material/styles";
 
+const ErrorInlineText = styled(SkyErrorText)(() => ({
+    display: 'inline-block',
+    marginLeft: '16px',
+    marginTop: 0,
+}));
 
 const HealthCheckScheduleDialog = ({
     open,
@@ -41,7 +46,6 @@ const HealthCheckScheduleDialog = ({
         // InputComponents,
         DatePicker,
         toast,
-        ButtonOutline
     } = sharedComponents;
 
     const [healthFiles, setHealthFiles] = React.useState([]);
@@ -53,14 +57,11 @@ const HealthCheckScheduleDialog = ({
     const [previewOpen, setPreviewOpen] = React.useState(false);
     const [previewUrl, setPreviewUrl] = React.useState("");
     const [previewFileName, setPreviewFileName] = React.useState("");
-    const [localLoading, setLocalLoading] = React.useState(false);
-    const tempPreviewUrlRef = React.useRef(null);
 
     const schema = yup.object().shape({
         examDate: yup.date()
             .required("Vui lòng chọn ngày khám")
-            .typeError("Ngày khám không hợp lệ")
-            .max(new Date(), "Ngày khám không được lớn hơn ngày hiện tại"),
+            .typeError("Ngày khám không hợp lệ"),
         healthFiles: yup.array().min(1, "Vui lòng đính kèm giấy khám sức khỏe"),
     });
 
@@ -89,31 +90,18 @@ const HealthCheckScheduleDialog = ({
         }
     }, [open, reset]);
 
-    const handleSave = handleSubmit(
-        (data) => {
-            onSave?.({
-                ...data,
-                files: healthFiles,
-            });
-        },
-        (errors) => {
-            if (errors.healthFiles) {
-                toast(errors.healthFiles.message, "error");
-            }
-        }
-    );
+    const handleSave = handleSubmit((data) => {
+        onSave?.({
+            ...data,
+            files: healthFiles,
+        });
+    });
 
     const handleFileUpload = useCallback((event) => {
         const files = Array.from(event.target.files);
-        const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "jpg", "jpeg", "png"];
+        const ALLOWED_EXTENSIONS = ["pdf", "doc", "xls", "xlsx", "jpg", "jpeg", "png"];
         const MAX_SIZE_MB = 10;
         const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
-        const currentFilesCount = healthFiles.length;
-        if (currentFilesCount + files.length > 10) {
-            toast("Vượt số lượng cho phép 10 file", "error");
-            return;
-        }
 
         const validFiles = [];
         for (const file of files) {
@@ -159,80 +147,24 @@ const HealthCheckScheduleDialog = ({
         setFileMenuAnchor(null);
     }, []);
 
-    const handleClose = useCallback(() => {
-        healthFiles.forEach(file => {
-            if (file.url) {
-                URL.revokeObjectURL(file.url);
-            }
-        });
-        if (tempPreviewUrlRef.current) {
-            URL.revokeObjectURL(tempPreviewUrlRef.current);
-            tempPreviewUrlRef.current = null;
-        }
-        onClose?.();
-    }, [healthFiles, onClose]);
-
-    const handleViewFile = useCallback(async () => {
+    const handleViewFile = useCallback(() => {
         const fileObj = healthFiles.find(img => img.id === selectedFileId);
         if (fileObj) {
-            const fileName = fileObj.name || "";
-            const lower = fileName.toLowerCase();
-            const isDoc = /\.(doc|docx)$/i.test(lower);
-            const isExcel = /\.(xls|xlsx)$/i.test(lower);
-
-            if (isDoc || isExcel) {
-                setLocalLoading(true);
-                try {
-                    const formData = new FormData();
-                    formData.append("file", fileObj.file);
-
-                    let response;
-                    if (isDoc) {
-                        response = await callApi(
-                            "post",
-                            API_DOC_TO_PDF,
-                            formData,
-                            { responseType: "blob", timeout: 30000 }
-                        );
-                    } else {
-                        response = await callApi(
-                            "post",
-                            API_XLSX_TO_PDF,
-                            formData,
-                            { responseType: "blob", timeout: 30000 }
-                        );
-                    }
-
-                    const pdfBlob = new Blob([response], { type: "application/pdf" });
-                    const tempUrl = URL.createObjectURL(pdfBlob);
-
-                    tempPreviewUrlRef.current = tempUrl;
-                    setPreviewUrl(tempUrl);
-                    setPreviewFileName(fileName + ".pdf");
-                    setPreviewOpen(true);
-                } catch (error) {
-                    logger.error("Error converting file:", error);
-                    toast("Không thể xem trước tệp tài liệu này.", "error");
-                } finally {
-                    setLocalLoading(false);
-                }
-            } else {
-                setPreviewUrl(fileObj.url);
-                setPreviewFileName(fileObj.name);
-                setPreviewOpen(true);
-            }
+            setPreviewUrl(fileObj.url);
+            setPreviewFileName(fileObj.name);
+            setPreviewOpen(true);
         }
         handleCloseFileMenu();
-    }, [healthFiles, selectedFileId, handleCloseFileMenu, toast]);
+    }, [healthFiles, selectedFileId, handleCloseFileMenu]);
 
     const handleDeleteFile = useCallback(() => {
         const remainingFiles = healthFiles.filter((img) => img.id !== selectedFileId);
         const deleted = healthFiles.find((img) => img.id === selectedFileId);
-
+        
         if (deleted && deleted.url) {
             URL.revokeObjectURL(deleted.url);
         }
-
+        
         setHealthFiles(remainingFiles);
         setValue("healthFiles", remainingFiles, { shouldValidate: true });
         handleCloseFileMenu();
@@ -240,12 +172,6 @@ const HealthCheckScheduleDialog = ({
 
     const handleClosePreview = useCallback(() => {
         setPreviewOpen(false);
-        if (tempPreviewUrlRef.current) {
-            URL.revokeObjectURL(tempPreviewUrlRef.current);
-            tempPreviewUrlRef.current = null;
-        }
-        setPreviewUrl("");
-        setPreviewFileName("");
     }, []);
 
     const fileTreeData = React.useMemo(() => {
@@ -259,11 +185,11 @@ const HealthCheckScheduleDialog = ({
     return (
         <Dialog
             open={open}
-            onClose={handleClose}
+            onClose={onClose}
             onSave={handleSave}
             title="Lịch khám sức khỏe"
             size="sm"
-            isLoading={isLoading || localLoading}
+            isLoading={isLoading}
         >
             <HealthDialogContainer>
                 <Grid container>
@@ -277,7 +203,6 @@ const HealthCheckScheduleDialog = ({
                                     placeholder="dd/mm/yyyy"
                                     required
                                     {...field}
-                                    maxDate={dayjs()}
                                     error={!!errors.examDate}
                                     helperText={errors.examDate?.message}
                                 />
@@ -292,13 +217,18 @@ const HealthCheckScheduleDialog = ({
                     </HealthAttachmentTitle>
 
                     <JobButtonContainer>
-                        <ButtonOutline
+                        <BlueActionButton
                             variant="contained"
                             startIcon={<CloudUploadIcon />}
                             onClick={handleUploadClick}
                         >
                             Tải Lên
-                        </ButtonOutline>
+                        </BlueActionButton>
+                        {errors.healthFiles && (
+                            <ErrorInlineText>
+                                {errors.healthFiles.message}
+                            </ErrorInlineText>
+                        )}
                     </JobButtonContainer>
 
                     <HiddenInput
@@ -313,7 +243,6 @@ const HealthCheckScheduleDialog = ({
                             data={fileTreeData}
                             onFileMenuClick={handleFileMenuClick}
                             MenuIcon={StyledMenuIcon}
-                            showStt
                         />
                     )}
                 </HealthAttachmentSection>

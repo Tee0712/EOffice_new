@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import axiosInstance from "@utils/axiosInstance";
 import { API_VEHICLE_REQUEST, APP_BASE, API_CARS_LIST, API_DRIVER_LIST } from "@EnvironmentFile/constants/urlConfig";
@@ -10,10 +10,10 @@ import {
 import { Controller, useForm, useWatch } from "react-hook-form";
 import withSharedComponents from "@components/WrapperComponent";
 // import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { StyledDivider,  StyledHeaderContent} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
+
 import {
   JobMainContent,
-  // VehicleSectionTitle as StyledHeaderContent,
+  VehicleSectionTitle as JobSectionTitle,
   StyledBoxContainerContent,
   SectionHeaderContainer,
 //   TimelineContainer,
@@ -62,11 +62,11 @@ import {
   TabButton,
   ActionButtonsContainer,
   PlateValue,
-  // SmallConfirmButton,
+  SmallConfirmButton,
   SummaryBoxFlex,
   SelectionTable,
-  // ConfirmButton,
-  // BlueActionButton,
+  ConfirmButton,
+  BlueActionButton,
 //   SelectButton,
   // ReasonInputArea,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
@@ -76,9 +76,8 @@ import FileTreeTable from "@components/FileTreeTable";
 // import { StyleBoxButton } from "@pages/MeetingCalendar/componentStyle/CreateMeetingSchedule.styles";
 import ConfirmRecoordinationDialog from "./ConfirmRecoordinationDialog";
 import api from "@services/api";
-import DOMPurify from "dompurify";
-// import { encodeHTML } from "@/utils/securityUtils";
-import { withFormWrapper } from "@components/common/FormWrapper";
+
+
 
 
 const ViewRequestCoordination = ({
@@ -89,28 +88,14 @@ const ViewRequestCoordination = ({
   title = "Điều phối lại yêu cầu đăng ký xe",
   data = {}, // Data passed from the list
   vehicleRegistrationId,
-  documentId,
 }) => {
   const {
-    BaseSwipper,
- InputComponents: BaseInput,
-    DateTimePicker: BaseDateTimePicker,
-    ButtonOutline
+    CustomSwipper,
+    InputComponents,
+    DateTimePicker,
+    // ButtonOutline
   } = sharedComponents;
- const isView = true;
-   const InputComponents = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseInput, "input");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "InputComponents";
-     return Component;
-   }, [BaseInput, isView]);
- 
-   const DateTimePicker = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseDateTimePicker, "date");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "DatePicker";
-     return Component;
-   }, [BaseDateTimePicker, isView]);
+
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [fileList, setFileList] = React.useState([]);
@@ -223,7 +208,7 @@ const ViewRequestCoordination = ({
       // Update the driver map for the confirm dialog
 
     }
-  }, [availableDrivers, oldCoordination]);
+  }, [availableDrivers, oldCoordination, newCoordination]);
 
   const handleApplyNewCoordination = React.useCallback(() => {
     if (!oldCoordination || !newCoordination) return;
@@ -338,11 +323,10 @@ const ViewRequestCoordination = ({
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
-      const requestId = vehicleRegistrationId || documentId;
-      if (open && requestId) {
+      if (open && vehicleRegistrationId) {
         setIsLoading(true);
         try {
-          const res = await api.get(`${API_VEHICLE_REQUEST}/${requestId}`);
+          const res = await api.get(`${API_VEHICLE_REQUEST}/${vehicleRegistrationId}`);
           const response = res.data;
           if (response && response.success) {
             const vehicleData = response.data;
@@ -375,10 +359,9 @@ const ViewRequestCoordination = ({
     };
 
     const fetchFiles = async () => {
-      const requestId = vehicleRegistrationId || documentId;
-      if (requestId) {
+      if (vehicleRegistrationId) {
         try {
-          const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${requestId}`);
+          const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${vehicleRegistrationId}`);
           if (response) {
             setFileList(response);
           }
@@ -409,18 +392,17 @@ const ViewRequestCoordination = ({
     fetchFiles();
     
     // Initialize from data prop if available
-    const coordinationInfo = data?.coordinationInformation || data?.data?.coordinationInformation;
-    if (coordinationInfo && Array.isArray(coordinationInfo)) {
-       setCurrentCoordinationItems(coordinationInfo);
+    if (data?.coordinationInformation && Array.isArray(data.coordinationInformation)) {
+       setCurrentCoordinationItems(data.coordinationInformation);
     }
-  }, [open, vehicleRegistrationId, reset, toast, data, documentId]);
+  }, [open, vehicleRegistrationId, reset, toast, data]);
 
   // Placeholders for sidebar boxes
   const displayOldCoordination = oldCoordination || { plate: "—", type: "—", brand: "—", driver: "—" };
   const displayNewCoordination = newCoordination || { plate: "—", type: "—", brand: "—", driver: "—" };
 
   return (
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={onClose}
@@ -438,13 +420,13 @@ const ViewRequestCoordination = ({
       //           </StyleBoxButton>
       //         }
         moreActions={
-                    <ButtonOutline
+                    <BlueActionButton
                       onClick={handleOpenConfirmDialog}
                       disabled={isLoading || coordinationDataComputed.status !== "Đã điều phối đủ"}
                       variant="contained"
                     >
                      Xác nhận & gửi điều phối
-                    </ButtonOutline>
+                    </BlueActionButton>
                   }
     >
       <JobMainContent>
@@ -453,13 +435,13 @@ const ViewRequestCoordination = ({
           <Grid item xs={12} md={6}>
             <StyledBoxContainerContent>
              <SectionHeaderContainer>
-                       <StyledHeaderContent variant="h6">
+                       <JobSectionTitle variant="h6">
                          THÔNG TIN YÊU CẦU ĐĂNG KÝ XE
-                       </StyledHeaderContent>
+                       </JobSectionTitle>
                        <StatusContainer direction="row" align="center">
                          <StatusLabel variant="body2">Trạng thái hồ sơ:</StatusLabel>
                          {documentDetail?.data?.vehicleStateBadge ? (
-                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`<p>${documentDetail.data.vehicleStateBadge}</p>`) }} />
+                           <div dangerouslySetInnerHTML={{ __html: documentDetail.data.vehicleStateBadge }} />
                          ) : (
                            <SuccessStatusTag>
                              Đã điều phối
@@ -467,7 +449,7 @@ const ViewRequestCoordination = ({
                          )}
                        </StatusContainer>
                      </SectionHeaderContainer>
- <StyledDivider />
+
               <Grid container spacing={2}>
                 {/* Information Fields */}
                 <Grid item xs={12} md={6}>
@@ -660,15 +642,14 @@ const ViewRequestCoordination = ({
             {/* ATTACHMENTS SECTION */}
             {isImportantGuest === "co" && (
               <StyledBoxContainerContent styledMarginTop>
-                <StyledHeaderContent variant="h6" gutterBottom>
+                <JobSectionTitle variant="h6" gutterBottom>
                   TỆP ĐÍNH KÈM TIẾP KHÁCH QUAN TRỌNG
-                </StyledHeaderContent>
+                </JobSectionTitle>
 
                 <FileTreeTable
                   data={fileList}
-                  isView
+                  isView={true}
                   fileName="Tai_lieu_yeu_cau_dat_xe"
-                  showStt
                 />
               </StyledBoxContainerContent>
             )}
@@ -676,9 +657,9 @@ const ViewRequestCoordination = ({
             {/* COORDINATION RESULTS SECTION */}
             <CoordinationContainer>
               <CoordinationHeader>
-                <StyledHeaderContent variant="h6" mb={0}>
+                <JobSectionTitle variant="h6" mb={0}>
                   KẾT QUẢ ĐIỀU PHỐI
-                </StyledHeaderContent>
+                </JobSectionTitle>
                 <CoordinationStatusBadge $status={coordinationDataComputed.status === "Đã điều phối đủ" ? "success" : "pending"}>
                   {coordinationDataComputed.status}
                 </CoordinationStatusBadge>
@@ -727,9 +708,9 @@ const ViewRequestCoordination = ({
                       <td>{item.carType || item.car?.carType || "-"}</td>
                       <td>{item.driverName || item.driver?.fullName || "-"}</td>
                       <td align="right">
-                        <ButtonOutline data-id={item.carId} onClick={handlePrepareRecoordinate} variant="contained">
+                        <SmallConfirmButton data-id={item.carId} onClick={handlePrepareRecoordinate}>
                           Điều phối lại
-                        </ButtonOutline>
+                        </SmallConfirmButton>
                       </td>
                     </tr>
                   ))}
@@ -739,9 +720,9 @@ const ViewRequestCoordination = ({
 
             {/* CREATOR INFO SECTION */}
             {/* <CreatorInfoContainer>
-              <StyledHeaderContent variant="h6" gutterBottom>
+              <JobSectionTitle variant="h6" gutterBottom>
                 THÔNG TIN NGƯỜI TẠO
-              </StyledHeaderContent>
+              </JobSectionTitle>
 
               <Grid container spacing={2}>
                 <Grid item xs={12} md={3}>
@@ -806,12 +787,12 @@ const ViewRequestCoordination = ({
             {/* THÔNG TIN ĐIỀU PHỐI LẠI */}
             <StyledBoxContainerContent>
               <SectionHeaderContainer>
-                <StyledHeaderContent variant="h6" mb={0}>
+                <JobSectionTitle variant="h6" mb={0}>
                   THÔNG TIN ĐIỀU PHỐI LẠI
-                </StyledHeaderContent>
-                <ButtonOutline onClick={handleApplyNewCoordination} variant="contained" >
+                </JobSectionTitle>
+                <ConfirmButton onClick={handleApplyNewCoordination}>
                   Xác nhận
-                </ButtonOutline>
+                </ConfirmButton>
               </SectionHeaderContainer>
 
               <SummaryBoxFlex>
@@ -859,9 +840,9 @@ const ViewRequestCoordination = ({
 
             {/* ĐIỀU PHỐI LẠI */}
             <StyledBoxContainerContent styledMarginTop>
-              <StyledHeaderContent variant="h6">
+              <JobSectionTitle variant="h6">
                 ĐIỀU PHỐI LẠI
-              </StyledHeaderContent>
+              </JobSectionTitle>
 
               <ActionButtonsContainer>
                 <TabButton 
@@ -909,9 +890,9 @@ const ViewRequestCoordination = ({
                         <td>{v.brand}</td>
                         <td>{v.manager.name || v.driver}</td>
                         <td align="right">
-                          <ButtonOutline data-id={v.id} onClick={handleSelectCar} variant="contained">
+                          <SmallConfirmButton data-id={v.id} onClick={handleSelectCar}>
                             Chọn
-                          </ButtonOutline>
+                          </SmallConfirmButton>
                         </td>
                       </tr>
                     ))
@@ -921,9 +902,9 @@ const ViewRequestCoordination = ({
                         <td>{d.fullName || d.full_name || d.name}</td>
                         <td>{d.totalTrips || 0}</td>
                         <td align="right">
-                          <ButtonOutline data-id={d.id} onClick={handleSelectDriver} variant="contained">
+                          <SmallConfirmButton data-id={d.id} onClick={handleSelectDriver}>
                             Chọn
-                          </ButtonOutline>
+                          </SmallConfirmButton>
                         </td>
                       </tr>
                     ))
@@ -957,9 +938,8 @@ const ViewRequestCoordination = ({
         priorityOptions={priorityOptions}
         coordinationData={coordinationDataComputed}
         onSuccess={onSuccess}
-        documentId={documentId}
       />
-    </BaseSwipper>
+    </CustomSwipper>
   );
 };
 

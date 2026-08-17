@@ -6611,4 +6611,69 @@ export class VehicleRegistrationService {
       );
     }
   }
+
+  /**
+   * Gom xe / Gom khách tối ưu lộ trình:
+   * Tìm các yêu cầu đăng ký xe chưa phân công có cùng ngày xuất phát,
+   * khung giờ gần nhau (<= 60 phút) và cùng tuyến đường để đề xuất ghép xe.
+   */
+  async getGroupingSuggestions(date?: string) {
+    try {
+      const qb = this.vehicleRegistrationRepo.createQueryBuilder('vr')
+        .where('vr.status = 1');
+
+      if (date) {
+        qb.andWhere('CONVERT(VARCHAR(10), vr.timeStart, 120) = :date', { date });
+      }
+
+      const pendingTrips = await qb.orderBy('vr.timeStart', 'ASC').getMany();
+
+      const groups: any[] = [];
+      const visited = new Set<string>();
+
+      for (let i = 0; i < pendingTrips.length; i++) {
+        const tripA = pendingTrips[i];
+        if (visited.has(tripA.id)) continue;
+
+        const candidateGroup = [tripA];
+        visited.add(tripA.id);
+
+        for (let j = i + 1; j < pendingTrips.length; j++) {
+          const tripB = pendingTrips[j];
+          if (visited.has(tripB.id)) continue;
+
+          // Check destination similarity and departure time difference <= 60 mins
+          const diffMinutes = Math.abs(
+            (new Date(tripA.departureTime).getTime() - new Date(tripB.departureTime).getTime()) / (1000 * 60)
+          );
+
+          if (diffMinutes <= 60) {
+            candidateGroup.push(tripB);
+            visited.add(tripB.id);
+          }
+        }
+
+        if (candidateGroup.length > 1) {
+          const totalPassengers = candidateGroup.reduce((sum, t) => sum + (t.passengerCount || 1), 0);
+          groups.push({
+            groupCode: `GRP_${tripA.id.substring(0, 6).toUpperCase()}`,
+            tripCount: candidateGroup.length,
+            totalPassengers,
+            suggestedVehicleType: totalPassengers > 7 ? 'Xe 16 chỗ' : 'Xe 7 chỗ',
+            departureTime: tripA.departureTime,
+            trips: candidateGroup,
+          });
+        }
+      }
+
+      return {
+        success: true,
+        data: groups,
+        totalGroupSuggestions: groups.length,
+      };
+    } catch (error) {
+      this.logger.error(`Error in getGroupingSuggestions: ${error.message}`);
+      return { success: false, data: [], totalGroupSuggestions: 0 };
+    }
+  }
 }

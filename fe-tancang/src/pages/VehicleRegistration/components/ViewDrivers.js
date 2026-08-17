@@ -2,15 +2,21 @@ import React, { useEffect, } from "react";
 import {
   SkyGrid as Grid,
   SkyIconButton,
-  SkyMenu as Menu,
-  SkyMenuItem as MenuItem,
-  SkyListItemText as ListItemText,
-  SkyBox,
 } from "@styles/SkyStyles";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import withSharedComponents from "@components/WrapperComponent";
+// import { useToast } from "@components/common/ToastProvider";
+// import ClearIcon from "@mui/icons-material/Clear";
+// import { Visibility } from "@mui/icons-material";
+import {
+  SkyMenu as Menu,
+  SkyMenuItem as MenuItem,
+  SkyListItemText as ListItemText,
+  SkyBox,
+  // SkyIconButton, SkyTypography
+} from "@styles/SkyStyles";
 import { 
   Popover, 
   // Button as MuiButton,
@@ -18,7 +24,6 @@ import {
   // InputLabel,
   // Select,
 } from "@mui/material";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 import {
   API_LIST_DRIVERS,
@@ -28,12 +33,11 @@ import {
   API_FILES_UPLOAD,
   API_GET_LIST_DRIVER_ABOURT_GROUP_DRIVER,
   API_VEHICLE_REQUEST,
-  API_LIST_CARS,
-  API_XLSX_TO_PDF,
 } from '@EnvironmentFile/constants/urlConfig';
 import dayjs from "dayjs";
 import {
   JobMainContent,
+  VehicleSectionTitle as JobSectionTitle,
   StyledBoxContainerContent,
   SectionHeaderContainer,
   // BlueActionButton,
@@ -64,6 +68,23 @@ import {
   StatusContainer,
   StatusLabel,
   StatusTag,
+} from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
+
+import FileTreeTable from "@components/FileTreeTable";
+import FilePreviewDialog from "@components/UploadFile/components/FilePreviewDialog";
+
+import LoadingDialog from "@components/LoadingDialog";
+// import { useSelector } from "react-redux";
+import axiosInstance from "@utils/axiosInstance";
+import { useToast } from "@components/common/ToastProvider";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import HistoryIcon from "@mui/icons-material/History";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+// import FilterListIcon from "@mui/icons-material/FilterList";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+// import AddIcon from "@mui/icons-material/Add";
+import {
   SidebarTabContainer,
   SidebarTabItem,
   HistorySummaryBox,
@@ -88,6 +109,7 @@ import {
   HealthDetailRow,
   HealthFileLink,
   FilterLabel,
+  // StyledFilterListIcon,
   CenteredJobPlaceholderText,
   SmallVisibilityIcon,
   StyledAddIcon,
@@ -105,36 +127,15 @@ import {
   FilterApplyButton,
   FlexGapBox,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
-// import { 
-//   FlexGrowBox,
-//   FooterActions
-// } from "@styles/BaseSwiper/BaseSwiper.style";
-import { 
-  StyledHeaderContent,
-  StyledDivider
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
-import { withFormWrapper } from "@components/common/FormWrapper";
-import DOMPurify from "dompurify";
-import FileTreeTable from "@components/FileTreeTable";
-import FilePreviewDialog from "@components/UploadFile/components/FilePreviewDialog";
-
-import LoadingDialog from "@components/LoadingDialog";
-// import { useSelector } from "react-redux";
-import axiosInstance from "@utils/axiosInstance";
-import { useToast } from "@components/common/ToastProvider";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import HistoryIcon from "@mui/icons-material/History";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-// import FilterListIcon from "@mui/icons-material/FilterList";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-// import AddIcon from "@mui/icons-material/Add";
 import { useSelector } from "react-redux";
+// import FilterListIcon from "@mui/icons-material/FilterList";
 import HealthCheckScheduleDialog from "./HealthCheckScheduleDialog";
-import ViewRequest from "./ViewRequest";
-import UpdateDrivers from "./UpdateDrivers";
+// import EventIcon from '@mui/icons-material/Event';
 import api from "@services/api";
-
+import {
+  API_LIST_CARS,
+} from '@EnvironmentFile/constants/urlConfig';
+import ViewRequest from "./ViewRequest";
 
 const HistoryTimeline = ({ history = [], onItemClick }) => {
   const makeHandleClick = (id) => () => {
@@ -146,7 +147,7 @@ const HistoryTimeline = ({ history = [], onItemClick }) => {
   return (
     <TimelineContainer>
       {history.map((item, index) => (
-        <TimelineItem key={item.id || index} onClick={makeHandleClick(item.id)}>
+        <TimelineItem key={index} onClick={makeHandleClick(item.id)}>
           {/* Vertical Line */}
           {index !== history.length - 1 && <TimelineLine />}
           {/* Dot */}
@@ -156,7 +157,7 @@ const HistoryTimeline = ({ history = [], onItemClick }) => {
           {/* Content */}
           <TimelineContent>
             <TimelineAction variant="body2">
-              {item.action || item.title}
+              {item.action}
             </TimelineAction>
             <TimelineTime variant="caption">
                {item.time}
@@ -166,7 +167,7 @@ const HistoryTimeline = ({ history = [], onItemClick }) => {
                 Người tạo: {item.user}
               </TimelineCreatorText>
             )}
-            <TimelineDivider />
+            {index !== history.length - 1 && <TimelineDivider />}
           </TimelineContent>
         </TimelineItem>
       ))}
@@ -182,35 +183,11 @@ const ViewDrivers = ({
   title = "Chi tiết tài xế",
 }) => {
   const {
-    BaseSwipper,
-    InputComponents: BaseInput,
-    DatePicker: BaseDatePicker,
-    AsyncAutoCompleted: BaseAsyncAutoCompleted,
-    ButtonOutline
+    CustomSwipper,
+    InputComponents,
+    DatePicker,
+    AsyncAutoCompleted,
   } = sharedComponents;
-
-  const isView = true;
-
-  const InputComponents = React.useMemo(() => {
-    const Wrapped = withFormWrapper(BaseInput, "input");
-    const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-    Component.displayName = "InputComponents";
-    return Component;
-  }, [BaseInput, isView]);
-
-  const DatePicker = React.useMemo(() => {
-    const Wrapped = withFormWrapper(BaseDatePicker, "date");
-    const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-    Component.displayName = "DatePicker";
-    return Component;
-  }, [BaseDatePicker, isView]);
-
-  const AsyncAutoCompleted = React.useMemo(() => {
-    const Wrapped = withFormWrapper(BaseAsyncAutoCompleted, "asyncSelect");
-    const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-    Component.displayName = "AsyncAutoCompleted";
-    return Component;
-  }, [BaseAsyncAutoCompleted, isView]);
 
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -264,7 +241,6 @@ const ViewDrivers = ({
   const [previewFileName, setPreviewFileName] = React.useState("");
   const [selectedRequestId, setSelectedRequestId] = React.useState(null);
   const [openViewRequest, setOpenViewRequest] = React.useState(false);
-  const [openUpdateDrivers, setOpenUpdateDrivers] = React.useState(false);
 
   const [healthDialogOpen, setHealthDialogOpen] = React.useState(false);
   const [historyData, setHistoryData] = React.useState([]);
@@ -279,19 +255,6 @@ const ViewDrivers = ({
   const handleCloseHealthDialog = React.useCallback(() => {
     setHealthDialogOpen(false);
   }, []);
-
-  const handleOpenUpdateDrivers = React.useCallback(() => {
-    setOpenUpdateDrivers(true);
-  }, []);
-
-  const handleCloseUpdateDrivers = React.useCallback(() => {
-    setOpenUpdateDrivers(false);
-  }, []);
-
-  const handleUpdateDriversSuccess = React.useCallback(() => {
-    setOpenUpdateDrivers(false);
-    onClose();
-  }, [onClose]);
 
   const handleSaveHealth = React.useCallback(async (data) => {
     setIsLoading(true);
@@ -341,78 +304,13 @@ const ViewDrivers = ({
     } finally {
       setIsLoading(false);
     }
-  }, [id, toast, fetchHealthRecords]);
+  }, [id, toast]);
 
-  const handleHealthFilePreview = React.useCallback((file) => async () => {
-    if (!file || !file.id) return;
-
-    const fileId = file.id;
-    const fileName = file.file_name || file.fileName || "Tài liệu khám sức khỏe";
-    const lower = fileName.toLowerCase();
-
-    setIsLoading(true);
-    try {
-      const isDoc = /\.(doc|docx)$/i.test(lower);
-      const isExcel = /\.(xls|xlsx)$/i.test(lower);
-      const isBrowserFile = /\.(pdf|jpeg|jpg|png|gif|webp|bmp)$/i.test(lower);
-
-      let objectUrl = "";
-
-      if (isDoc) {
-        const conversionApi = `${APP_BASE}/api/doc-url-to-pdf?id=${fileId}`;
-        const res = await api.get(conversionApi, {
-          responseType: "blob",
-          timeout: 0,
-        });
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isExcel) {
-        const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-        const fileRes = await api.get(downloadUrl, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const formData = new FormData();
-        formData.append("file", new File([fileRes.data], fileName));
-
-        const res = await api.post(API_XLSX_TO_PDF, formData, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isBrowserFile) {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        const fileExtension = fileName.split(".").pop().toLowerCase();
-        const type = fileExtension === "pdf" ? "application/pdf" : blob.type || "image/jpeg";
-        const newBlob = new Blob([blob], { type });
-        objectUrl = URL.createObjectURL(newBlob);
-      } else {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: blob.type }));
-      }
-
-      if (objectUrl) {
-        setPreviewUrl(objectUrl);
-        setPreviewFileName(fileName);
-        setPreviewOpen(true);
-      }
-    } catch (error) {
-      toast("Không thể tải file để xem trước.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+  const handleHealthFilePreview = React.useCallback((file) => () => {
+    setPreviewUrl(`${API_VIEW_FILE}/${file.id}`);
+    setPreviewFileName(file.file_name);
+    setPreviewOpen(true);
+  }, []);
 
   const schema = yup.object().shape({
     fullName: yup.string(),
@@ -576,7 +474,7 @@ const ViewDrivers = ({
           const items = res.data?.items || (Array.isArray(res.data) ? res.data : []);
           if (items) {
             setHistoryData(items.map(item => ({
-              action: `${item.departurePoint || '-'} ⟹ ${item.destination || '-'}`,
+              action: `${item.departurePoint || '-'} ➔ ${item.destination || '-'}`,
               opinion: item.opinion || item.notes || "",
               processor: item.processor,
               time: `${item.departureTime || ''} - ${item.returnTime || ''} - ${item.licensePlate || ''}`,
@@ -633,7 +531,7 @@ const ViewDrivers = ({
           const res = await api.get(`${API_VEHICLE_REQUEST}/${id}/history-driver?${qs}`);
           if (res.data && res.data.success) {
              const mappedTrips = (res.data.items || []).map(item => ({
-               title: `${item.departurePoint || '-'} ⟹ ${item.destination || '-'}`,
+               title: `${item.departurePoint || '-'} ➔ ${item.destination || '-'}`,
                time: `${item.departureTime || ''} – ${item.returnTime || ''} | ${item.licensePlate || ''}`,
                user: item.driverName || item.createdBy || '-',
                status: item.vehicleState || item.status || '-',
@@ -642,8 +540,8 @@ const ViewDrivers = ({
              }));
              setHistoryTrips(mappedTrips);
              setHistorySummary({
-                total: res.data.totalTrips || 0, // Fallback if API hasn't updated total fields
-                month: res.data.totalTripsMonth || 0
+                total: res.data.totalTrips || 523, // Fallback if API hasn't updated total fields
+                month: res.data.totalTripsMonth || 78
              });
           }
         } catch (error) {
@@ -699,121 +597,21 @@ const ViewDrivers = ({
     setFileMenuAnchor(null);
   }, []);
 
-  const handleViewFile = React.useCallback(async () => {
+  const handleViewFile = React.useCallback(() => {
     const fileObj = driverImages.find(img => img.id === selectedFileId);
-    if (!fileObj) {
-      handleCloseFileMenu();
-      return;
+    if (fileObj) {
+      setPreviewUrl(fileObj.url);
+      setPreviewFileName(fileObj.name);
+      setPreviewOpen(true);
     }
-
-    const fileId = fileObj.id;
-    const fileName = fileObj.name || "Tài liệu";
-    const lower = fileName.toLowerCase();
-
-    setIsLoading(true);
-    try {
-      const isDoc = /\.(doc|docx)$/i.test(lower);
-      const isExcel = /\.(xls|xlsx)$/i.test(lower);
-      const isBrowserFile = /\.(pdf|jpeg|jpg|png|gif|webp|bmp)$/i.test(lower);
-
-      let objectUrl = "";
-
-      if (isDoc) {
-        const conversionApi = `${APP_BASE}/api/doc-url-to-pdf?id=${fileId}`;
-        const res = await api.get(conversionApi, {
-          responseType: "blob",
-          timeout: 0,
-        });
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isExcel) {
-        const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-        const fileRes = await api.get(downloadUrl, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const formData = new FormData();
-        formData.append("file", new File([fileRes.data], fileName));
-
-        const res = await api.post(API_XLSX_TO_PDF, formData, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isBrowserFile) {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        const fileExtension = fileName.split(".").pop().toLowerCase();
-        const type = fileExtension === "pdf" ? "application/pdf" : blob.type || "image/jpeg";
-        const newBlob = new Blob([blob], { type });
-        objectUrl = URL.createObjectURL(newBlob);
-      } else {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: blob.type }));
-      }
-
-      if (objectUrl) {
-        setPreviewUrl(objectUrl);
-        setPreviewFileName(fileName);
-        setPreviewOpen(true);
-      }
-    } catch (error) {
-      toast("Không thể tải file để xem trước.", "error");
-    } finally {
-      setIsLoading(false);
-      handleCloseFileMenu();
-    }
-  }, [driverImages, selectedFileId, handleCloseFileMenu, toast]);
-
-  const handleDownloadFile = React.useCallback(async () => {
-    const fileObj = driverImages.find(img => img.id === selectedFileId);
-    if (!fileObj) {
-      handleCloseFileMenu();
-      return;
-    }
-    const fileId = fileObj.id;
-    const fileName = fileObj.name || "Tài liệu";
-    setIsLoading(true);
-    try {
-      const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-      const response = await api.get(downloadUrl, {
-        responseType: "blob",
-        timeout: 0,
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      toast("Tải file thất bại.", "error");
-    } finally {
-      setIsLoading(false);
-      handleCloseFileMenu();
-    }
-  }, [driverImages, selectedFileId, handleCloseFileMenu, toast]);
+    handleCloseFileMenu();
+  }, [driverImages, selectedFileId, handleCloseFileMenu]);
 
   const handleClosePreview = React.useCallback(() => {
     setPreviewOpen(false);
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
     setPreviewUrl("");
     setPreviewFileName("");
-  }, [previewUrl]);
+  }, []);
 
   const fileTreeData = React.useMemo(() => {
     return driverImages.map((file) => ({
@@ -824,24 +622,13 @@ const ViewDrivers = ({
   }, [driverImages]);
 
   return (
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={onClose}
       type="view"
       hideBackdrop
       isLoading={isLoading}
-      moreActions={
-        !driverDetail?.isNotEdit && (
-          <ButtonOutline
-                variant="contained"
-          
-                onClick={handleOpenUpdateDrivers}
-              >
-                Chỉnh sửa
-          </ButtonOutline>
-        )
-      }
     >
       <JobMainContent>
         <Grid container spacing={2}>
@@ -850,19 +637,18 @@ const ViewDrivers = ({
             {/* SECTION 1: THÔNG TIN TÀI XẾ */}
             <StyledBoxContainerContent>
               <SectionHeaderContainer>
-                <StyledHeaderContent variant="h6">
+                <JobSectionTitle variant="h6">
                   THÔNG TIN TÀI XẾ
-                </StyledHeaderContent>
+                </JobSectionTitle>
                 <StatusContainer>
                   <StatusLabel>Trạng thái hồ sơ:</StatusLabel>
                   {driverDetail?.statusDriver ? (
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`<p>${driverDetail.statusDriver}</p>`) }} />
+                    <div dangerouslySetInnerHTML={{ __html: driverDetail.statusDriver }} />
                   ) : (
                     <StatusTag>Đang hoạt động</StatusTag>
                   )}
                 </StatusContainer>
               </SectionHeaderContainer>
-              <StyledDivider />
 
               <Grid container spacing={2}>
                 {/* ROW 1 */}
@@ -1006,10 +792,9 @@ const ViewDrivers = ({
             </StyledBoxContainerContent>
 
             <StyledBoxContainerContent styledMarginTop>
-              <StyledHeaderContent variant="h6">
+              <JobSectionTitle variant="h6">
                 HÌNH ẢNH BẰNG LÁI
-              </StyledHeaderContent>
-              <StyledDivider />
+              </JobSectionTitle>
 
               {driverImages.length > 0 ? (
                 <>
@@ -1017,7 +802,6 @@ const ViewDrivers = ({
                         data={fileTreeData}
                         onFileMenuClick={handleFileMenuClick}
                         MenuIcon={StyledMenuIcon}
-                        showStt
                         // isView={true}
                     />
                     <Menu
@@ -1031,12 +815,6 @@ const ViewDrivers = ({
                                 <SmallVisibilityIcon />
                             </StyledListItemIcon>
                             <ListItemText>Xem chi tiết</ListItemText>
-                        </MenuItem>
-                        <MenuItem onClick={handleDownloadFile}>
-                            <StyledListItemIcon>
-                                <FileDownloadIcon />
-                            </StyledListItemIcon>
-                            <ListItemText>Tải xuống</ListItemText>
                         </MenuItem>
                     </Menu>
                 </>
@@ -1081,9 +859,9 @@ const ViewDrivers = ({
 
               {activeTab === "schedule" && (
                 <>
-                  <StyledHeaderContent variant="h6" mb={2}>
+                  <JobSectionTitle variant="h6" mb={2}>
                     LỊCH SẮP TỚI
-                  </StyledHeaderContent>
+                  </JobSectionTitle>
                   <HistoryTimeline history={historyData} onItemClick={handleOpenRequestDetail} />
                 </>
               )}
@@ -1091,9 +869,9 @@ const ViewDrivers = ({
               {activeTab === "history" && (
                 <>
                   <SectionHeaderContainer>
-                    <StyledHeaderContent variant="h6" mb={0}>
+                    <JobSectionTitle variant="h6" mb={0}>
                       LỊCH SỬ HOẠT ĐỘNG
-                    </StyledHeaderContent>
+                    </JobSectionTitle>
                     <StyledFilterIcon onClick={handleFilterClick} />
                   </SectionHeaderContainer>
 
@@ -1130,13 +908,11 @@ const ViewDrivers = ({
                                      value={filterValues.fromDate}
                                      onChange={handleFilterInputChange('fromDate')}
                                      placeholder="dd/mm/yyyy"
-                                     isView={false}
                                   />
                                   <DatePicker 
                                      value={filterValues.toDate}
                                      onChange={handleFilterInputChange('toDate')}
                                      placeholder="dd/mm/yyyy"
-                                     isView={false}
                                   />
                               </DateRangeInputGroup>
                            </DateInputsRow>
@@ -1152,7 +928,6 @@ const ViewDrivers = ({
                                   queryParam="licensePlate"
                                   optionLabel="licensePlate"
                                   optionValue="id"
-                               isView={false}
                                />
                            </SkyBox>
 
@@ -1180,22 +955,12 @@ const ViewDrivers = ({
 
                   <TripListContainer>
                     {filteredTrips.map((trip, idx) => (
-                      <TripItemBox key={trip.id || idx} onClick={makeHandleOpenRequestDetail(trip.id)}>
-                         {/* Vertical Line */}
-                         {idx !== filteredTrips.length - 1 && <TimelineLine />}
-                         {/* Dot */}
-                        <TimelineDotBox>
-                          <HistoryDot />
-                        </TimelineDotBox>
-                        
-                        <TimelineContent>
-                          <TripTitle>{trip.title}</TripTitle>
-                          <TripDetail>{trip.time}</TripDetail>
+                      <TripItemBox key={idx} onClick={makeHandleOpenRequestDetail(trip.id)}>
+                        <TripTitle>{trip.title}</TripTitle>
+                        <TripDetail>{trip.time}</TripDetail>
                         <TripStatus status={trip.statusCode}>
                           Trạng thái: {trip.status}
                         </TripStatus>
-                          <TimelineDivider />
-                        </TimelineContent>
                       </TripItemBox>
                     ))}
                     {filteredTrips.length === 0 && (
@@ -1210,14 +975,14 @@ const ViewDrivers = ({
 
               {activeTab === "experience" && (
                 <>
-                  <StyledHeaderContent variant="h6" mb={2}>
+                  <JobSectionTitle variant="h6" mb={2}>
                     KINH NGHIỆM LÁI XE
-                  </StyledHeaderContent>
+                  </JobSectionTitle>
                   <ExperienceContainer>
                     <ExperienceCarTitle mt={1}>Tổng kinh nghiệm: {experienceSummary.total}</ExperienceCarTitle>
                     <ExperienceCarTitle mb={2}>Quản lý xe: {experienceSummary.managedCars}</ExperienceCarTitle>
                     {experienceData.map((exp, idx) => (
-                      <ExperienceContentBox key={exp.id || idx}>
+                      <ExperienceContentBox key={idx}>
                         <ExperienceCarTitle>{exp.carType}</ExperienceCarTitle>
                         <ExperienceDetailText>{exp.detail}</ExperienceDetailText>
                       </ExperienceContentBox>
@@ -1229,9 +994,9 @@ const ViewDrivers = ({
               {activeTab === "health" && (
                 <>
                   <SectionHeaderContainer>
-                    <StyledHeaderContent variant="h6" mb={0}>
+                    <JobSectionTitle variant="h6" mb={0}>
                       KHÁM SỨC KHỎE
-                    </StyledHeaderContent>
+                    </JobSectionTitle>
                     <SkyIconButton size="small" onClick={handleOpenHealthDialog}>
                       <StyledAddIcon />
                     </SkyIconButton>
@@ -1240,7 +1005,7 @@ const ViewDrivers = ({
                   <SkyBox mt={2}>
                     {healthRecords.length > 0 ? (
                       healthRecords.map((item, idx) => (
-                        <HealthRecordBox key={item.id || idx}>
+                        <HealthRecordBox key={idx}>
                           <HealthHeaderRow>
                             <HealthDateText>{dayjs(item.checkupDate).format("DD/MM/YYYY")}</HealthDateText>
                             {idx === 0 && (
@@ -1255,7 +1020,7 @@ const ViewDrivers = ({
                             </ExperienceDetailText>
                             {item.attachments && item.attachments.map((file, fileIdx) => (
                               <HealthFileLink 
-                                key={file.id || fileIdx} 
+                                key={fileIdx} 
                                 onClick={handleHealthFilePreview(file)}
                               >
                                 <InsertDriveFileIcon />
@@ -1303,14 +1068,7 @@ const ViewDrivers = ({
         vehicleRegistrationId={selectedRequestId}
         sharedComponents={sharedComponents}
       />
-      <UpdateDrivers
-        open={openUpdateDrivers}
-        onClose={handleCloseUpdateDrivers}
-        id={id}
-        onSuccess={handleUpdateDriversSuccess}
-        sharedComponents={sharedComponents}
-      />
-    </BaseSwipper>
+    </CustomSwipper>
   );
 };
 

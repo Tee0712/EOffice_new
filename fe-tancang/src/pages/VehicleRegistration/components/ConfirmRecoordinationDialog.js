@@ -4,7 +4,7 @@ import { useToast } from "@components/common/ToastProvider";
 import api from "@services/api";
 import { API_VEHICLE_REQUEST } from "@EnvironmentFile/constants/urlConfig";
 import {
-  // JobSectionTitle,
+  JobSectionTitle,
   // ConfirmButton,
   // RedCancelButton,
   ConfirmDialogContent,
@@ -22,9 +22,7 @@ import {
   ReasonInputArea,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
 import { Box } from "@mui/material";
-import { 
-  StyledHeaderContent,
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
+
 const ConfirmRecoordinationDialog = ({
   open,
   onClose,
@@ -36,7 +34,6 @@ const ConfirmRecoordinationDialog = ({
   actionCode = "",
   workItem = {},
   vehicleRegistrationId,
-  documentId,
   requestTypeOptions = [],
   priorityOptions = [],
   coordinationData = { items: [] } // For display if still using it
@@ -63,8 +60,7 @@ const ConfirmRecoordinationDialog = ({
   }, []);
 
   const handleConfirm = useCallback(async () => {
-    const requestId = vehicleRegistrationId || documentId;
-    if (!requestId) {
+    if (!vehicleRegistrationId) {
       toast("Thiếu ID yêu cầu!", "error");
       return;
     }
@@ -86,7 +82,7 @@ const ConfirmRecoordinationDialog = ({
       };
 
       await api.patch(
-        `${API_VEHICLE_REQUEST}/${requestId}/coordination-information`,
+        `${API_VEHICLE_REQUEST}/${vehicleRegistrationId}/coordination-information`,
         payload
       );
 
@@ -104,7 +100,7 @@ const ConfirmRecoordinationDialog = ({
     }
   }, [
     vehicleRegistrationId, selectedCars, selectedDriverMap,
-    actionCode, workItem, noteDetail, toast, onClose, onSuccess, reason, coordinationData.items, documentId
+    actionCode, workItem, noteDetail, toast, onClose, onSuccess, reason
   ]);
     const handleReasonChange = React.useCallback((e) => {
       setReason(e.target.value);
@@ -160,9 +156,9 @@ const ConfirmRecoordinationDialog = ({
         </ConfirmInfoRow>
 
         <CoordinatedSummaryMini>
-          <StyledHeaderContent variant="h6" mb={0}>
+          <JobSectionTitle variant="h6" mb={0}>
             KẾT QUẢ ĐIỀU PHỐI LẠI
-          </StyledHeaderContent>
+          </JobSectionTitle>
           <SummaryVehicleStats>
             <StatItem>
               <svg width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -209,9 +205,9 @@ const ConfirmRecoordinationDialog = ({
                 coordinationData.items.map((item, index) => (
                   <tr key={item.carId || index}>
                     <td>{index + 1}</td>
-                    <td>{item.car?.carType || item.carType || item.capacity || "—"}</td>
+                    <td>{item.car?.carType || item.capacity || "—"}</td>
                     <td>{item.car?.brand || item.brand || "—"}</td>
-                    <td>{item.car?.licensePlate || item.licensePlate || item.plate || "—"}</td>
+                    <td>{item.car?.licensePlate || item.plate || "—"}</td>
                     <td>{item.driver?.fullName || item.driver?.full_name || item.driverName || item.driver || "—"}</td>
                   </tr>
                 ))
@@ -220,9 +216,9 @@ const ConfirmRecoordinationDialog = ({
           </SelectionTable>
         </TableWrapper>
         <Box mt={3}>
-                 <StyledHeaderContent variant="h6" mb={1}>
+                 <JobSectionTitle variant="h6" mb={1}>
                   Lý do điều phối lại
-                </StyledHeaderContent>
+                </JobSectionTitle>
                 <ReasonInputArea
                   placeholder="Nhập lý do ..." 
                   value={reason}

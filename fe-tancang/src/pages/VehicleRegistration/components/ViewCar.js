@@ -1,10 +1,20 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, } from "react";
 import {
   SkyGrid as Grid,
   SkyBox,
-  SkyMenu as Menu,
+} from "@styles/SkyStyles";
+import { Controller, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import withSharedComponents from "@components/WrapperComponent";
+// import { useToast } from "@components/common/ToastProvider";
+// import ClearIcon from "@mui/icons-material/Clear";
+// import { Visibility } from "@mui/icons-material";
+ import { SkyMenu as Menu,
   SkyMenuItem as MenuItem,
   SkyListItemText as ListItemText,
+  // SkyTypography
+  // SkyBox,
 } from "@styles/SkyStyles";
 import { 
   Popover, 
@@ -13,23 +23,12 @@ import {
   // InputLabel,
   // Select,
 } from "@mui/material";
-import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import withSharedComponents from "@components/WrapperComponent";
-// import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import { withFormWrapper } from "@components/common/FormWrapper";
-import { 
-  StyledHeaderContent,
-  StyledDivider
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
 
 import {
   API_LIST_CARS,
   API_VIEW_FILE,
   APP_BASE, API_LIST_DRIVERS,
-  API_VEHICLE_REQUEST,
-  API_XLSX_TO_PDF
+  API_VEHICLE_REQUEST
 } from '@EnvironmentFile/constants/urlConfig';
 import ViewRequest from "./ViewRequest";
 import {
@@ -50,6 +49,7 @@ import {
   StyledListItemIcon,
   StyledBoxContainerContent,
   SectionHeaderContainer,
+  JobSectionTitle,
   BlueHeaderPopoverContainer,
   BlueHeaderPopoverTitle,
   PopoverHeaderText,
@@ -72,6 +72,22 @@ import {
   FilterOutlinedButton,
   FilterApplyButton,
   FlexGapBox,
+  // BlueActionButton,
+  FilterLabel,
+} from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
+
+import FileTreeTable from "@components/FileTreeTable";
+import FilePreviewDialog from "@components/UploadFile/components/FilePreviewDialog";
+
+import LoadingDialog from "@components/LoadingDialog";
+import { useSelector } from "react-redux";
+import axiosInstance from "@utils/axiosInstance";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import HistoryIcon from "@mui/icons-material/History";
+// import EventIcon from '@mui/icons-material/Event';
+// import FilterListIcon from "@mui/icons-material/FilterList";
+// import FilterListIcon from "@mui/icons-material/FilterList";
+import {
   SidebarTabContainer,
   SidebarTabItem,
   HistorySummaryBox,
@@ -88,27 +104,12 @@ import {
   StatusContainer,
   StatusLabel,
   StyledFilterIcon,
-  FilterLabel,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
-
-import FileTreeTable from "@components/FileTreeTable";
-import FilePreviewDialog from "@components/UploadFile/components/FilePreviewDialog";
-
-import LoadingDialog from "@components/LoadingDialog";
-import { useSelector } from "react-redux";
-import axiosInstance from "@utils/axiosInstance";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import HistoryIcon from "@mui/icons-material/History";
-// import EventIcon from '@mui/icons-material/Event';
-// import FilterListIcon from "@mui/icons-material/FilterList";
-// import FilterListIcon from "@mui/icons-material/FilterList";
-
 import dayjs from "dayjs";
 import api from "@services/api";
 import { useToast } from "@components/common/ToastProvider";
-// import EditIcon from "@mui/icons-material/Edit";
-import UpdateCar from "./UpdateCar";
-import DOMPurify from "dompurify";
+
+
 const HistoryTimeline = ({ history = [], onItemClick }) => {
   const makeHandleClick = (id) => () => {
     if (onItemClick) {
@@ -119,7 +120,7 @@ const HistoryTimeline = ({ history = [], onItemClick }) => {
   return (
     <TimelineContainer>
       {history.map((item, index) => (
-        <TimelineItem key={item.id || index} onClick={makeHandleClick(item.id)}>
+        <TimelineItem key={index} onClick={makeHandleClick(item.id)}>
           {/* Vertical Line */}
           {index !== history.length - 1 && <TimelineLine />}
           {/* Dot */}
@@ -156,27 +157,11 @@ const ViewCar = ({
   title = "Chi tiết xe",
 }) => {
   const {
-    BaseSwipper,
-    InputComponents: BaseInput,
-    AsyncAutoCompleted: BaseAsyncAutoCompleted,
-    DatePicker,
-    ButtonOutline
+    CustomSwipper,
+    InputComponents,
+    AsyncAutoCompleted,
+    DatePicker
   } = sharedComponents;
-
-  const isView = true;
-  const InputComponents = useMemo(() => {
-    const Wrapped = withFormWrapper(BaseInput, "input");
-    const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-    Component.displayName = "InputComponents";
-    return Component;
-  }, [BaseInput, isView]);
-
-  const AsyncAutoCompleted = useMemo(() => {
-    const Wrapped = withFormWrapper(BaseAsyncAutoCompleted, "asyncSelect");
-    const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-    Component.displayName = "AsyncAutoCompleted";
-    return Component;
-  }, [BaseAsyncAutoCompleted, isView]);
 
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -202,7 +187,6 @@ const [historyData, setHistoryData] = React.useState([]);
   const [documentDetail, setDocumentDetail] = React.useState(null);
   const [selectedRequestId, setSelectedRequestId] = React.useState(null);
   const [openViewRequest, setOpenViewRequest] = React.useState(false);
-  const [openUpdateCar, setOpenUpdateCar] = React.useState(false);
 
   const schema = yup.object().shape({
     licensePlate: yup.string().required("Vui lòng nhập biển số xe"),
@@ -271,20 +255,6 @@ const [historyData, setHistoryData] = React.useState([]);
     handleFilterClose();
   }, [handleFilterClose]);
 
-  const handleOpenUpdateCar = React.useCallback(() => {
-    setOpenUpdateCar(true);
-  }, []);
-
-  const handleCloseUpdateCar = React.useCallback(() => {
-    setOpenUpdateCar(false);
-  }, []);
-
-  const handleUpdateCarSuccess = React.useCallback(() => {
-    setOpenUpdateCar(false);
-    onClose();
-  }, [onClose]);
-
-
   const handleQuickDate = React.useCallback((type) => () => {
     const today = dayjs();
     let fromDate, toDate;
@@ -337,7 +307,7 @@ const [historyData, setHistoryData] = React.useState([]);
               carType: carData.carType || "",
               carBrand: carData.brand || "",
               seats: carData.seatCount ? String(carData.seatCount) : "",
-              manager: typeof carData.manager === "object" && carData.manager ? { ...carData.manager, name: carData.manager.fullName } : (carData.manager || ""),
+              manager: carData.manager || "",
               status: carData.maintenance || "",
               note: carData.note || "",
             });
@@ -375,7 +345,7 @@ const [historyData, setHistoryData] = React.useState([]);
               action: `${item.departurePoint || '-'} ➔ ${item.destination || '-'}`,
               opinion: item.opinion || item.notes || "",
               processor: item.processor,
-              time: `${item.departureTime || ''} - ${item.returnTime || ''} | ${item.driverName || ''}`,
+              time: `${item.departureTime || ''} - ${item.returnTime || ''} - ${item.licensePlate || ''}`,
               user: item.createdBy || "",
               department: item.department || "",
               id: item.id || item._id
@@ -467,121 +437,21 @@ const [historyData, setHistoryData] = React.useState([]);
     setFileMenuAnchor(null);
   }, []);
 
-  const handleViewFile = React.useCallback(async () => {
+  const handleViewFile = React.useCallback(() => {
     const fileObj = carImages.find(img => img.id === selectedFileId);
-    if (!fileObj) {
-      handleCloseFileMenu();
-      return;
+    if (fileObj) {
+      setPreviewUrl(fileObj.url);
+      setPreviewFileName(fileObj.name);
+      setPreviewOpen(true);
     }
-
-    const fileId = fileObj.id;
-    const fileName = fileObj.name || "Tài liệu";
-    const lower = fileName.toLowerCase();
-
-    setIsLoading(true);
-    try {
-      const isDoc = /\.(doc|docx)$/i.test(lower);
-      const isExcel = /\.(xls|xlsx)$/i.test(lower);
-      const isBrowserFile = /\.(pdf|jpeg|jpg|png|gif|webp|bmp)$/i.test(lower);
-
-      let objectUrl = "";
-
-      if (isDoc) {
-        const conversionApi = `${APP_BASE}/api/doc-url-to-pdf?id=${fileId}`;
-        const res = await api.get(conversionApi, {
-          responseType: "blob",
-          timeout: 0,
-        });
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isExcel) {
-        const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-        const fileRes = await api.get(downloadUrl, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const formData = new FormData();
-        formData.append("file", new File([fileRes.data], fileName));
-
-        const res = await api.post(API_XLSX_TO_PDF, formData, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isBrowserFile) {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        const fileExtension = fileName.split(".").pop().toLowerCase();
-        const type = fileExtension === "pdf" ? "application/pdf" : blob.type || "image/jpeg";
-        const newBlob = new Blob([blob], { type });
-        objectUrl = URL.createObjectURL(newBlob);
-      } else {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: blob.type }));
-      }
-
-      if (objectUrl) {
-        setPreviewUrl(objectUrl);
-        setPreviewFileName(fileName);
-        setPreviewOpen(true);
-      }
-    } catch (error) {
-      toast("Không thể tải file để xem trước.", "error");
-    } finally {
-      setIsLoading(false);
-      handleCloseFileMenu();
-    }
-  }, [carImages, selectedFileId, handleCloseFileMenu, toast]);
-
-  // const handleDownloadFile = React.useCallback(async () => {
-  //   const fileObj = carImages.find(img => img.id === selectedFileId);
-  //   if (!fileObj) {
-  //     handleCloseFileMenu();
-  //     return;
-  //   }
-  //   const fileId = fileObj.id;
-  //   const fileName = fileObj.name || "Tài liệu";
-  //   setIsLoading(true);
-  //   try {
-  //     const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-  //     const response = await api.get(downloadUrl, {
-  //       responseType: "blob",
-  //       timeout: 0,
-  //     });
-  //     const url = window.URL.createObjectURL(new Blob([response.data]));
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.setAttribute("download", fileName);
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.parentNode.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     toast("Tải file thất bại.", "error");
-  //   } finally {
-  //     setIsLoading(false);
-  //     handleCloseFileMenu();
-  //   }
-  // }, [carImages, selectedFileId, handleCloseFileMenu, toast]);
+    handleCloseFileMenu();
+  }, [carImages, selectedFileId, handleCloseFileMenu]);
 
   const handleClosePreview = React.useCallback(() => {
     setPreviewOpen(false);
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
     setPreviewUrl("");
     setPreviewFileName("");
-  }, [previewUrl]);
+  }, []);
 
   const fileTreeData = React.useMemo(() => {
     return carImages.map((file) => ({
@@ -592,23 +462,13 @@ const [historyData, setHistoryData] = React.useState([]);
   }, [carImages]);
 
   return (
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={onClose}
       type="view"
       hideBackdrop
       isLoading={isLoading}
-      moreActions={
-        (documentDetail?.statusCarOrigin || documentDetail?.data?.statusCarOrigin) !== "DANG_SU_DUNG" && (
-          <ButtonOutline
-            variant="contained"
-            onClick={handleOpenUpdateCar}
-          >
-            Chỉnh sửa
-          </ButtonOutline>
-        )
-      }
     >
       <JobMainContent>
         <Grid container spacing={2}>
@@ -617,21 +477,19 @@ const [historyData, setHistoryData] = React.useState([]);
             {/* SECTION 1: THÔNG TIN XE */}
             <StyledBoxContainerContent>
               <SectionHeaderContainer>
-                <StyledHeaderContent variant="h6">
+                <JobSectionTitle variant="h6">
                   THÔNG TIN XE
-                </StyledHeaderContent>
+                </JobSectionTitle>
                 <StatusContainer>
                     <StatusLabel>Trạng thái hồ sơ:</StatusLabel>
                      {documentDetail?.statusCar ? (
-                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`<p>${documentDetail.statusCar}</p>`) }} />
+                           <div dangerouslySetInnerHTML={{ __html: documentDetail.statusCar }} />
                          ) : (
                     <StatusTag>Sẵn sàng</StatusTag>
                 )}
                 </StatusContainer>
-         
               </SectionHeaderContainer>
 
-       <StyledDivider />
               <Grid container spacing={2}>
                 {/* ROW 1 */}
                 <Grid item xs={12} md={6}>
@@ -771,10 +629,9 @@ const [historyData, setHistoryData] = React.useState([]);
             </StyledBoxContainerContent>
 
             <StyledBoxContainerContent styledMarginTop>
-              <StyledHeaderContent variant="h6">
+              <JobSectionTitle variant="h6">
                 HÌNH ẢNH XE
-              </StyledHeaderContent>
-                     <StyledDivider />
+              </JobSectionTitle>
 
               {carImages.length > 0 ? (
                 <>
@@ -784,7 +641,6 @@ const [historyData, setHistoryData] = React.useState([]);
                         MenuIcon={StyledMenuIcon}
                         // isView={true}
                         // hideDownload={true}
-                        showStt
                     />
                     <Menu
                         anchorEl={fileMenuAnchor}
@@ -798,12 +654,6 @@ const [historyData, setHistoryData] = React.useState([]);
                             </StyledListItemIcon>
                             <ListItemText>Xem chi tiết</ListItemText>
                         </MenuItem>
-                        {/* <MenuItem onClick={handleDownloadFile}>
-                            <StyledListItemIcon>
-                                <FileDownloadIcon />
-                            </StyledListItemIcon>
-                            <ListItemText>Tải xuống</ListItemText>
-                        </MenuItem> */}
                     </Menu>
                 </>
               ) : (
@@ -837,17 +687,17 @@ const [historyData, setHistoryData] = React.useState([]);
 
               {activeTab === "schedule" ? (
                 <>
-                  <StyledHeaderContent variant="h6" mb={2}>
+                  <JobSectionTitle variant="h6" mb={2}>
                     LỊCH SẮP TỚI
-                  </StyledHeaderContent>
+                  </JobSectionTitle>
                   <HistoryTimeline history={historyData} onItemClick={handleOpenRequestDetail} />
                 </>
               ) : (
                 <>
                   <SectionHeaderContainer>
-                    <StyledHeaderContent variant="h6" mb={0}>
+                    <JobSectionTitle variant="h6" mb={0}>
                       LỊCH SỬ HOẠT ĐỘNG
-                    </StyledHeaderContent>
+                    </JobSectionTitle>
                     <StyledFilterIcon onClick={handleFilterClick} />
                   </SectionHeaderContainer>
 
@@ -884,13 +734,11 @@ const [historyData, setHistoryData] = React.useState([]);
                                      value={filterValues.fromDate}
                                      onChange={handleFilterInputChange('fromDate')}
                                      placeholder="dd/mm/yyyy"
-                                        
                                   />
                                   <DatePicker 
                                      value={filterValues.toDate}
                                      onChange={handleFilterInputChange('toDate')}
                                      placeholder="dd/mm/yyyy"
-                                     
                                   />
                               </DateRangeInputGroup>
                            </DateInputsRow>
@@ -906,7 +754,6 @@ const [historyData, setHistoryData] = React.useState([]);
                                   queryParam="fullName"
                                   optionLabel="fullName"
                                   optionValue="driverId"
-                                  isView={false}
                                />
                            </SkyBox>
 
@@ -934,7 +781,7 @@ const [historyData, setHistoryData] = React.useState([]);
 
                   <TripListContainer>
                     {filteredTrips.map((trip, idx) => (
-                      <TripItemBox key={trip.id || idx} onClick={makeHandleOpenRequestDetail(trip.id)}>
+                      <TripItemBox key={idx} onClick={makeHandleOpenRequestDetail(trip.id)}>
                         <TripTitle>{trip.title}</TripTitle>
                         <TripDetail>{trip.time} | {trip.user}</TripDetail>
                         <TripStatus status={trip.statusCode}>
@@ -973,14 +820,7 @@ const [historyData, setHistoryData] = React.useState([]);
         vehicleRegistrationId={selectedRequestId}
         sharedComponents={sharedComponents}
       />
-      <UpdateCar
-        open={openUpdateCar}
-        onClose={handleCloseUpdateCar}
-        id={id}
-        onSuccess={handleUpdateCarSuccess}
-        sharedComponents={sharedComponents}
-      />
-    </BaseSwipper>
+    </CustomSwipper>
   );
 };
 

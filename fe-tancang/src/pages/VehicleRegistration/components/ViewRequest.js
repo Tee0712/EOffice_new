@@ -1,31 +1,30 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import api from "@services/api";
 import axiosInstance from "@utils/axiosInstance";
 import { 
   API_VEHICLE_REQUEST, 
   APP_BASE, 
-  API_VIEW_FILE ,
-  API_XLSX_TO_PDF
+  API_VIEW_FILE 
 } from "@EnvironmentFile/constants/urlConfig";
 import { typeFlagMap } from "@components/FormButton/constant";
 import { useToast } from "@components/common/ToastProvider";
 import {
   SkyGrid as Grid,
-  SkyMenu as Menu,
-  SkyMenuItem as MenuItem,
-  SkyListItemText as ListItemText,
+  // SkyBox as Box,
 } from "@styles/SkyStyles";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import withSharedComponents from "@components/WrapperComponent";
 import { Visibility } from "@mui/icons-material";
-import { withFormWrapper } from "@components/common/FormWrapper";
-import { 
-  StyledHeaderContent,
-  StyledDivider
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
+import {
+  SkyMenu as Menu,
+  SkyMenuItem as MenuItem,
+  SkyListItemText as ListItemText,
+} from "@styles/SkyStyles";
+
 import {
   JobMainContent,
+  VehicleSectionTitle as JobSectionTitle,
   StyledBoxContainerContent,
   SectionHeaderContainer,
   TimelineContainer,
@@ -72,7 +71,6 @@ import {
   // CapacityBox,
   // CoordinationItemStatus,
   SelectionTable,
-	TimelineProfile,
   // SmallConfirmButton,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
 
@@ -84,14 +82,13 @@ import CoordinateRequests from "./CoordinateRequests";
 import UpdateNewRequest from "./UpdateNewRequest";
 import ConfirmRemindTheDriverDialog from "./ConfirmRemindTheDriverDialog";
 import ViewRequestCoordination from "./ViewRequestCoordination";
-import DOMPurify from "dompurify";
 
 // Simple Timeline Component for Request History
 const HistoryTimeline = ({ history = [] }) => {
   return (
     <TimelineContainer>
       {history.map((item, index) => (
-        <TimelineItem key={item.id || index}>
+        <TimelineItem key={index}>
           {/* Vertical Line */}
           {index !== history.length - 1 && <TimelineLine />}
           {/* Dot */}
@@ -108,13 +105,6 @@ const HistoryTimeline = ({ history = [] }) => {
                 `${item.time || ''} ${item.time && item.user ? '|' : ''} ${item.user || ''} ${item.department ? '- ' + item.department : ''}`
               )}
             </TimelineTime>
-						{item?.drivers?.map((item) => {
-							return (
-								<TimelineProfile key={item?.order}>
-									{item?.text}
-								</TimelineProfile>
-							)
-						})}
             {index !== history.length - 1 && <TimelineDivider />}
           </TimelineContent>
         </TimelineItem>
@@ -133,28 +123,14 @@ const ViewRequest = ({
   title = "Chi tiết yêu cầu đăng ký xe",
   data = {}, // Data passed from the list
   vehicleRegistrationId,
-  documentId,
 }) => {
   const {
-    BaseSwipper,
-    InputComponents: BaseInput,
-    DateTimePicker: BaseDateTimePicker,
+    CustomSwipper,
+    InputComponents,
+    DateTimePicker,
     // ButtonOutline
   } = sharedComponents;
- const isView = true;
-   const InputComponents = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseInput, "input");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "InputComponents";
-     return Component;
-   }, [BaseInput, isView]);
- 
-   const DateTimePicker = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseDateTimePicker, "date");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "DatePicker";
-     return Component;
-   }, [BaseDateTimePicker, isView]);
+
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCoordinated, setIsCoordinated] = React.useState(false);
@@ -175,10 +151,10 @@ const ViewRequest = ({
 
   const requestTypeOptions =
     crmSource.find((item) => item.code === "LYCDKX")?.data || [];
-  // const priorityOptions =
-  //   crmSource.find((item) => item.code === "DOUUTIENDATXE")?.data || [];
-  // const importantGuestsOptions =
-  //   crmSource.find((item) => item.code === "TIEPKHACHQUANTRONG")?.data || [];
+  const priorityOptions =
+    crmSource.find((item) => item.code === "DOUUTIENDATXE")?.data || [];
+const importantGuestsOptions =
+  crmSource.find((item) => item.code === "TIEPKHACHQUANTRONG")?.data || [];
   const dataForFormButton = React.useMemo(() => {
     if (!documentDetail) return null;
 
@@ -211,8 +187,8 @@ const ViewRequest = ({
   } = useForm({
     defaultValues: {
       requestType: "",
-      // priority: "",
-      // isImportantGuest: "",
+      priority: "",
+      isImportantGuest: "",
       departureTime: null,
       returnTime: null,
       departurePoint: "",
@@ -220,7 +196,7 @@ const ViewRequest = ({
       passengerCount: "",
       contactPerson: "",
       contactPhone: "",
-      // purpose: "",
+      purpose: "",
       note: "",
       username: "",
       positions: "",
@@ -245,11 +221,9 @@ const ViewRequest = ({
     };
   }, [documentDetail, data]);
 
-  // const isImportantGuest = useWatch({ control, name: "isImportantGuest" });
-  const isImportantGuest = "khong";
+  const isImportantGuest = useWatch({ control, name: "isImportantGuest" });
   const watchedRequestType = useWatch({ control, name: "requestType" });
-  // const watchedPriority = useWatch({ control, name: "priority" });
-  // const watchedPriority = "";
+  const watchedPriority = useWatch({ control, name: "priority" });
   const watchedDepartureTime = useWatch({ control, name: "departureTime" });
   const watchedReturnTime = useWatch({ control, name: "returnTime" });
   const watchedDeparturePoint = useWatch({ control, name: "departurePoint" });
@@ -281,87 +255,94 @@ const ViewRequest = ({
     }
   }, [documentDetail]);
 
-  const fetchRequestDetails = React.useCallback(async () => {
-    const requestId = vehicleRegistrationId || documentId;
-    if (open && requestId) {
-      setIsLoading(true);
-      try {
-        const res = await api.get(`${API_VEHICLE_REQUEST}/${requestId}`);
-        const response = res.data;
-        
-        if (response && response.success) {
-          const vehicleData = response.data;
-          setIsCoordinated(vehicleData.isCoordinated === true);
-          setIsCreator(vehicleData.isCreator === true);
-          setDocumentDetail(response);
-          reset({
-            requestType: vehicleData.requestType,
-            departureTime: vehicleData.departureTime,
-            returnTime: vehicleData.returnTime,
-            departurePoint: vehicleData.departurePoint,
-            destination: vehicleData.destination,
-            passengerCount: vehicleData.passengerCount,
-            contactPerson: vehicleData.contactPerson,
-            contactPhone: vehicleData.contactPhone,
-            note: vehicleData.notes,
-            username: vehicleData.createdByInfo.name,
-            position: vehicleData.createdByInfo.position || "",
-            department: vehicleData.createdByInfo.department || "",
-            "created_at": vehicleData.createdByInfo.createdAt,
-          });
-        }
-      } catch (error) {
-        const errorMessage = error?.response?.data?.message || error?.message || "Không thể tải thông tin yêu cầu!";
-        toast(errorMessage, "error");
-        logger.error("Error fetching vehicle request:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [open, vehicleRegistrationId, documentId, reset, toast]);
-
-  const fetchFiles = React.useCallback(async () => {
-    const requestId = vehicleRegistrationId || documentId;
-    if (requestId) {
-      try {
-        const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${requestId}`);
-        if (response) {
-          setFileList(response);
-        }
-      } catch (error) {
-        logger.error("Error fetching files:", error);
-      }
-    }
-  }, [vehicleRegistrationId, documentId]);
-
-  const fetchHistory = React.useCallback(async () => {
-    const requestId = vehicleRegistrationId || documentId;
-    if (requestId) {
-      try {
-        const res = await api.get(`${API_VEHICLE_REQUEST}/${requestId}/history`);
-        if (res.data) {
-          setHistoryData(res.data.map(item => ({
-            action: item.action,
-            opinion: item.opinion,
-            processor: item.processor,
-            time: "",
-            user: "",
-            department: "",
-            drivers: item?.details?.drivers,
-            order: item?.order,
-          })));
-        }
-      } catch (error) {
-        logger.error("Error fetching history:", error);
-      }
-    }
-  }, [vehicleRegistrationId, documentId]);
-
   useEffect(() => {
+    const fetchRequestDetails = async () => {
+      if (open && vehicleRegistrationId) {
+        setIsLoading(true);
+        try {
+          const res = await api.get(`${API_VEHICLE_REQUEST}/${vehicleRegistrationId}`);
+          const response = res.data;
+          
+          if (response && response.success) {
+            const vehicleData = response.data;
+            setIsCoordinated(vehicleData.isCoordinated === true);
+            setIsCreator(vehicleData.isCreator === true);
+            setDocumentDetail(response);
+            reset({
+              requestType: vehicleData.requestType,
+              priority: vehicleData.priority,
+              isImportantGuest: vehicleData.isImportantGuest,
+              departureTime: vehicleData.departureTime,
+              returnTime: vehicleData.returnTime,
+              departurePoint: vehicleData.departurePoint,
+              destination: vehicleData.destination,
+              passengerCount: vehicleData.passengerCount,
+              contactPerson: vehicleData.contactPerson,
+              contactPhone: vehicleData.contactPhone,
+              purpose: vehicleData.purpose,
+              note: vehicleData.notes,
+              username: vehicleData.createdByInfo.name,
+              position: vehicleData.createdByInfo.position || "",
+              department: vehicleData.createdByInfo.department || "",
+              "created_at": vehicleData.createdByInfo.createdAt,
+            });
+
+            // Fetch history from separate API now
+            // if (vehicleData.histories && Array.isArray(vehicleData.histories)) {
+            //   setHistoryData(vehicleData.histories.map(item => ({
+            //     action: item.action,
+            //     time: item.actionDate || item.time,
+            //     user: item.processor || item.user,
+            //     department: item.department || ""
+            //   })));
+            // }
+          }
+        } catch (error) {
+          toast("Không thể tải thông tin yêu cầu!", "error");
+          logger.error("Error fetching vehicle request:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    const fetchFiles = async () => {
+      if (vehicleRegistrationId) {
+        try {
+          const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${vehicleRegistrationId}`);
+          if (response) {
+            setFileList(response);
+          }
+        } catch (error) {
+          logger.error("Error fetching files:", error);
+        }
+      }
+    };
+
+    const fetchHistory = async () => {
+      if (vehicleRegistrationId) {
+        try {
+          const res = await api.get(`${API_VEHICLE_REQUEST}/${vehicleRegistrationId}/history`);
+          if (res.data) {
+            setHistoryData(res.data.map(item => ({
+              action: item.action,
+              opinion: item.opinion,
+              processor: item.processor,
+              time: "",
+              user: "",
+              department: ""
+            })));
+          }
+        } catch (error) {
+          logger.error("Error fetching history:", error);
+        }
+      }
+    };
+
     fetchRequestDetails();
     fetchFiles();
     fetchHistory();
-  }, [fetchRequestDetails, fetchFiles, fetchHistory]);
+  }, [open, data?.id, reset, toast, vehicleRegistrationId]);
 
   const handleCloseConfirmDialog = React.useCallback(() => {
    setOpenCoordinate(false)
@@ -379,11 +360,9 @@ const ViewRequest = ({
   const handleSuccessCoordination = React.useCallback(() => {
     setOpenCoordinate(false);
     setOpenRecoordinate(false);
-    fetchRequestDetails();
-    fetchFiles();
-    fetchHistory();
+    onClose();
     if (onSuccess) onSuccess();
-  }, [onSuccess, fetchRequestDetails, fetchFiles, fetchHistory]);
+  }, [onClose, onSuccess]);
 
   const handleFileMenuClick = React.useCallback((event) => {
     const fileId = event.currentTarget.getAttribute('data-file-id');
@@ -395,150 +374,21 @@ const ViewRequest = ({
     setFileMenuAnchor(null);
   }, []);
 
-    const handleViewFile = React.useCallback(async () => {
-    const fileObj = fileList.find(img => String(img.id) === String(selectedFileId));
-    if (!fileObj) {
-      handleCloseFileMenu();
-      return;
+  const handleViewFile = React.useCallback(() => {
+    const fileObj = fileList.find(f => f.id.toString() === selectedFileId?.toString());
+    if (fileObj) {
+      setPreviewUrl(`${API_VIEW_FILE}/${fileObj.id}`);
+      setPreviewFileName(fileObj.file_name || fileObj.name);
+      setPreviewOpen(true);
     }
+    handleCloseFileMenu();
+  }, [fileList, selectedFileId, handleCloseFileMenu]);
 
-    const fileId = fileObj.id;
-    const fileName = fileObj.file_name || fileObj.name || "Tài liệu";
-    const lower = fileName.toLowerCase();
-
-    setIsLoading(true);
-    try {
-      const isDoc = /\.(doc|docx)$/i.test(lower);
-      const isExcel = /\.(xls|xlsx)$/i.test(lower);
-      const isBrowserFile = /\.(pdf|jpeg|jpg|png|gif|webp|bmp)$/i.test(lower);
-
-      let objectUrl = "";
-
-      if (isDoc) {
-        const conversionApi = `${APP_BASE}/api/doc-url-to-pdf?id=${fileId}`;
-        const res = await api.get(conversionApi, {
-          responseType: "blob",
-          timeout: 0,
-        });
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isExcel) {
-        const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-        const fileRes = await api.get(downloadUrl, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const formData = new FormData();
-        formData.append("file", new File([fileRes.data], fileName));
-
-        const res = await api.post(API_XLSX_TO_PDF, formData, {
-          responseType: "blob",
-          timeout: 0,
-        });
-
-        const blob = new Blob([res.data], { type: "application/pdf" });
-        objectUrl = URL.createObjectURL(blob);
-      } else if (isBrowserFile) {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        const fileExtension = fileName.split(".").pop().toLowerCase();
-        const type = fileExtension === "pdf" ? "application/pdf" : blob.type || "image/jpeg";
-        const newBlob = new Blob([blob], { type });
-        objectUrl = URL.createObjectURL(newBlob);
-      } else {
-        const response = await axiosInstance.get(
-          `${API_VIEW_FILE}/${fileId}?public=true`,
-          { responseType: "blob" }
-        );
-        const blob = response?.data || response;
-        objectUrl = URL.createObjectURL(new Blob([blob], { type: blob.type }));
-      }
-
-      if (objectUrl) {
-        setPreviewUrl(objectUrl);
-        setPreviewFileName(fileName);
-        setPreviewOpen(true);
-      }
-    } catch (error) {
-      toast("Không thể tải file để xem trước.", "error");
-    } finally {
-      setIsLoading(false);
-      handleCloseFileMenu();
-    }
-  }, [fileList, selectedFileId, handleCloseFileMenu, toast]);
-
-  // const handleDownloadFile = React.useCallback(async () => {
-  //   const fileObj = fileList.find(img => img.id === selectedFileId);
-  //   if (!fileObj) {
-  //     handleCloseFileMenu();
-  //     return;
-  //   }
-  //   const fileId = fileObj.id;
-  //   const fileName = fileObj.file_name || fileObj.name || "Tài liệu";
-  //   setIsLoading(true);
-  //   try {
-  //     const downloadUrl = `${APP_BASE}/api/files/download/${fileId}`;
-  //     const response = await api.get(downloadUrl, {
-  //       responseType: "blob",
-  //       timeout: 0,
-  //     });
-  //     const url = window.URL.createObjectURL(new Blob([response.data]));
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.setAttribute("download", fileName);
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.parentNode.removeChild(link);
-  //     window.URL.revokeObjectURL(url);
-  //   } catch (error) {
-  //     toast("Tải file thất bại.", "error");
-  //   } finally {
-  //     setIsLoading(false);
-  //     handleCloseFileMenu();
-  //   }
-  // }, [fileList, selectedFileId, handleCloseFileMenu, toast]);
-
-    const handleClosePreview = React.useCallback(() => {
-      setPreviewOpen(false);
-      if (previewUrl && previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      setPreviewUrl("");
-      setPreviewFileName("");
-    }, [previewUrl]);
-
-    const handleDownloadInPreview = React.useCallback(async () => {
-      if (!selectedFileId) return;
-
-      const fileObj = fileList.find((img) => String(img.id) === String(selectedFileId));
-      const fileName = fileObj?.file_name || fileObj?.name || "Tai_lieu";
-
-      setIsLoading(true);
-      try {
-        const downloadUrl = `${APP_BASE}/api/files/download/${selectedFileId}?public=true`;
-        const response = await axiosInstance.get(downloadUrl, {
-          responseType: "blob",
-          timeout: 0,
-        });
-        const blob = response instanceof Blob ? response : response?.data;
-        const objectUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = objectUrl;
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(objectUrl);
-      } catch (error) {
-        toast("Tai file that bai.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    }, [selectedFileId, fileList, toast]);
+  const handleClosePreview = React.useCallback(() => {
+    setPreviewOpen(false);
+    setPreviewUrl("");
+    setPreviewFileName("");
+  }, []);
   
   const SuccsetOpenUpdateDrivers = React.useCallback((onSuccess) => {
    setOpenUpdateDrivers(false);
@@ -556,7 +406,7 @@ const ViewRequest = ({
 
   return (
     <>
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={handleClose}
@@ -568,16 +418,10 @@ const ViewRequest = ({
           <FormButton
             dataDetail={dataForFormButton}
             onAction={handleProcessingAction}
-            setReloadData={() => {
-              fetchRequestDetails();
-              fetchFiles();
-              fetchHistory();
-              onSuccess?.();
-            }}
+            setReloadData={onSuccess}
             disabled={isLoading}
             sharedComponents={sharedComponents}
             onClose={onClose}
-            isView={true}
           />
         </StyleBoxButton>
               }
@@ -588,13 +432,13 @@ const ViewRequest = ({
           <Grid item xs={12} md={9}>
             <StyledBoxContainerContent>
              <SectionHeaderContainer>
-                       <StyledHeaderContent variant="h6">
+                       <JobSectionTitle variant="h6">
                          THÔNG TIN YÊU CẦU ĐĂNG KÝ XE
-                       </StyledHeaderContent>
+                       </JobSectionTitle>
                         <StatusContainer direction="row" align="center">
                          <StatusLabel variant="body2">Trạng thái hồ sơ:</StatusLabel>
                          {documentDetail?.data?.vehicleStateBadge ? (
-                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(documentDetail.data.vehicleStateBadge) }} />
+                           <div dangerouslySetInnerHTML={{ __html: documentDetail.data.vehicleStateBadge }} />
                          ) : (
                            <SuccessStatusTag>
                              Đã điều phối
@@ -602,7 +446,6 @@ const ViewRequest = ({
                          )}
                        </StatusContainer>
                      </SectionHeaderContainer>
-                     <StyledDivider />
 
               <Grid container spacing={2}>
                 {/* Information Fields */}
@@ -623,7 +466,7 @@ const ViewRequest = ({
                     )}
                   />
                 </Grid>
-                {/* <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={6}>
                   <Controller
                     name="priority"
                     control={control}
@@ -640,6 +483,7 @@ const ViewRequest = ({
                     )}
                   />
                 </Grid>
+                 {/* ROW 2: Disabled */}
                             <Grid item xs={12} md={6}>
                               <Controller
                                 name="isImportantGuest"
@@ -656,7 +500,7 @@ const ViewRequest = ({
                                   />
                                 )}
                               />
-                            </Grid> */}
+                            </Grid>
                             <Grid item xs={12} md={6}>
                               <Controller
                                 name="passengerCount"
@@ -677,7 +521,7 @@ const ViewRequest = ({
                     control={control}
                     render={({ field }) => (
                       <DateTimePicker
-                        label="Dự kiến thời gian đi"
+                        label="Thời gian đi"
                         showTime
                         disabled
                         value={field.value}
@@ -691,7 +535,7 @@ const ViewRequest = ({
                     control={control}
                     render={({ field }) => (
                       <DateTimePicker
-                        label="Dự kiến thời gian về"
+                        label="Thời gian về"
                         showTime
                         disabled
                         value={field.value}
@@ -768,7 +612,7 @@ const ViewRequest = ({
                   />
                 </Grid> */}
 
-                {/* <Grid item xs={12}>
+                <Grid item xs={12}>
                   <Controller
                     name="purpose"
                     control={control}
@@ -782,7 +626,7 @@ const ViewRequest = ({
                       />
                     )}
                   />
-                </Grid> */}
+                </Grid>
 
                 <Grid item xs={12}>
                   <Controller
@@ -805,17 +649,16 @@ const ViewRequest = ({
             {/* ATTACHMENTS SECTION */}
             {isImportantGuest === "co" && (
               <StyledBoxContainerContent styledMarginTop>
-                <StyledHeaderContent variant="h6" gutterBottom>
+                <JobSectionTitle variant="h6" gutterBottom>
                   TỆP ĐÍNH KÈM TIẾP KHÁCH QUAN TRỌNG
-                </StyledHeaderContent>
+                </JobSectionTitle>
 
                 <FileTreeTable
                   data={fileList}
-                  // isView
+                  isView={true}
                   fileName="Tai_lieu_yeu_cau_dat_xe"
                   onFileMenuClick={handleFileMenuClick}
                   MenuIcon={StyledMenuIcon}
-                  showStt
                 />
 
                 <Menu
@@ -830,12 +673,6 @@ const ViewRequest = ({
                     </StyledListItemIcon>
                     <ListItemText>Xem chi tiết</ListItemText>
                   </MenuItem>
-                  {/* <MenuItem onClick={handleDownloadFile}>
-                    <StyledListItemIcon>
-                      <FileDownload />
-                    </StyledListItemIcon>
-                    <ListItemText>Tải xuống</ListItemText>
-                  </MenuItem> */}
                 </Menu>
               </StyledBoxContainerContent>
             )}
@@ -844,9 +681,9 @@ const ViewRequest = ({
             {isCoordinated && (
               <CoordinationContainer>
                 <CoordinationHeader>
-                  <StyledHeaderContent variant="h6" mb={0}>
+                  <JobSectionTitle variant="h6" mb={0}>
                     KẾT QUẢ ĐIỀU PHỐI
-                  </StyledHeaderContent>
+                  </JobSectionTitle>
                   {/* <CoordinationStatusBadge>
                     {coordinationDataComputed.status}
                   </CoordinationStatusBadge> */}
@@ -916,9 +753,9 @@ const ViewRequest = ({
             {/* CREATOR INFO SECTION */}
             {isCreator && (
               <CreatorInfoContainer>
-                <StyledHeaderContent variant="h6" gutterBottom>
+                <JobSectionTitle variant="h6" gutterBottom>
                   THÔNG TIN NGƯỜI TẠO
-                </StyledHeaderContent>
+                </JobSectionTitle>
 
                 <Grid container spacing={2}>
                   <Grid item xs={12} md={3}>
@@ -982,15 +819,15 @@ const ViewRequest = ({
           {/* RIGHT COLUMN: History Sidebar */}
           <Grid item xs={12} md={3}>
             <StyledBoxContainerContent fullHeight>
-              <StyledHeaderContent variant="h6" mb={3}>
+              <JobSectionTitle variant="h6" mb={3}>
                 LỊCH SỬ YÊU CẦU
-              </StyledHeaderContent>
+              </JobSectionTitle>
               <HistoryTimeline history={historyData} />
             </StyledBoxContainerContent>
           </Grid>
         </Grid>
       </JobMainContent>
-    </BaseSwipper>
+    </CustomSwipper>
 
     {/* Màn điều phối yêu cầu */}
     {openCoordinate && (
@@ -999,7 +836,6 @@ const ViewRequest = ({
         onClose={handleCloseConfirmDialog}
         sharedComponents={sharedComponents}
         vehicleRegistrationId={vehicleRegistrationId}
-        documentId={documentId}
         data={data}
         actionCode={coordinateActionData?.actionCode}
         workItem={coordinateActionData?.workItem}
@@ -1014,7 +850,6 @@ const ViewRequest = ({
          onClose={handleCloseUpdateDriversDialog}
          sharedComponents={sharedComponents}
          vehicleRegistrationId={vehicleRegistrationId}
-         documentId={documentId}
          onSuccess={SuccsetOpenUpdateDrivers}
       />
     )}
@@ -1026,8 +861,8 @@ const ViewRequest = ({
         onClose={handleCloseRemindDialog}
         formValues={{
           requestType: watchedRequestType,
-          // priority: watchedPriority,
-          // isImportantGuest: isImportantGuest,
+          priority: watchedPriority,
+          isImportantGuest: isImportantGuest,
           departureTime: watchedDepartureTime,
           returnTime: watchedReturnTime,
           departurePoint: watchedDeparturePoint,
@@ -1043,9 +878,8 @@ const ViewRequest = ({
         //   manager: item.driver
         // }))}
         vehicleRegistrationId={vehicleRegistrationId}
-        documentId={documentId}
         requestTypeOptions={requestTypeOptions}
-        // priorityOptions={priorityOptions}
+        priorityOptions={priorityOptions}
       />
     )}
 
@@ -1056,7 +890,6 @@ const ViewRequest = ({
         onClose={handleCloseRecoordinateSwipper}
         sharedComponents={sharedComponents}
         vehicleRegistrationId={vehicleRegistrationId}
-        documentId={documentId}
         data={documentDetail}
         actionCode={coordinateActionData?.actionCode}
         workItem={coordinateActionData?.workItem}
@@ -1069,7 +902,6 @@ const ViewRequest = ({
       onClose={handleClosePreview}
       fileName={previewFileName}
       url={previewUrl}
-      onDownload={handleDownloadInPreview}
     />
     </>
   );

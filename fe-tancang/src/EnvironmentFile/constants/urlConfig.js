@@ -870,4 +870,11 @@ export const API_CUSTOM_SENDER_UNITS = `${APP_BASE}/api/custom-sender-units`;
 // url file mẫu import Dự án
 export const API_IMPORT_FILE_TEMPLE = IMPORT_FILE_TEMPLE;
 
-export const API_PASSPORT_RETURN_SLIP = `${APP_BASE}/api/passport-return-requests`
+export const API_PASSPORT_RETURN_SLIP = `${APP_BASE}/api/passport-return-requests`;
+
+// ======================== EVENT MANAGEMENT API ========================
+export const API_EVENT_MANAGEMENT_EVENTS = `${APP_BASE}/api/v1/events`;
+export const API_EVENT_MANAGEMENT_NOTIFICATIONS = `${APP_BASE}/api/v1/notifications`;
+export const API_EVENT_MANAGEMENT_RECIPIENTS = `${APP_BASE}/api/v1/recipients`;
+export const API_EVENT_MANAGEMENT_LOGISTICS = `${APP_BASE}/api/v1/logistics`;
+export const API_EVENT_MANAGEMENT_DEPARTMENTS = `${APP_BASE}/api/v1/event-departments`;

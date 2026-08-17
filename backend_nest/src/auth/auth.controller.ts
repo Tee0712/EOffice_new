@@ -15,60 +15,53 @@ export class AuthController {
   @Public()
   @Post('login')
   @ApiOperation({
-    summary: 'Đăng nhập bằng username và password',
+    summary: 'Đăng nhập Hybrid (Local Database & Keycloak SSO)',
   })
   async login(@Body() body: any) {
     const { username, password } = body;
     if (!username || !password) {
       throw new UnauthorizedException('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu');
     }
-    return this.authKeycloakService.loginDirectGrant(username.trim(), password);
+
+    const cleanUsername = username.trim();
+
+    // B1: Thử xác thực với tài khoản nhân viên lưu trong Database MSSQL nội bộ
+    try {
+      const localUser = await this.authService.validateUser(cleanUsername, password);
+      if (localUser) {
+        return await this.authService.login(localUser);
+      }
+    } catch (dbErr) {
+      if (dbErr instanceof UnauthorizedException) {
+        throw dbErr;
+      }
+    }
+
+    // B2: Nếu không khớp tài khoản Local DB, Fallback sang Keycloak SSO Direct Grant
+    try {
+      return await this.authKeycloakService.loginDirectGrant(cleanUsername, password);
+    } catch (kcErr) {
+      throw new UnauthorizedException('Tài khoản hoặc mật khẩu không chính xác.');
+    }
   }
 
   @Public()
   @Post('refresh-token')
   @ApiOperation({
-    summary: 'Lam moi token',
-    description: 'Cap lai access token bang refresh token',
+    summary: 'Làm mới token (Hybrid)',
+    description: 'Cấp lại access token bằng refresh token',
   })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        refresh_token: {
-          type: 'string',
-          description: 'Refresh token',
-          example: 'eyJhbGci...',
-        },
-      },
-      required: ['refresh_token'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Lam moi token thanh cong',
-    schema: {
-      example: {
-        access_token: 'eyJhbGc...',
-        refresh_token: 'eyJhbGci...',
-        expires_in: 86400,
-        refresh_expires_in: 864000,
-        user: {
-          id: 'user-id',
-          username: 'admin',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Refresh token khong hop le hoac het han',
-  })
-  async refreshToken(@Body() body: { refresh_token: string }) {
-    const { refresh_token } = body;
-    if (!refresh_token) {
-      throw new UnauthorizedException('Refresh token missing');
+  async refreshToken(@Body('refresh_token') refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Vui lòng cung cấp refresh_token');
     }
-    return this.authService.refreshToken(refresh_token);
+
+    // Thử làm mới bằng Local Auth Service trước
+    try {
+      return await this.authService.refreshToken(refreshToken);
+    } catch {
+      // Fallback sang làm mới bằng Keycloak
+      return await this.authKeycloakService.refreshAccessToken(refreshToken);
+    }
   }
 }

@@ -16,11 +16,10 @@ import { UsersModule } from 'src/users/users.module';
 import { PushTokenEntity } from './entities/push-token.entity';
 import { FcmPushService } from './fcm-push.service';
 
+import { SmsGatewayService } from './sms-gateway.service';
+
 @Module({
   imports: [
-    // MongooseModule.forFeature([
-    //   { name: Notification.name, schema: NotificationSchema },
-    // ]),
     TypeOrmModule.forFeature([NotificationEntity, UserEntity, PushTokenEntity], 'mssqlConnection'),
     forwardRef(() => DatabaseModule), // Inject MySQL pool
     forwardRef(() => AuthModule), // Inject JwtService từ AuthModule
@@ -31,7 +30,7 @@ import { FcmPushService } from './fcm-push.service';
     forwardRef(() => UsersModule),
   ],
   controllers: [NotificationController],
-  providers: [NotificationGateway, NotificationService, FcmPushService],
-  exports: [NotificationService, NotificationGateway],
+  providers: [NotificationGateway, NotificationService, FcmPushService, SmsGatewayService],
+  exports: [NotificationService, NotificationGateway, SmsGatewayService],
 })
 export class NotificationModule { }

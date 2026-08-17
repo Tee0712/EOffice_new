@@ -11,16 +11,12 @@ import {
   CoordinatedSummaryMini,
   // SummaryVehicleStats,
   // StatItem,
-  // VehicleSectionTitle as JobSectionTitle,
+  VehicleSectionTitle as JobSectionTitle,
   SelectionTable,
   TableWrapper,
   ReasonInputArea,
 } from "@pages/VehicleRegistration/componentStyle/VehicleRequest.styles";
 import { SkyBox as Box } from "@styles/SkyStyles";
-import { 
-  StyledHeaderContent,
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
-import { useSelector } from "react-redux";
 
 /**
  * Dialog xác nhận điều phối yêu cầu đăng ký xe.
@@ -47,49 +43,30 @@ const ConfirmRemindTheDriverDialog = ({
   // actionCode = "",
   // workItem = {},
   vehicleRegistrationId,
-  documentId,
-  requestTypeOptions: propsRequestTypeOptions = [],
-  priorityOptions: propsPriorityOptions = [],
+  requestTypeOptions = [],
+  priorityOptions = [],
 }) => {
   const toast = useToast();
-  const { crmSource = [] } = useSelector((state) => state.config || {});
-
-  const requestTypeOptions = propsRequestTypeOptions.length > 0 
-    ? propsRequestTypeOptions 
-    : (crmSource.find((item) => item.code === "LYCDKX")?.data || []);
-
-  const priorityOptions = propsPriorityOptions.length > 0
-    ? propsPriorityOptions
-    : (crmSource.find((item) => item.code === "DOUUTIENDATXE")?.data || []);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [unconfirmedDrivers, setUnconfirmedDrivers] = useState([]);
   const [note, setNote] = useState("");
-  const [coordinatedData, setCoordinatedData] = useState(null);
-
-  const finalId = vehicleRegistrationId || documentId || formValues.id || formValues._id;
 
   // Fetch unconfirmed drivers when dialog opens
   useEffect(() => {
-    if (open && finalId) {
+    if (open && vehicleRegistrationId) {
       const fetchData = async () => {
         try {
           const res = await api.get(
-            `${API_VEHICLE_REQUEST}/${finalId}/unconfirmed-drivers`
+            `${API_VEHICLE_REQUEST}/${vehicleRegistrationId}/unconfirmed-drivers`
           );
-          if (res.data) {
-            setUnconfirmedDrivers(res.data.coordinationInformation || res.data.unconfirmedDrivers || []);
-            setCoordinatedData(res.data);
-          }
+          setUnconfirmedDrivers(res.data.unconfirmedDrivers || []);
         } catch (error) {
           logger.error("Error fetching unconfirmed drivers:", error);
         }
       };
       fetchData();
     }
-  }, [open, finalId]);
-
-  const displayData = coordinatedData || formValues;
+  }, [open, vehicleRegistrationId]);
 
   useEffect(() => {
     if (open) {
@@ -119,7 +96,7 @@ const ConfirmRemindTheDriverDialog = ({
 
   // --- API call ---
   const handleConfirm = useCallback(async () => {
-    if (!finalId) {
+    if (!vehicleRegistrationId) {
       toast("Thiếu ID yêu cầu!", "error");
       return;
     }
@@ -130,7 +107,7 @@ const ConfirmRemindTheDriverDialog = ({
       };
 
       await api.post(
-        `${API_VEHICLE_REQUEST}/${finalId}/remind-drivers`,
+        `${API_VEHICLE_REQUEST}/${vehicleRegistrationId}/remind-drivers`,
         payload
       );
 
@@ -147,7 +124,7 @@ const ConfirmRemindTheDriverDialog = ({
       setIsSubmitting(false);
     }
   }, [
-    finalId, note, toast, onClose,
+    vehicleRegistrationId, note, toast, onClose,
   ]);
 
   const handleNoteChange = useCallback((e) => {
@@ -169,46 +146,46 @@ const ConfirmRemindTheDriverDialog = ({
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Loại yêu cầu:</ConfirmInfoLabel>
           <ConfirmInfoValue>
-            {getLabel(requestTypeOptions, displayData.requestType)}
+            {getLabel(requestTypeOptions, formValues.requestType)}
           </ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Mức độ ưu tiên:</ConfirmInfoLabel>
           <ConfirmInfoValue>
-            {getLabel(priorityOptions, displayData.priority)}
+            {getLabel(priorityOptions, formValues.priority)}
           </ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Tiếp khách quan trọng:</ConfirmInfoLabel>
           <ConfirmInfoValue>
-            {(displayData.importantGuest === "co" || displayData.isImportantGuest === "co") ? "Có" : "Không"}
+            {formValues.isImportantGuest === "co" ? "Có" : "Không"}
           </ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Thời gian đi – Thời gian về:</ConfirmInfoLabel>
           <ConfirmInfoValue>
-            {formatDateTime(displayData.departureTime)} –{" "}
-            {formatDateTime(displayData.returnTime)}
+            {formatDateTime(formValues.departureTime)} –{" "}
+            {formatDateTime(formValues.returnTime)}
           </ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Nơi xuất phát:</ConfirmInfoLabel>
-          <ConfirmInfoValue>{displayData.departurePoint || "—"}</ConfirmInfoValue>
+          <ConfirmInfoValue>{formValues.departurePoint || "—"}</ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Nơi đến:</ConfirmInfoLabel>
-          <ConfirmInfoValue>{displayData.destination || "—"}</ConfirmInfoValue>
+          <ConfirmInfoValue>{formValues.destination || "—"}</ConfirmInfoValue>
         </ConfirmInfoRow>
         <ConfirmInfoRow>
           <ConfirmInfoLabel>Số lượng người đi:</ConfirmInfoLabel>
-          <ConfirmInfoValue>{displayData.passengerCount || "—"}</ConfirmInfoValue>
+          <ConfirmInfoValue>{formValues.passengerCount || "—"}</ConfirmInfoValue>
         </ConfirmInfoRow>
 
         {/* ── Kết quả điều phối ── */}
         <CoordinatedSummaryMini>
-          <StyledHeaderContent variant="h6" mb={0}>
+          <JobSectionTitle variant="h6" mb={0}>
             CẢNH BÁO ĐIỀU PHỐI
-          </StyledHeaderContent>
+          </JobSectionTitle>
         </CoordinatedSummaryMini>
 
         <TableWrapper>
@@ -252,9 +229,9 @@ const ConfirmRemindTheDriverDialog = ({
         </TableWrapper>
 
         <Box mt={3}>
-            <StyledHeaderContent variant="h6" mb={1}>
+            <JobSectionTitle variant="h6" mb={1}>
                 Ghi chú:
-            </StyledHeaderContent>
+            </JobSectionTitle>
             <ReasonInputArea
                 placeholder="Nhập ghi chú cảnh bảo"
                 rows={4}

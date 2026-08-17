@@ -121,10 +121,11 @@ export class ProjectService implements OnModuleInit {
 
       // Tự sửa các bản ghi cũ bị lưu sai đơn vị tiền tệ giải ngân
       // (Vì giao diện luôn nhập VND nên tiền tệ giải ngân lưu đúng phải là 1)
+      // Sử dụng CAST để so sánh decimal với int an toàn
       await safeQuery(this.dataSource, `
         UPDATE project_disbursements
-        SET moneyUnit = 1
-        WHERE moneyUnit IS NULL OR moneyUnit > 1
+        SET moneyUnit = CAST(1 AS DECIMAL(18,2))
+        WHERE moneyUnit IS NULL OR CAST(moneyUnit AS DECIMAL(18,2)) > 1
       `, []);
     } catch (error) {
       this.logger.error('Lỗi khi kiểm tra/tạo bảng project_disbursements & moneyUnit: ' + error.message);

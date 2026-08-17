@@ -196,10 +196,9 @@ export const TimelineLine = styled(SkyBox)(({ theme }) => ({
   position: "absolute",
   left: 10,
   top: 24,
-  bottom: -16, // Extend further down
-  width: 3, // Slightly thicker
+  bottom: 0,
+  width: 2,
   backgroundColor: theme.palette.primary.main,
-  borderRadius: 2,
 }));
 
 export const TimelineDotBox = styled(SkyBox)(({ theme }) => ({
@@ -230,10 +229,6 @@ export const TimelineTime = styled(SkyTypography)(({ theme }) => ({
   marginBottom: theme.spacing(0.5),
   color: theme.palette.text.secondary,
   fontSize: "12px",
-}));
-
-export const TimelineProfile = styled(SkyTypography)(() => ({
-	fontSize: "14px",
 }));
 
 export const TimelineCreatorText = styled(TimelineTime)(({ theme }) => ({
@@ -364,7 +359,7 @@ export const HistorySummaryBox = styled(SkyBox)(({ theme }) => ({
 
 export const HistorySummaryItem = styled(SkyBox)(({ theme }) => ({
   flex: 1,
-  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0', // Slightly darker grey for contrast
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
   borderRadius: 8,
   padding: theme.spacing(1.5),
   textAlign: 'center',
@@ -372,7 +367,7 @@ export const HistorySummaryItem = styled(SkyBox)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'center',
   height: 80,
-  // border: `1px solid ${theme.palette.divider}`,
+  border: `1px solid ${theme.palette.divider}`,
 }));
 
 export const SummaryLabel = styled(SkyTypography)(({ theme }) => ({
@@ -392,11 +387,13 @@ export const TripListContainer = styled(SkyBox)(() => ({
   flexDirection: 'column',
 }));
 
-export const TripItemBox = styled(SkyBox)(({ theme, onClick }) => ({
-  display: "flex",
-  position: "relative",
-  paddingBottom: theme.spacing(3),
-  cursor: onClick ? 'pointer' : 'default',
+export const TripItemBox = styled(SkyBox)(({ theme }) => ({
+  padding: theme.spacing(1.5, 0),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  cursor: 'pointer',
+  '&:last-child': {
+    borderBottom: 'none',
+  }
 }));
 
 export const TripTitle = styled(SkyTypography)(({ theme }) => ({
@@ -456,13 +453,10 @@ export const ExperienceContainer = styled(SkyBox)(({ theme }) => ({
 }));
 
 export const ExperienceContentBox = styled(SkyBox)(({ theme }) => ({
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.05)'
-      : '#e5e5e5',
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
   borderRadius: 8,
   padding: theme.spacing(1.5),
-  // border: `1px solid ${theme.palette.divider}`,
+  border: `1px solid ${theme.palette.divider}`,
 }));
 
 export const ExperienceCarTitle = styled(SkyTypography, {
@@ -492,14 +486,11 @@ export const StyledAddIcon = styled(AddIcon)(() => ({
   color: '#1976d2',
 }));
 export const HealthRecordBox = styled(SkyBox)(({ theme }) => ({
-   backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.05)'
-      : '#e5e5e5',
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
   borderRadius: 8,
   padding: theme.spacing(1.5),
   marginBottom: theme.spacing(1.5),
-  // border: `1px solid ${theme.palette.divider}`,
+  border: `1px solid ${theme.palette.divider}`,
 }));
 
 export const HealthHeaderRow = styled(SkyBox)(() => ({
@@ -841,7 +832,7 @@ export const TableWrapper = styled('div')(() => ({
   width: '100%',
   overflowX: 'auto',
   overflowY: 'auto',
-  maxHeight: '520px',
+  maxHeight: '340px',
 }));
 
 export const SelectButton = styled(SkyButton)(({ theme }) => ({

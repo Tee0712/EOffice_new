@@ -8,6 +8,8 @@ import { SsoController } from './sso.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/users/entities/user.entity';
 
+import { SessionLockService } from './session-lock.service';
+
 @Module({
   imports: [
     AuthConfigModule,
@@ -16,6 +18,7 @@ import { UserEntity } from 'src/users/entities/user.entity';
     TypeOrmModule.forFeature([UserEntity], 'mssqlConnection'),
   ],
   controllers: [AuthController, SsoController],
-  providers: [AuthService, JwtService],
+  providers: [AuthService, JwtService, SessionLockService],
+  exports: [AuthService, SessionLockService],
 })
 export class AuthBasicModule { }

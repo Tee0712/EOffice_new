@@ -8,6 +8,8 @@ import { UsersModule } from 'src/users/users.module';
 import { AuthorityDocumentsModule } from 'src/authority-documents/authority-documents.module';
 import { UserEntity } from 'src/users/entities/user.entity';
 
+import { TempCleanupCron } from './temp-cleanup.cron';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -16,7 +18,7 @@ import { UserEntity } from 'src/users/entities/user.entity';
     AuthorityDocumentsModule,
   ],
   controllers: [StorageConfigController],
-  providers: [StorageConfigService],
-  exports: [StorageConfigService],
+  providers: [StorageConfigService, TempCleanupCron],
+  exports: [StorageConfigService, TempCleanupCron],
 })
 export class StorageConfigModule {}

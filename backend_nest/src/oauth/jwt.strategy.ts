@@ -4,7 +4,8 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../users/entities/user.entity';
-import { passportJwtSecret } from 'jwks-rsa';
+import * as jwksRsa from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
@@ -35,6 +36,47 @@ const extractJwtFromCookie = (req: any): string | null => {
   return typeof token === 'string' && token.split('.').length === 3 ? token : null;
 };
 
+// Client cache JWKS của Keycloak
+const keycloakJwksClient = jwksRsa({
+  cache: true,
+  rateLimit: true,
+  jwksRequestsPerMinute: 5,
+  jwksUri: `${process.env.KEYCLOAK_ISSUER || 'http://localhost:8080/realms/master'}/protocol/openid-connect/certs`,
+});
+
+// Hybrid Secret Provider: Tự động phân biệt Local Token (HS256) vs Keycloak Token (RS256)
+const hybridSecretOrKeyProvider = (request: any, rawJwtToken: any, done: (err: any, secretOrKey?: any) => void) => {
+  try {
+    const decoded: any = jwt.decode(rawJwtToken, { complete: true });
+    if (!decoded || !decoded.header) {
+      return done(new UnauthorizedException('Token không hợp lệ (không thể giải mã header)'));
+    }
+
+    const localSecret = process.env.JWT_SECRET || 'EOFFICE_SECRET_KEY_2026';
+
+    // 1. Nếu là token ký bởi Local AuthService (HS256 hoặc có claim type = 'local')
+    if (decoded.header.alg === 'HS256' || decoded.payload?.type === 'local') {
+      return done(null, localSecret);
+    }
+
+    // 2. Nếu là token RS256 có kid (Keycloak SSO)
+    if (decoded.header.kid && process.env.KEYCLOAK_ISSUER) {
+      keycloakJwksClient.getSigningKey(decoded.header.kid, (err, key) => {
+        if (err || !key) {
+          return done(null, localSecret);
+        }
+        const signingKey = key.getPublicKey();
+        return done(null, signingKey);
+      });
+      return;
+    }
+
+    return done(null, localSecret);
+  } catch (err) {
+    return done(err);
+  }
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   private readonly logger = new Logger(JwtStrategy.name);
@@ -52,41 +94,42 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         ExtractJwt.fromUrlQueryParameter('access_token'),
       ]),
       ignoreExpiration: false,
-      secretOrKeyProvider: passportJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 5,
-        // Cần đảm bảo KEYCLOAK_ISSUER được cấu hình trong .env (VD: http://localhost:8080/realms/master)
-        jwksUri: `${process.env.KEYCLOAK_ISSUER}/protocol/openid-connect/certs`,
-      }),
-      algorithms: ['RS256'],
+      secretOrKeyProvider: hybridSecretOrKeyProvider,
+      algorithms: ['RS256', 'HS256'],
     });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async validate(payload: any) {
-
-    // Keycloak token payload thường chứa 'sub' là UUID của user
-    const keycloakUserId = payload.sub;
-    if (!keycloakUserId) {
-      this.logger.error('[JWT validate] ❌ Token thiếu claim sub');
-      throw new UnauthorizedException('Token không hợp lệ (không tìm thấy sub).');
+    const userIdOrSub = payload.userId || payload.sub;
+    if (!userIdOrSub) {
+      this.logger.error('[JWT validate] ❌ Token thiếu claim sub/userId');
+      throw new UnauthorizedException('Token không hợp lệ (không tìm thấy sub hoặc userId).');
     }
 
-    // Ánh xạ `sub` của Keycloak về `userId` nội bộ trong DB của hệ thống
+    // 1. Tìm user theo id trực tiếp (Tài khoản local hoặc đã map)
     let user = await this.userRepo.findOne({
-      where: { keycloakUserId: keycloakUserId },
-      select: ['id', 'status'],
+      where: { id: userIdOrSub },
+      select: ['id', 'username', 'status'],
     });
 
+    // 2. Nếu không tìm thấy theo id, tìm theo keycloakUserId
     if (!user) {
-      // Nếu không tìm thấy bằng keycloakUserId, tìm fallback sang username
       user = await this.userRepo.findOne({
-        where: { username: payload.preferred_username },
-        select: ['id', 'status'],
+        where: { keycloakUserId: userIdOrSub },
+        select: ['id', 'username', 'status'],
+      });
+    }
+
+    // 3. Nếu vẫn không thấy, tìm theo username (preferred_username)
+    if (!user && (payload.preferred_username || payload.username)) {
+      const username = payload.preferred_username || payload.username;
+      user = await this.userRepo.findOne({
+        where: { username },
+        select: ['id', 'username', 'status'],
       });
 
-      if (!user) {
+      if (!user && payload.preferred_username) {
         // Just-In-Time Provisioning: Tự động tạo user mới nếu hoàn toàn chưa tồn tại
         const fullName = `${payload.given_name || ''} ${payload.family_name || ''}`.trim() || payload.preferred_username;
         const hashedPassword = await bcrypt.hash('12345678', 10);
@@ -96,19 +139,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
           name: fullName,
           username: payload.preferred_username,
           emailUser: payload.email,
-          keycloakUserId: keycloakUserId,
+          keycloakUserId: userIdOrSub,
           status: 1, // STATUS.ACTIVED
           password: hashedPassword,
           createdAt: new Date(),
         });
 
         user = await this.userRepo.save(newUser);
-      } else {
-        // Nếu tìm thấy bằng username nhưng chưa có keycloakUserId, thì cập nhật keycloakUserId
-        await this.userRepo.update(user.id, { keycloakUserId: keycloakUserId });
+      } else if (user && !user.keycloakUserId && payload.sub) {
+        await this.userRepo.update(user.id, { keycloakUserId: payload.sub });
       }
     }
 
-    return { userId: user.id };
+    if (!user) {
+      throw new UnauthorizedException('Tài khoản không tồn tại trong hệ thống.');
+    }
+
+    if (user.status !== 1) {
+      throw new UnauthorizedException('Tài khoản đã bị khóa hoặc chưa được kích hoạt.');
+    }
+
+    return { userId: user.id, id: user.id, username: user.username };
   }
 }

@@ -1,32 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "@services/AuthService";
 import apis from "@services/api";
-import { API_AUTH_ME } from "@EnvironmentFile/constants/urlConfig";
-import {
-  keycloakIssuer,
-  keycloakClientId,
-  keycloakRedirectUri,
-  keycloakScope
-} from "@variable";
+import { API_ME } from "@EnvironmentFile/constants/urlConfig";
 
 // Async thunk để lấy auth config
 export const fetchAuthConfig = createAsyncThunk(
 	"user/fetchAuthConfig",
 	async (_, { rejectWithValue }) => {
 		try {
-			// Luôn dùng keycloak config từ env
-			logger.log("🚀 [Auth] Using Keycloak config from appConfig.js");
+			// Mặc định dùng local auth (database)
+			logger.log("🚀 [Auth] Using local auth (database)");
 			const mockActiveConfig = {
-				authType: 'keycloak',
+				authType: 'local',
 				isActive: true,
-				config: {
-					issuer: keycloakIssuer,
-					clientId: keycloakClientId,
-					redirectUri: keycloakRedirectUri,
-					scope: keycloakScope
-				}
+				config: {}
 			};
-			authService.setStrategy('keycloak');
+			authService.setStrategy('local');
 			return mockActiveConfig;
 		} catch (error) {
 			return rejectWithValue(
@@ -59,7 +48,7 @@ export const fetchCurrentUserMe = createAsyncThunk(
 	"user/fetchCurrentUserMe",
 	async (_, { rejectWithValue }) => {
 		try {
-			const response = await apis.get(API_AUTH_ME);
+			const response = await apis.get(API_ME);
 			return response?.data;
 		} catch (error) {
 			return rejectWithValue(

@@ -1,0 +1,16 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Agent skills, tools & indexes
+.agents/
+.codegraph/
+.ua/
+.understand-anything/
+
+# Node & Build artifacts
+node_modules/
+dist/
+build/
+*.log
+.env.local

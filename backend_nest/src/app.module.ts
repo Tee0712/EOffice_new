@@ -258,6 +258,9 @@ import { RecordExploitationModule } from './record-exploitation/record-exploitat
 import { StorageConfigModule } from './storage-config/storage-config.module';
 import { MeetingModule } from './meeting/meeting.module';
 import { MeetingRoomModule } from './meeting-rooms/meeting-rooms.module';
+import { CanteenModule } from './canteen/canteen.module';
+import { BulletinsModule } from './bulletins/bulletins.module';
+import { EventManagementModule } from './event-management/event-management.module';
 import { MeetingScheduleModule } from './meeting-schedule/meeting-schedule.module';
 import { BlocksModule } from './block/block.module';
 import { IntergrationSignatureModule } from './Intergration-signature/intergration-signature.module';
@@ -479,6 +482,9 @@ import { MobileConfigModule } from './mobile-config/mobile-config.module';
         }),
         SignOtpModule,
         CustomSenderUnitModule,
+        CanteenModule,
+        BulletinsModule,
+        EventManagementModule,
         CacheModule.register({
             // store: redisStore as any,
             // host: 'localhost',

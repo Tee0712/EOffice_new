@@ -47,14 +47,14 @@ export class AuthKeycloakController {
     const authConfig = await this.authConfigRepository.findOne({
       where: { authType: 'keycloak', isActive: true },
     });
-    
+
     // Lấy config hiệu dụng (trộn Env + DB)
     const config = await this.authKeycloakService.getEffectiveConfig(authConfig?.config);
-    
-    if (!config.issuer || !config.baseUrl) { 
-      throw new HttpException('Chưa cấu hình Keycloak issuer hoặc baseUrl.', HttpStatus.INTERNAL_SERVER_ERROR); 
+
+    if (!config.issuer || !config.baseUrl) {
+      throw new HttpException('Chưa cấu hình Keycloak issuer hoặc baseUrl.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
- 
+
     const { clientId, redirectUri, scope, issuer } = config;
     const finalRedirectUri = customRedirectUri || redirectUri;
     const authorizeUrl = `${issuer}/protocol/openid-connect/auth?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(finalRedirectUri)}&scope=${encodeURIComponent(scope)}`;
@@ -107,7 +107,7 @@ export class AuthKeycloakController {
       console.error('❌ Callback failed:', err.message);
       return res.status(401).send(`Authentication failed: ${err.message}. Vui lòng kiểm tra log backend.`);
     }
-  } 
+  }
 
   @Public()
   @Post('exchange-code')
@@ -210,7 +210,7 @@ export class AuthKeycloakController {
       // Ưu tiên đọc từ Authorization header
       let tokenUser = '';
       const authHeader = req.headers.authorization;
-      
+
       if (authHeader?.startsWith('Bearer ')) {
         tokenUser = authHeader.substring(7);
       }
@@ -219,8 +219,8 @@ export class AuthKeycloakController {
       if (!tokenUser) {
         tokenUser = req.cookies['tokenUser'] || req.cookies['token'];
       }
-      
-      
+
+
 
       const token = req.cookies['token'] || tokenUser;
 
@@ -261,14 +261,14 @@ export class AuthKeycloakController {
 
       // Map position sang positionName dùng usersService
       const positionName = await this.usersService.getPositionName(userObj?.position);
-      const {user, ...otherData} = profileData;
+      const { user, ...otherData } = profileData;
       return {
         ...otherData,
         isSuperAdmin: !!isSuperAdmin,
         token,
         tokenUser,
         roles: isSuperAdmin ? ['SUPER_ADMIN'] : (decoded.roles || []),
-        user: {...user, positionName: positionName},
+        user: { ...user, positionName: positionName },
         userFromDb: { ...userObj, positionName: positionName }
       };
     } catch (err) {
@@ -313,8 +313,8 @@ export class AuthKeycloakController {
 
       const isHttps = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https';
       const config = await this.authKeycloakService.getEffectiveConfig();
-      const cookieOptions = { 
-        httpOnly: true, 
+      const cookieOptions = {
+        httpOnly: true,
         secure: isHttps,
         sameSite: (isHttps ? 'none' : 'lax') as any,
         path: '/',
@@ -329,8 +329,8 @@ export class AuthKeycloakController {
       //   res.cookie('refresh_token', tokens.refresh_token, cookieOptions);
       // }
 
-      return res.json({ 
-        success: true, 
+      return res.json({
+        success: true,
         token: tokenToUse, // id_token || access_token
         access_token: tokens.access_token, // Trả thêm access_token gốc nếu cần
         id_token: tokens.id_token,
@@ -443,7 +443,7 @@ export class AuthKeycloakController {
     const traceId = this.createAuthTraceId();
     // 1. Lấy thông tin cấu hình hiệu dụng (Ưu tiên Env, sau đó đến DB)
     const config = await this.authKeycloakService.getEffectiveConfig();
-    
+
     // 2. Lấy id_token và redirect_uri từ query/cookie
     const idToken = req.query?.id_token || req.body?.id_token || req.cookies['id_token'];
     const queryRedirectUri = req.query?.redirect_uri as string;
@@ -465,7 +465,7 @@ export class AuthKeycloakController {
         cookieNames: Object.keys(req.cookies || {}),
       })}`,
     );
-    
+
     // 3. Xóa cookie xác thực (nhiều options để đảm bảo xóa sạch)
     this.clearAllAuthCookies(res);
 
@@ -476,7 +476,7 @@ export class AuthKeycloakController {
     if (issuer) {
       // ✅ Dùng OIDC end_session_endpoint — Xóa session tập trung trên Keycloak
       const endSessionUrl = new URL(`${issuer}/protocol/openid-connect/logout`);
-      
+
       // Đảm bảo URL chuyển hướng về FE là tuyệt đối
       let feRedirectUrlFixed = feRedirectUrl;
       if (feRedirectUrlFixed && !feRedirectUrlFixed.startsWith('http')) {
@@ -489,7 +489,7 @@ export class AuthKeycloakController {
         // Tham số chuẩn OIDC: post_logout_redirect_uri
         endSessionUrl.searchParams.append('post_logout_redirect_uri', feRedirectUrlFixed);
       }
-      
+
       if (idToken) {
         // Cung cấp hint cho Keycloak để không hiện màn hình xác nhận logout
         endSessionUrl.searchParams.append('id_token_hint', idToken);

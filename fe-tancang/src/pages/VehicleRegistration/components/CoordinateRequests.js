@@ -13,14 +13,10 @@ import Popover from "@mui/material/Popover";
 import IconButton from "@mui/material/IconButton";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import DOMPurify from "dompurify";
-import { 
-  StyledHeaderContent,
-  StyledDivider
-} from "@pages/IncomingDocumentManagement/components/AddIncommingDoc/components/AddIncommingDoc.styles";
+
 import {
   JobMainContent,
-  // VehicleSectionTitle as JobSectionTitle,
+  VehicleSectionTitle as JobSectionTitle,
   StyledBoxContainerContent,
   SectionHeaderContainer,
 //   TimelineContainer,
@@ -76,7 +72,7 @@ import {
 //   ConfirmButton,
   // SelectButton,
   // ReasonInputArea,
-  // BlueActionButton,
+  BlueActionButton,
   DriverPopoverItem,
   DriverPopoverName,
   // DriverPopoverSub,
@@ -90,7 +86,7 @@ import FileTreeTable from "@components/FileTreeTable";
 // import { StyleBoxButton } from "@pages/MeetingCalendar/componentStyle/CreateMeetingSchedule.styles";
 import ConfirmCoordinateRequestsDialog from "./ConfirmCoordinateRequestsDialog";
 import api from "@services/api";
-import { withFormWrapper } from "@components/common/FormWrapper";
+
 
 
 
@@ -102,30 +98,15 @@ const CoordinateRequests = ({
   title = "Điều phối yêu cầu đăng ký xe",
   data = {}, // Data passed from the list
   vehicleRegistrationId,
-  documentId, 
   actionCode = '',
   workItem = {},
 }) => {
   const {
-    BaseSwipper,
- InputComponents: BaseInput,
-    DateTimePicker: BaseDateTimePicker,
-    ButtonOutline
+    CustomSwipper,
+    InputComponents,
+    DateTimePicker,
+    // ButtonOutline
   } = sharedComponents;
- const isView = true;
-   const InputComponents = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseInput, "input");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "InputComponents";
-     return Component;
-   }, [BaseInput, isView]);
- 
-   const DateTimePicker = useMemo(() => {
-     const Wrapped = withFormWrapper(BaseDateTimePicker, "date");
-     const Component = (props) => <Wrapped {...props} isView={props.isView !== undefined ? props.isView : isView} />;
-     Component.displayName = "DatePicker";
-     return Component;
-   }, [BaseDateTimePicker, isView]);
 
   const toast = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
@@ -295,13 +276,6 @@ const CoordinateRequests = ({
   }, [driverList, selectedDriverMap, activeRowId]);
 
 
-  const effectiveActionCode = useMemo(() => {
-    if (actionCode) return actionCode;
-    // Fallback: tìm trong availableActions của documentDetail
-    const actions = documentDetail?.data?.availableActions || data?.availableActions || [];
-    return actions.find(a => a.type === 'agree_vehicle_registrant')?.code || '';
-  }, [actionCode, documentDetail, data]);
-
   const coordinationData = {
     status: currentSeatCount >= currentDemand ? "Đã điều phối đủ" : "Chưa điều phối đủ",
     demand: currentDemand,
@@ -314,11 +288,10 @@ const CoordinateRequests = ({
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
-      const requestId = vehicleRegistrationId || documentId;
-      if (open && requestId) {
+      if (open && vehicleRegistrationId) {
         setIsLoading(true);
         try {
-          const res = await api.get(`${API_VEHICLE_REQUEST}/${requestId}`);
+          const res = await api.get(`${API_VEHICLE_REQUEST}/${vehicleRegistrationId}`);
           const response = res.data;
           if (response && response.success) {
             const vehicleData = response.data;
@@ -366,10 +339,9 @@ const CoordinateRequests = ({
     };
 
     const fetchFiles = async () => {
-      const requestId = vehicleRegistrationId || documentId;
-      if (requestId) {
+      if (vehicleRegistrationId) {
         try {
-          const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${requestId}`);
+          const response = await axiosInstance.get(`${APP_BASE}/api/files/by-object?object_type=vehicleRegistration&object_id=${vehicleRegistrationId}`);
           if (response) {
             setFileList(response);
           }
@@ -382,10 +354,10 @@ const CoordinateRequests = ({
     fetchRequestDetails();
     fetchCarsAndDrivers();
     fetchFiles();
-  }, [open, data?.id, reset, toast, vehicleRegistrationId, documentId]);
+  }, [open, data?.id, reset, toast, vehicleRegistrationId]);
 
   return (
-    <BaseSwipper
+    <CustomSwipper
       title={title}
       open={open}
       onClose={onClose}
@@ -403,13 +375,13 @@ const CoordinateRequests = ({
       //           </StyleBoxButton>
       //         }
         moreActions={
-              <ButtonOutline
+              <BlueActionButton
                 onClick={handleOpenConfirmDialog}
                 disabled={isLoading || coordinationData.status !== "Đã điều phối đủ"}
                 variant="contained"
               >
                Xác nhận & gửi điều phối
-              </ButtonOutline>
+              </BlueActionButton>
             }
     >
       <JobMainContent>
@@ -418,13 +390,13 @@ const CoordinateRequests = ({
           <Grid item xs={12} md={6}>
             <StyledBoxContainerContent>
              <SectionHeaderContainer>
-                       <StyledHeaderContent variant="h6">
+                       <JobSectionTitle variant="h6">
                          THÔNG TIN YÊU CẦU ĐĂNG KÝ XE
-                       </StyledHeaderContent>
+                       </JobSectionTitle>
                        <StatusContainer direction="row" align="center">
                          <StatusLabel variant="body2">Trạng thái hồ sơ:</StatusLabel>
                             {documentDetail?.data?.vehicleStateBadge ? (
-                           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(`<p>${documentDetail.data.vehicleStateBadge}</p>`) }} />
+                           <div dangerouslySetInnerHTML={{ __html: documentDetail.data.vehicleStateBadge }} />
                          ) : (
                           <SuccessStatusTag>
                             Đã điều phối
@@ -432,7 +404,6 @@ const CoordinateRequests = ({
                          )}
                        </StatusContainer>
                      </SectionHeaderContainer>
-                     <StyledDivider />
 
               <Grid container spacing={2}>
                 {/* Information Fields */}
@@ -625,15 +596,14 @@ const CoordinateRequests = ({
             {/* ATTACHMENTS SECTION */}
             {isImportantGuest === "co" && (
               <StyledBoxContainerContent styledMarginTop>
-                <StyledHeaderContent variant="h6" gutterBottom>
+                <JobSectionTitle variant="h6" gutterBottom>
                   TỆP ĐÍNH KÈM TIẾP KHÁCH QUAN TRỌNG
-                </StyledHeaderContent>
+                </JobSectionTitle>
 
                 <FileTreeTable
                   data={fileList}
-                  isView
+                  isView={true}
                   fileName="Tai_lieu_yeu_cau_dat_xe"
-                  showStt
                 />
               </StyledBoxContainerContent>
             )}
@@ -641,9 +611,9 @@ const CoordinateRequests = ({
             {/* COORDINATION RESULTS SECTION */}
             <CoordinationContainer>
               <CoordinationHeader>
-                <StyledHeaderContent variant="h6" mb={0}>
+                <JobSectionTitle variant="h6" mb={0}>
                   KẾT QUẢ ĐIỀU PHỐI
-                </StyledHeaderContent>
+                </JobSectionTitle>
                 <CoordinationStatusBadge $status={coordinationData.status === "Đã điều phối đủ" ? "success" : "pending"}>
                   {coordinationData.status}
                 </CoordinationStatusBadge>
@@ -836,9 +806,9 @@ const CoordinateRequests = ({
 
             {/* ĐIỀU PHỐI LẠI */}
             <StyledBoxContainerContent >
-              <StyledHeaderContent variant="h6">
+              <JobSectionTitle variant="h6">
                 ĐIỀU PHỐI XE - TÀI XẾ
-              </StyledHeaderContent>
+              </JobSectionTitle>
 
               {/* <ActionButtonsContainer>
                 <TabButton 
@@ -892,13 +862,13 @@ const CoordinateRequests = ({
                         </IconButton>
                       </td>
                       <td align="right">
-                        <ButtonOutline  
-                          variant="contained"
+                        <BlueActionButton
+                        variant="contained"
                           onClick={makeSelectCar(v)}
                           disabled={selectedCars.some(c => c.id === v.id)}
                         >
                           Chọn
-                        </ButtonOutline>
+                        </BlueActionButton>
                       </td>
                     </tr>
                   ))}
@@ -949,15 +919,14 @@ const CoordinateRequests = ({
         selectedCars={selectedCars}
         selectedDriverMap={selectedDriverMap}
         // noteDetail={reason}
-        actionCode={effectiveActionCode}
+        actionCode={actionCode}
         workItem={workItem}
         vehicleRegistrationId={vehicleRegistrationId}
         requestTypeOptions={requestTypeOptions}
         priorityOptions={priorityOptions}
         onSuccess={onSuccess}
-        documentId={documentId}
       />
-    </BaseSwipper>
+    </CustomSwipper>
   );
 };
 
