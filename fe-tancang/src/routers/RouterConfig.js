@@ -1,6 +1,6 @@
-import React, { Suspense, useEffect, lazy, useMemo } from "react";
+import React, { Suspense, useEffect, lazy } from "react";
 import Loading from "@components/Loading/Loading";
-import { People, ReceiptLong, Menu as MenuIcon, Restaurant, Campaign, Article } from "@mui/icons-material";
+import { People, ReceiptLong, Menu as MenuIcon, Restaurant as RestaurantIcon, Restaurant, Campaign, Article } from "@mui/icons-material";
 import { Navigate, useRoutes, useLocation, useNavigate } from "react-router-dom";
 import useDynamicMenuRoutes from "@hooks/useDynamicMenuRoutes";
 import ProtectedRoute from "@AuthContext/ProtectedRoute";
@@ -232,6 +232,53 @@ export const routes = [
     ],
   },
   {
+    title: "QUẢN LÝ ĂN CA",
+    path: "/canteen",
+    element: <CanteenAdminDashboard />,
+    codeRouter: "CANTEEN_MANAGEMENT",
+    icon: <RestaurantIcon />,
+    settingIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-8.03c2.09-.13 3.75-1.85 3.75-3.97V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`,
+    order: 9,
+    subItems: [
+      {
+        path: "/canteen/dashboard",
+        element: <CanteenAdminDashboard />,
+        title: "DASHBOARD TỔNG HỢP SUẤT ĂN",
+        codeRouter: "canteen-dashboard-suat-an",
+      },
+      {
+        path: "/canteen/registrations",
+        element: <CanteenMyRegistrations />,
+        title: "ĐĂNG KÝ SUẤT ĂN",
+        codeRouter: "canteen-dang-ky-suat-an",
+      },
+      {
+        path: "/canteen/settings",
+        element: <CanteenSettingsPage />,
+        title: "CÀI ĐẶT ĐĂNG KÝ SUẤT ĂN",
+        codeRouter: "canteen-cai-dat-dang-ky",
+      },
+      {
+        path: "/canteen/supplier-dashboard",
+        element: <CateringSupplierSummaryDashboard />,
+        title: "DASHBOARD TỔNG HỢP NHÀ CUNG CẤP",
+        codeRouter: "canteen-dashboard-summary-ncc",
+      },
+      {
+        path: "/canteen/suppliers",
+        element: <CateringSuppliers />,
+        title: "QUẢN LÝ NHÀ CUNG CẤP",
+        codeRouter: "quan-ly-nha-cung-cap-an-ca",
+      },
+      {
+        path: "/canteen/menu-setup",
+        element: <CateringMenuSetup />,
+        title: "THIẾT LẬP THỰC ĐƠN (TUẦN)",
+        codeRouter: "thiet-lap-menu-bep",
+      },
+    ],
+  },
+  {
     // title: "Quản trị hệ thống",
     title: "Quản lý phân quyền",
     icon: <People />,
@@ -293,7 +340,7 @@ export const routes = [
         element: <CanteenManagement />,
         title: "Ăn ca & Suất ăn",
         codeRouter: "CANTEEN_LIST",
-        icon: Restaurant,
+        icon: <Restaurant />,
       },
       {
         path: "/meals/calendar",

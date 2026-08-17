@@ -12,18 +12,22 @@ import {
 import { Star, TrendingUp, EmojiEvents } from '@mui/icons-material';
 import { Box } from '@mui/material';
 
-const RankingAndTrend = ({ ranking, trends, activeId, onActiveChange }) => {
-  if (!ranking || !trends) return null;
-
+const RankingAndTrend = ({ ranking = [], trends, activeId, onActiveChange }) => {
   const chartData = useMemo(() => {
+    if (!trends || !trends.months || !trends.series) return [];
     return trends.months.map((month, idx) => {
       const obj = { name: month };
-      trends.series.forEach(s => {
-        obj[s.supplierName] = s.data[idx];
+      trends.series.forEach((s) => {
+        const keyName = s.supplierName || s.name;
+        if (keyName) {
+          obj[keyName] = s.data?.[idx] ?? 0;
+        }
       });
       return obj;
     });
   }, [trends]);
+
+  if (!ranking?.length && !trends) return null;
 
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 

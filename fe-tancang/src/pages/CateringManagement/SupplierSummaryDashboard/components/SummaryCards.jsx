@@ -25,6 +25,14 @@ const labelMap = {
   overallRating: 'Điểm TB chung',
 };
 
+const labelMapKeyAlt = {
+  totalSuppliers: 'supplierCount',
+  monthlyOrders: 'monthlyOrders',
+  mealsProvided: 'totalMeals',
+  totalCost: 'totalCost',
+  overallRating: 'averageRating',
+};
+
 const SummaryCards = ({ data }) => {
   if (!data) return null;
 
@@ -40,28 +48,32 @@ const SummaryCards = ({ data }) => {
   };
 
   const formatValue = (key, val) => {
+    if (val === undefined || val === null) return '0';
+    const num = Number(val);
+    if (isNaN(num)) return String(val);
     if (key === 'totalCost') {
-      if (val >= 1000000000) return `${(val / 1000000000).toFixed(2)} tỷ`;
-      if (val >= 1000000) return `${(val / 1000000).toFixed(0)} tr`;
-      return val.toLocaleString();
+      if (num >= 1000000000) return `${(num / 1000000000).toFixed(2)} tỷ`;
+      if (num >= 1000000) return `${(num / 1000000).toFixed(0)} tr`;
+      return num.toLocaleString();
     }
-    if (key === 'overallRating') return val.toFixed(1);
-    return val.toLocaleString();
+    if (key === 'overallRating') return num.toFixed(1);
+    return num.toLocaleString();
   };
 
   return (
     <div className="kpi-grid">
       {Object.entries(labelMap).map(([key, label]) => {
-        const item = data?.[key] || { value: 0 };
+        const rawItem = data?.[key] ?? data?.[labelMapKeyAlt[key]];
+        const item = typeof rawItem === 'object' && rawItem !== null ? rawItem : { value: rawItem ?? 0 };
         return (
           <div key={key} className="kpi-card">
-            <div className="kpi-icon" style={{ backgroundColor: iconMap[key].color, color: iconMap[key].text }}>
-              {iconMap[key].icon}
+            <div className="kpi-icon" style={{ backgroundColor: iconMap[key]?.color || '#eff6ff', color: iconMap[key]?.text || '#3b82f6' }}>
+              {iconMap[key]?.icon}
             </div>
             <div className="kpi-info">
               <p>{label}</p>
-              <h3>{formatValue(key, item.value)}</h3>
-              {renderTrend(key, item.trend, item.trendValue)}
+              <h3>{formatValue(key, item?.value ?? item)}</h3>
+              {renderTrend(key, item?.trend, item?.trendValue)}
             </div>
           </div>
         );

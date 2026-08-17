@@ -27,7 +27,7 @@ import {
 import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "@components/common/ToastProvider";
-import { setCurrentPageTitle, setSidebarOpen, setCurrentPageBreadcrumb, setSelectedModule  } from "@redux/slices/layoutSlice";
+import { setCurrentPageTitle, setSidebarOpen, setCurrentPageBreadcrumb, setSelectedModule } from "@redux/slices/layoutSlice";
 import { closeGlobalDialog } from "@components/GlobalDialogPortal";
 import useDynamicMenuRoutes from "@hooks/useDynamicMenuRoutes";
 import { setCodeGlobal } from "@redux/slices/FormDesign/formDesignSlice";
@@ -74,6 +74,16 @@ const SvgIconFromApi = ({ rawSvg, size = 24 }) => {
   );
 };
 
+const renderIcon = (icon) => {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) return icon;
+  if (typeof icon === "function" || (typeof icon === "object" && icon.$$typeof)) {
+    const IconComp = icon;
+    return <IconComp />;
+  }
+  return icon;
+};
+
 // Component con cho các Item trong Module Rail
 const ModuleRailItemAction = React.memo(({ item, onSelect, isActive }) => {
   const handleClick = useCallback(() => {
@@ -86,7 +96,7 @@ const ModuleRailItemAction = React.memo(({ item, onSelect, isActive }) => {
         {item.settingIcon ? (
           <SvgIconFromApi rawSvg={item.settingIcon} size={20} />
         ) : (
-          item.icon
+          renderIcon(item.icon)
         )}
       </ModuleRailIconBox>
     </ModuleRailItem>
@@ -165,7 +175,7 @@ const HoverMenuItem = React.memo(({
                 <SvgIconFromApi rawSvg={item.settingIcon} size={24} />
               </StyledContainerSvg>
             ) : (
-              item.icon
+              renderIcon(item.icon)
             )}
           </StyledListItemIcon>
 
@@ -251,7 +261,7 @@ const MainMenuItem = React.memo(({
                 <SvgIconFromApi rawSvg={item.settingIcon} size={24} />
               </StyledContainerSvg>
             ) : (
-              item.icon
+              renderIcon(item.icon)
             )}
           </StyledListItemIcon>
 
@@ -517,11 +527,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const buildBreadcrumb = useCallback((routes, targetPath, ancestors = []) => {
     for (const item of routes) {
-      const crumb = { 
-        title: item.title, 
-        path: item.path || findFirstNavigablePath(item) 
+      const crumb = {
+        title: item.title,
+        path: item.path || findFirstNavigablePath(item)
       };
-      
+
       if (item.path === targetPath) {
         return [...ancestors, crumb];
       }
@@ -567,16 +577,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       const { item, level } = foundData;
       dispatch(setCurrentPageTitle(item.title));
 
-      const moduleCrumb = selectedModule ? { 
-        title: selectedModule.title, 
-        path: findFirstNavigablePath(selectedModule) 
+      const moduleCrumb = selectedModule ? {
+        title: selectedModule.title,
+        path: findFirstNavigablePath(selectedModule)
       } : null;
 
       const chain = buildBreadcrumb(filteredRoutes, location.pathname, moduleCrumb ? [moduleCrumb] : []);
       if (chain) {
         dispatch(setCurrentPageBreadcrumb(chain));
       }
-      
+
       if (item.collapsed) {
         dispatch(setSidebarOpen(false));
       } else if (
@@ -637,7 +647,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         if (targetPath) {
           const moduleCode = moduleItem.codeRouter || moduleItem.title;
           dispatch(setSelectedModule(moduleCode));
-          
+
           setIsMenuPinned(false);
           setIsModuleNamesOpen(false);
           setHoveredModule(null);
@@ -651,7 +661,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       const moduleCode = moduleItem.codeRouter || moduleItem.title;
       dispatch(setSelectedModule(moduleCode));
-      
+
       setIsMenuPinned(true);
       setIsModuleNamesOpen(true);
       setHoveredModule(moduleItem);
@@ -738,8 +748,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       $isHoverOpen={isSidebarHovered}
       $isHoverSubMenuOpen={isHoverSubMenuOpen}
     >
-      <DrawerContentBox 
-        $isOpen={isMobile ? isOpen : false} 
+      <DrawerContentBox
+        $isOpen={isMobile ? isOpen : false}
         $isHoverOpen={isSidebarHovered}
         $isHoverSubMenuOpen={isHoverSubMenuOpen}
         onMouseLeave={handleSidebarMouseLeave}

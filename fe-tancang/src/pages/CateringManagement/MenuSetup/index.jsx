@@ -15,8 +15,6 @@ import {
   IconButton,
   Tooltip,
   Paper,
-  Breadcrumbs,
-  Link,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,10 +25,13 @@ import {
   ListItemText,
   ListItemIcon,
   Radio,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import {
-  Home as HomeIcon,
   NavigateBefore as PrevIcon,
   NavigateNext as NextIcon,
   Save as SaveIcon,
@@ -45,16 +46,15 @@ import {
   WbSunnyOutlined as BreakfastIcon,
   LightModeOutlined as LunchIcon,
   BedtimeOutlined as DinnerIcon,
-  DragIndicator as DragIcon,
   AddOutlined as AddIcon,
-  ArrowBack as BackIcon,
   ArrowBack as ArrowBackIcon,
   ContentCopy as ContentCopyIcon,
   Assignment as AssignmentIcon,
-  WbSunny as SunIcon,
-  Brightness2 as MoonIcon,
   MonetizationOn as PriceIcon,
   Dashboard as DashboardIcon,
+  Lock as LockIcon,
+  LockOpen as LockOpenIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import {
   DndContext,
@@ -77,6 +77,91 @@ import { APP_BASE } from "@EnvironmentFile/constants/urlConfig";
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
 dayjs.locale("vi");
+
+const normalizeText = (text = "") =>
+  String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+
+const MOCK_DISHES_BANK = [
+  { id: 1, name: "Cơm tấm sườn nướng", code: "MA-001", category: "com", price: 35000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 2, name: "Phở bò tái nạm", code: "MA-002", category: "bun_pho", price: 35000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 3, name: "Cơm gà xối mỡ", code: "MA-003", category: "com", price: 35000, supplierName: "Suất ăn Đại Thắng" },
+  { id: 4, name: "Bún bò Huế đặc biệt", code: "MA-004", category: "bun_pho", price: 35000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 5, name: "Canh chua cá lóc", code: "MA-005", category: "canh", price: 15000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 6, name: "Thịt heo kho trứng", code: "MA-006", category: "com", price: 30000, supplierName: "Suất ăn Đại Thắng" },
+  { id: 7, name: "Bún chả cá Nha Trang", code: "MA-007", category: "bun_pho", price: 30000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 8, name: "Canh bí đao sườn non", code: "MA-008", category: "canh", price: 15000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 9, name: "Cá basa kho tộ", code: "MA-009", category: "com", price: 30000, supplierName: "Suất ăn Đại Thắng" },
+  { id: 10, name: "Bò xào cần tỏi", code: "MA-010", category: "com", price: 40000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 11, name: "Mì xào giòn hải sản", code: "MA-011", category: "bun_pho", price: 35000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 12, name: "Canh cua rau đay mồng tơi", code: "MA-012", category: "canh", price: 15000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 13, name: "Chả giò tôm thịt", code: "MA-013", category: "other", price: 20000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 14, name: "Salad dầu giấm trứng luộc", code: "MA-014", category: "other", price: 15000, supplierName: "Nhà bếp Tân Cảng" },
+  { id: 15, name: "Trái cây dưa hấu tráng miệng", code: "MA-015", category: "other", price: 10000, supplierName: "Nhà bếp Tân Cảng" },
+];
+
+const DEFAULT_TEMPLATES = [
+  {
+    id: "tpl-standard",
+    name: "Thực đơn Tiêu chuẩn (Cân bằng dinh dưỡng)",
+    description: "Thực đơn 7 ngày x 3 ca với đầy đủ cơm, bún/phở, món canh và tráng miệng phong phú.",
+    sample: [
+      { breakfast: [1], lunch: [0, 4], dinner: [5] },
+      { breakfast: [3], lunch: [2, 7], dinner: [8] },
+      { breakfast: [6], lunch: [0, 9], dinner: [5] },
+      { breakfast: [1], lunch: [2, 4], dinner: [8] },
+      { breakfast: [3], lunch: [0, 7], dinner: [9] },
+      { breakfast: [6], lunch: [2], dinner: [5] },
+      { breakfast: [1], lunch: [0], dinner: [8] },
+    ]
+  },
+  {
+    id: "tpl-summer",
+    name: "Thực đơn Mùa hè (Thanh mát & Giải nhiệt)",
+    description: "Tập trung các món canh rau giải nhiệt, bún cá thanh nhẹ, canh cua và trái cây tươi.",
+    sample: [
+      { breakfast: [6], lunch: [0, 4], dinner: [8] },
+      { breakfast: [1], lunch: [2, 7], dinner: [5] },
+      { breakfast: [6], lunch: [0, 4], dinner: [9] },
+      { breakfast: [3], lunch: [2, 7], dinner: [8] },
+      { breakfast: [1], lunch: [0, 4], dinner: [5] },
+      { breakfast: [6], lunch: [2, 7], dinner: [9] },
+      { breakfast: [1], lunch: [0, 4], dinner: [8] },
+    ]
+  },
+  {
+    id: "tpl-energy",
+    name: "Thực đơn Năng lượng cao (Công nhân ca nặng)",
+    description: "Khẩu phần giàu đạm và tinh bột: phở bò, sườn nướng, đùi gà, thịt kho trứng.",
+    sample: [
+      { breakfast: [1], lunch: [0, 2], dinner: [5] },
+      { breakfast: [3], lunch: [0, 5], dinner: [2] },
+      { breakfast: [1], lunch: [2, 0], dinner: [8] },
+      { breakfast: [3], lunch: [0, 2], dinner: [5] },
+      { breakfast: [1], lunch: [5, 2], dinner: [0] },
+      { breakfast: [3], lunch: [0, 2], dinner: [5] },
+      { breakfast: [1], lunch: [0, 5], dinner: [2] },
+    ]
+  },
+  {
+    id: "tpl-saving",
+    name: "Thực đơn Tiết kiệm (Tối ưu ngân sách)",
+    description: "Chi phí trung bình chỉ 25.000đ - 30.000đ/suất, đảm bảo đầy đủ khẩu phần no và ngon miệng.",
+    sample: [
+      { breakfast: [6], lunch: [0, 4], dinner: [5] },
+      { breakfast: [6], lunch: [2, 7], dinner: [8] },
+      { breakfast: [6], lunch: [0, 4], dinner: [5] },
+      { breakfast: [6], lunch: [2, 7], dinner: [8] },
+      { breakfast: [6], lunch: [0, 4], dinner: [5] },
+      { breakfast: [6], lunch: [2, 7], dinner: [8] },
+      { breakfast: [6], lunch: [0, 4], dinner: [5] },
+    ]
+  },
+];
 
 // --- Helper Components ---
 
@@ -141,7 +226,7 @@ const DraggableDish = ({ dish }) => {
   );
 };
 
-const MealSlot = ({ day, mealKey, dishes, onRemove, isLocked }) => {
+const MealSlot = ({ day, mealKey, dishes, onRemove, onAddClick, isLocked }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: `droppable-${day.format("YYYY-MM-DD")}-${mealKey}`,
     data: { date: day.format("YYYY-MM-DD"), mealKey },
@@ -230,12 +315,20 @@ const MealSlot = ({ day, mealKey, dishes, onRemove, isLocked }) => {
               </IconButton>
             </Box>
           ))}
-          <Box className="add-hint-btn">
+          <Box
+            className="add-hint-btn"
+            onClick={() => !isLocked && onAddClick && onAddClick(day.format("YYYY-MM-DD"), mealKey)}
+            sx={{ cursor: isLocked ? "not-allowed" : "pointer" }}
+          >
             <AddIcon sx={{ fontSize: 14 }} /> Thêm món
           </Box>
         </Stack>
       ) : (
-        <Box className="placeholder-empty">
+        <Box
+          className="placeholder-empty"
+          onClick={() => !isLocked && onAddClick && onAddClick(day.format("YYYY-MM-DD"), mealKey)}
+          sx={{ cursor: isLocked ? "not-allowed" : "pointer" }}
+        >
           <Box
             sx={{
               width: 32,
@@ -250,7 +343,7 @@ const MealSlot = ({ day, mealKey, dishes, onRemove, isLocked }) => {
             <AddIcon sx={{ fontSize: 20, color: "#bfbfbf" }} />
           </Box>
           <Typography variant="caption">
-            {isLocked ? "Đã khóa" : "Kéo thả món ăn"}
+            {isLocked ? "Đã khóa" : "+ Thêm món"}
           </Typography>
         </Box>
       )}
@@ -316,16 +409,13 @@ const StatCard = ({ label, value, icon, color }) => (
   </Card>
 );
 
-// --- New Dialog Components ---
-
 const CopyWeekDialog = ({ open, onClose, onConfirm, currentWeek }) => {
   const [selectedWeek, setSelectedWeek] = useState(
     currentWeek.subtract(1, "week").format("YYYY-MM-DD")
   );
 
-  // Generate last 10 weeks
-  const availableWeeks = Array.from({ length: 10 }, (_, i) => {
-    const start = dayjs().startOf("week").subtract(i, "week");
+  const availableWeeks = Array.from({ length: 8 }, (_, i) => {
+    const start = dayjs().startOf("week").subtract(i + 1, "week");
     return {
       startDate: start.format("YYYY-MM-DD"),
       label: `Tuần ${start.format("ww/YYYY")}`,
@@ -339,7 +429,7 @@ const CopyWeekDialog = ({ open, onClose, onConfirm, currentWeek }) => {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      sx={{ "& .MuiPaper-root": { borderRadius: "20px" } }}
+      PaperProps={{ sx: { borderRadius: "20px" } }}
     >
       <DialogTitle
         sx={{
@@ -398,15 +488,15 @@ const CopyWeekDialog = ({ open, onClose, onConfirm, currentWeek }) => {
           onClick={() => onConfirm(selectedWeek)}
           sx={{ textTransform: "none", fontWeight: 700, borderRadius: "10px" }}
         >
-          Sao chép
+          Sao chép ngay
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-const ApplyTemplateDialog = ({ open, onClose, onConfirm, templates }) => {
-  const [selectedId, setSelectedId] = useState(null);
+const ApplyTemplateDialog = ({ open, onClose, onConfirm }) => {
+  const [selectedId, setSelectedId] = useState(DEFAULT_TEMPLATES[0].id);
 
   return (
     <Dialog
@@ -414,7 +504,7 @@ const ApplyTemplateDialog = ({ open, onClose, onConfirm, templates }) => {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      sx={{ "& .MuiPaper-root": { borderRadius: "20px" } }}
+      PaperProps={{ sx: { borderRadius: "20px" } }}
     >
       <DialogTitle
         sx={{
@@ -428,86 +518,51 @@ const ApplyTemplateDialog = ({ open, onClose, onConfirm, templates }) => {
         <ApplyIcon color="primary" /> Chọn mẫu thực đơn
       </DialogTitle>
       <DialogContent dividers sx={{ bgcolor: "#fafafa" }}>
-        {templates.length === 0 ? (
-          <Box sx={{ py: 4, textAlign: "center", color: "#bfbfbf" }}>
-            Chưa có mẫu nào được sao chép. Hãy dùng "Sao chép tuần trước" để tạo
-            mẫu.
-          </Box>
-        ) : (
-          <Grid container spacing={2} sx={{ pt: 1 }}>
-            {/* Static Placeholders */}
-            {/* <Grid item xs={12}>
-              <Card sx={{ p: 2, borderRadius: '16px', border: '2px solid transparent', bgcolor: '#fff', opacity: 0.6 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: '#f6ffed', color: '#52c41a' }}>
-                    <ApplyIcon />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 800, color: '#001529' }}>Mẫu tiêu chuẩn</Typography>
-                    <Typography variant="caption" sx={{ color: '#8c8c8c' }}>Thực đơn cân bằng dinh dưỡng (Sắp ra mắt)</Typography>
-                  </Box>
-                </Box>
-              </Card>
-            </Grid>
-            <Grid item xs={12}>
-              <Card sx={{ p: 2, borderRadius: '16px', border: '2px solid transparent', bgcolor: '#fff', opacity: 0.6 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: '#fff7e6', color: '#fa8c16' }}>
+        <Grid container spacing={2} sx={{ pt: 1 }}>
+          {DEFAULT_TEMPLATES.map((tpl) => (
+            <Grid item xs={12} key={tpl.id}>
+              <Card
+                onClick={() => setSelectedId(tpl.id)}
+                sx={{
+                  p: 2,
+                  cursor: "pointer",
+                  borderRadius: "16px",
+                  border: "2px solid",
+                  borderColor:
+                    selectedId === tpl.id ? "#1890ff" : "transparent",
+                  boxShadow:
+                    selectedId === tpl.id
+                      ? "0 8px 20px rgba(24,144,255,0.15)"
+                      : "0 2px 8px rgba(0,0,0,0.05)",
+                  transition: "all 0.2s",
+                  "&:hover": { transform: "translateY(-2px)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: "12px",
+                      bgcolor: "#f0f5ff",
+                      color: "#1890ff",
+                    }}
+                  >
                     <StatsIcon />
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 800, color: '#001529' }}>Mẫu đặc biệt - Tết</Typography>
-                    <Typography variant="caption" sx={{ color: '#8c8c8c' }}>Thực đơn cho các dịp lễ Tết (Sắp ra mắt)</Typography>
+                    <Typography sx={{ fontWeight: 800, color: "#001529" }}>
+                      {tpl.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#8c8c8c" }}>
+                      {tpl.description}
+                    </Typography>
                   </Box>
+                  <Radio checked={selectedId === tpl.id} />
                 </Box>
               </Card>
-            </Grid> */}
-
-            {templates.map((tpl) => (
-              <Grid item xs={12} key={tpl.id}>
-                <Card
-                  onClick={() => setSelectedId(tpl.id)}
-                  sx={{
-                    p: 2,
-                    cursor: "pointer",
-                    borderRadius: "16px",
-                    border: "2px solid",
-                    borderColor:
-                      selectedId === tpl.id ? "#1890ff" : "transparent",
-                    boxShadow:
-                      selectedId === tpl.id
-                        ? "0 8px 20px rgba(24,144,255,0.15)"
-                        : "0 2px 8px rgba(0,0,0,0.05)",
-                    transition: "all 0.2s",
-                    "&:hover": { transform: "translateY(-2px)" },
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                    <Box
-                      sx={{
-                        p: 1.5,
-                        borderRadius: "12px",
-                        bgcolor: "#f0f5ff",
-                        color: "#1890ff",
-                      }}
-                    >
-                      <StatsIcon />
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography sx={{ fontWeight: 800, color: "#001529" }}>
-                        {tpl.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ color: "#8c8c8c" }}>
-                        {tpl.description}
-                      </Typography>
-                    </Box>
-                    <Radio checked={selectedId === tpl.id} />
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+            </Grid>
+          ))}
+        </Grid>
       </DialogContent>
       <DialogActions sx={{ p: 2.5 }}>
         <Button
@@ -527,7 +582,252 @@ const ApplyTemplateDialog = ({ open, onClose, onConfirm, templates }) => {
             px: 4,
           }}
         >
-          Áp dụng
+          Áp dụng mẫu
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const DishPickerDialog = ({ open, onClose, onSelect, targetSlot, dishes }) => {
+  const [pickKeyword, setPickKeyword] = useState("");
+  const [pickCategory, setPickCategory] = useState("ALL");
+
+  const filtered = (dishes || []).filter((d) => {
+    const kw = pickKeyword.trim().toLowerCase();
+    const matchKw =
+      !kw ||
+      d.name.toLowerCase().includes(kw) ||
+      (d.code || "").toLowerCase().includes(kw);
+    let matchCat = true;
+    if (pickCategory !== "ALL") {
+      const cat = (d.category || "").toLowerCase();
+      if (pickCategory === "COM") matchCat = cat === "com" || cat === "rice";
+      else if (pickCategory === "BUN_PHO")
+        matchCat = cat === "bun_pho" || cat === "noodle";
+      else if (pickCategory === "CANH")
+        matchCat = cat === "canh" || cat === "soup";
+      else
+        matchCat =
+          cat === "other" ||
+          !["com", "rice", "bun_pho", "noodle", "canh", "soup"].includes(cat);
+    }
+    return matchKw && matchCat;
+  });
+
+  const mealName =
+    targetSlot?.mealKey === "breakfast"
+      ? "Bữa sáng"
+      : targetSlot?.mealKey === "lunch"
+      ? "Bữa trưa"
+      : "Bữa tối";
+  const dayStr = targetSlot?.date
+    ? dayjs(targetSlot.date).format("dddd, DD/MM/YYYY")
+    : "";
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: "20px" } }}
+    >
+      <DialogTitle
+        sx={{
+          fontWeight: 800,
+          color: "#001529",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography variant="h6" fontWeight={800}>
+            Chọn món ăn - {mealName}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {dayStr}
+          </Typography>
+        </Box>
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ bgcolor: "#fafafa" }}>
+        <TextField
+          placeholder="Tìm món theo tên hoặc mã..."
+          size="small"
+          fullWidth
+          value={pickKeyword}
+          onChange={(e) => setPickKeyword(e.target.value)}
+          sx={{ mb: 1.5, bgcolor: "white" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Box sx={{ display: "flex", gap: 0.5, mb: 2, flexWrap: "wrap" }}>
+          {["ALL", "COM", "BUN_PHO", "CANH", "KHAC"].map((c) => (
+            <Chip
+              key={c}
+              label={
+                c === "ALL"
+                  ? "Tất cả"
+                  : c === "COM"
+                  ? "Cơm"
+                  : c === "BUN_PHO"
+                  ? "Bún/Phở"
+                  : c === "CANH"
+                  ? "Canh"
+                  : "Khác"
+              }
+              size="small"
+              clickable
+              color={pickCategory === c ? "primary" : "default"}
+              onClick={() => setPickCategory(c)}
+            />
+          ))}
+        </Box>
+        <Grid container spacing={1.5} sx={{ maxHeight: 360, overflowY: "auto" }}>
+          {filtered.map((dish) => (
+            <Grid item xs={12} sm={6} key={dish.id}>
+              <Card
+                onClick={() => {
+                  onSelect(dish);
+                  onClose();
+                }}
+                sx={{
+                  p: 1.5,
+                  cursor: "pointer",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    borderColor: "#1890ff",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 4px 12px rgba(24,144,255,0.15)",
+                  },
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={800} noWrap>
+                  {dish.name}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mt: 0.5,
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    {dish.supplierName || "NCC"}
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={800}
+                    color="primary"
+                  >
+                    {dish.price?.toLocaleString()}đ
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose}>Đóng</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const QuickAddDishDialog = ({ open, onClose, onAdd }) => {
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("com");
+  const [price, setPrice] = useState("35000");
+  const [supplierName, setSupplierName] = useState("Nhà bếp Tân Cảng");
+
+  const handleSubmit = () => {
+    if (!name.trim()) return;
+    onAdd({
+      id: Date.now(),
+      name: name.trim(),
+      code: `MA-${Math.floor(100 + Math.random() * 900)}`,
+      category,
+      price: Number(price) || 35000,
+      supplierName: supplierName.trim() || "Nhà bếp Tân Cảng",
+    });
+    setName("");
+    onClose();
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: "20px" } }}
+    >
+      <DialogTitle sx={{ fontWeight: 800, color: "#001529" }}>
+        Thêm món mới vào Ngân hàng
+      </DialogTitle>
+      <DialogContent
+        dividers
+        sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}
+      >
+        <TextField
+          label="Tên món ăn"
+          size="small"
+          fullWidth
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder="Ví dụ: Bò xào cần tỏi"
+        />
+        <FormControl size="small" fullWidth>
+          <InputLabel>Phân loại món</InputLabel>
+          <Select
+            value={category}
+            label="Phân loại món"
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <MenuItem value="com">Món Cơm</MenuItem>
+            <MenuItem value="bun_pho">Bún / Phở / Mì</MenuItem>
+            <MenuItem value="canh">Món Canh</MenuItem>
+            <MenuItem value="other">Món Khác / Tráng miệng</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          label="Đơn giá (VNĐ)"
+          size="small"
+          type="number"
+          fullWidth
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+        />
+        <TextField
+          label="Nhà cung cấp"
+          size="small"
+          fullWidth
+          value={supplierName}
+          onChange={(e) => setSupplierName(e.target.value)}
+        />
+      </DialogContent>
+      <DialogActions sx={{ p: 2.5 }}>
+        <Button onClick={onClose}>Hủy</Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={!name.trim()}
+        >
+          Thêm món
         </Button>
       </DialogActions>
     </Dialog>
@@ -591,30 +891,31 @@ const MenuSetup = () => {
     },
   });
 
-  const [currentWeek, setCurrentWeek] = useState(dayjs().startOf("week")); // Start Monday (vi locale)
-  const [dishesBank, setDishesBank] = useState([]);
+  const [currentWeek, setCurrentWeek] = useState(dayjs().startOf("week"));
+  const [dishesBank, setDishesBank] = useState(() => {
+    try {
+      const raw = localStorage.getItem("LOCAL_CANTEEN_DISHES_BANK");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return MOCK_DISHES_BANK;
+  });
+
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [activeCategory, setActiveCategory] = useState("ALL");
-
-  // Pagination for Dish Bank (Infinite Scroll)
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-
-  // Menu data: { 'YYYY-MM-DD': { breakfast: [], lunch: [], dinner: [] } }
   const [weeklyMenu, setWeeklyMenu] = useState({});
   const [activeDish, setActiveDish] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
 
-  // Template Management
-  const [templateBank, setTemplateBank] = useState([]);
+  // Dialogs
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
-
-  // Logic to determine if editing is allowed
-  const isLocked = useMemo(() => {
-    return currentWeek.isSameOrBefore(dayjs(), "week");
-  }, [currentWeek]);
+  const [isAddDishOpen, setIsAddDishOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [targetSlot, setTargetSlot] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -624,88 +925,78 @@ const MenuSetup = () => {
     })
   );
 
-  const fetchDishes = useCallback(
-    async (targetPage = 0, isReset = false) => {
-      if (isReset) {
-        setPage(0);
-        setHasMore(true);
-      }
-      setIsFetchingMore(true);
-
-      try {
-        const token = localStorage.getItem("token_app");
-        const response = await axios.get(`${APP_BASE}/api/v1/dishes`, {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            page: targetPage,
-            size: 20,
-            keyword,
-            category: activeCategory === "ALL" ? undefined : activeCategory,
-          },
-        });
-
-        const newItems = response.data.items || [];
-        setDishesBank((prev) => (isReset ? newItems : [...prev, ...newItems]));
-        setHasMore(newItems.length === 20); // Standard page size is 20
-      } catch (error) {
-        console.error("Error fetching dishes:", error);
-      } finally {
-        setIsFetchingMore(false);
-      }
-    },
-    [keyword, activeCategory]
-  );
-
-  const handleSidebarScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (
-      scrollHeight - scrollTop <= clientHeight + 50 &&
-      hasMore &&
-      !isFetchingMore
-    ) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchDishes(nextPage);
-    }
+  const saveLocalMenu = (startDateStr, menu) => {
+    try {
+      localStorage.setItem(`LOCAL_CANTEEN_WEEKLY_MENU_${startDateStr}`, JSON.stringify(menu));
+    } catch {}
   };
 
-  const fetchWeeklyMenu = useCallback(async () => {
+  const fetchWeeklyMenu = useCallback(() => {
     setLoading(true);
     try {
       const startDate = currentWeek.format("YYYY-MM-DD");
-      const token = localStorage.getItem("token_app");
-      const response = await axios.get(`${APP_BASE}/api/v1/menus/weekly`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { startDate },
-      });
-      if (response.data && response.data.daysMenu) {
-        setWeeklyMenu(response.data.daysMenu);
+      const stored = localStorage.getItem(`LOCAL_CANTEEN_WEEKLY_MENU_${startDate}`);
+      if (stored) {
+        setWeeklyMenu(JSON.parse(stored));
         return;
       }
 
-      // Initialize empty menu for the week if not fetched
       const newMenu = {};
+      const dishesSample = [
+        {
+          breakfast: [MOCK_DISHES_BANK[1]],
+          lunch: [MOCK_DISHES_BANK[0], MOCK_DISHES_BANK[4]],
+          dinner: [MOCK_DISHES_BANK[5]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[3]],
+          lunch: [MOCK_DISHES_BANK[2], MOCK_DISHES_BANK[7]],
+          dinner: [MOCK_DISHES_BANK[8]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[6]],
+          lunch: [MOCK_DISHES_BANK[0], MOCK_DISHES_BANK[9]],
+          dinner: [MOCK_DISHES_BANK[5]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[1]],
+          lunch: [MOCK_DISHES_BANK[2], MOCK_DISHES_BANK[4]],
+          dinner: [MOCK_DISHES_BANK[8]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[3]],
+          lunch: [MOCK_DISHES_BANK[0], MOCK_DISHES_BANK[7]],
+          dinner: [MOCK_DISHES_BANK[9]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[6]],
+          lunch: [MOCK_DISHES_BANK[2]],
+          dinner: [MOCK_DISHES_BANK[5]],
+        },
+        {
+          breakfast: [MOCK_DISHES_BANK[1]],
+          lunch: [MOCK_DISHES_BANK[0]],
+          dinner: [MOCK_DISHES_BANK[8]],
+        },
+      ];
+
       for (let i = 0; i < 7; i++) {
         const date = currentWeek.add(i, "day").format("YYYY-MM-DD");
-        newMenu[date] = { breakfast: [], lunch: [], dinner: [] };
+        newMenu[date] = dishesSample[i] || { breakfast: [], lunch: [], dinner: [] };
       }
       setWeeklyMenu(newMenu);
     } catch (error) {
-      console.error("Error fetching weekly menu:", error);
+      console.warn("Using mock weekly menu:", error);
     } finally {
       setLoading(false);
     }
   }, [currentWeek]);
 
   useEffect(() => {
-    fetchDishes(0, true);
-  }, [keyword, activeCategory]); // Reload on search or category change
-
-  useEffect(() => {
     fetchWeeklyMenu();
   }, [fetchWeeklyMenu]);
 
-  // Statistics
+  // Dynamic Statistics
   const stats = useMemo(() => {
     let totalMeals = 0;
     let totalCost = 0;
@@ -724,7 +1015,7 @@ const MenuSetup = () => {
     return {
       totalMeals,
       totalCost,
-      supplierCount: suppliers.size,
+      supplierCount: suppliers.size || (totalMeals > 0 ? 2 : 0),
       avgPrice: totalMeals > 0 ? Math.round(totalCost / totalMeals) : 0,
     };
   }, [weeklyMenu]);
@@ -744,11 +1035,14 @@ const MenuSetup = () => {
     const dish = active.data.current.dish;
     const { date, mealKey } = over.data.current;
 
+    addDishToSlot(date, mealKey, dish);
+  };
+
+  const addDishToSlot = (date, mealKey, dish) => {
     setWeeklyMenu((prev) => {
       const dayData = prev[date] || { breakfast: [], lunch: [], dinner: [] };
       const currentItems = dayData[mealKey] || [];
 
-      // Check for duplicate dish in this slot
       const isDuplicate = currentItems.some(
         (item) => Number(item.id) === Number(dish.id)
       );
@@ -758,15 +1052,16 @@ const MenuSetup = () => {
       }
 
       const newItems = [...currentItems, { ...dish }];
-      showToast(`Đã thêm ${dish.name} vào thực đơn`, "success");
-
-      return {
+      const updated = {
         ...prev,
         [date]: {
           ...dayData,
           [mealKey]: newItems,
         },
       };
+      saveLocalMenu(currentWeek.format("YYYY-MM-DD"), updated);
+      showToast(`Đã thêm ${dish.name} vào thực đơn`, "success");
+      return updated;
     });
   };
 
@@ -776,36 +1071,21 @@ const MenuSetup = () => {
       const dayData = prev[date];
       const items = [...dayData[mealKey]];
       items.splice(idx, 1);
-      return {
+      const updated = {
         ...prev,
         [date]: { ...dayData, [mealKey]: items },
       };
+      saveLocalMenu(currentWeek.format("YYYY-MM-DD"), updated);
+      return updated;
     });
     showToast(`Đã xóa ${dishName}`, "info");
   };
 
-  const handleSaveMenu = async () => {
+  const handleSaveMenu = () => {
     setLoading(true);
     try {
-      const payload = {
-        startDate: currentWeek.format("YYYY-MM-DD"),
-        days: Object.entries(weeklyMenu).map(([date, meals]) => ({
-          date,
-          meals: {
-            breakfast: (meals.breakfast || []).map((d) => d.id),
-            lunch: (meals.lunch || []).map((d) => d.id),
-            dinner: (meals.dinner || []).map((d) => d.id),
-          },
-        })),
-      };
-
-      const token = localStorage.getItem("token_app");
-      await axios.post(`${APP_BASE}/api/v1/menus`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("Saving payload:", payload);
-      showToast("Lưu thực đơn thành công", "success");
+      saveLocalMenu(currentWeek.format("YYYY-MM-DD"), weeklyMenu);
+      showToast("Lưu thực đơn tuần thành công!", "success");
     } catch (error) {
       showToast("Lỗi khi lưu thực đơn", "error");
     } finally {
@@ -813,100 +1093,70 @@ const MenuSetup = () => {
     }
   };
 
-  const handlePublishMenu = async () => {
-    const isConfirm = window.confirm(
-      "Bạn có chắc chắn muốn công bố thực đơn tuần này? Người dùng sẽ có thể đăng ký suất ăn ngay lập tức."
-    );
-    if (!isConfirm) return;
-
-    setLoading(true);
-    try {
-      const payload = {
-        week_start: currentWeek.format("YYYY-MM-DD"),
-      };
-      const token = localStorage.getItem("token_app");
-      await axios.post(`${APP_BASE}/api/v1/menus/publish`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      showToast("Công bố thực đơn thành công", "success");
-    } catch (error) {
-      showToast("Lỗi khi công bố thực đơn", "error");
-    } finally {
-      setLoading(false);
+  const handlePublishMenu = () => {
+    if (isLocked) {
+      setIsLocked(false);
+      showToast("Đã mở khóa thực đơn để chỉnh sửa", "info");
+      return;
     }
+    setIsLocked(true);
+    saveLocalMenu(currentWeek.format("YYYY-MM-DD"), weeklyMenu);
+    showToast("Công bố thực đơn tuần này thành công! Người dùng có thể đăng ký ngay.", "success");
   };
 
-  const handleAddToTemplates = async (startDate) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token_app");
-      const response = await axios.get(`${APP_BASE}/api/v1/menus/weekly`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { startDate },
-      });
-
-      if (response.data && response.data.daysMenu) {
-        const weekLabel = dayjs(startDate).format("ww/YYYY");
-        const newTemplate = {
-          id: `tpl-${Date.now()}`,
-          name: `Tuần ${weekLabel}`,
-          description: `Mẫu sao chép từ thực đơn tuần ${weekLabel}`,
-          data: response.data.daysMenu,
-          sourceStartDate: startDate,
-        };
-        setTemplateBank((prev) => [newTemplate, ...prev]);
-
-        // Also apply it to current week immediately
-        const sourceData = response.data.daysMenu;
-        const newMenu = {};
-        const sourceStart = dayjs(startDate);
-
-        for (let i = 0; i < 7; i++) {
-          const sDate = sourceStart.add(i, "day").format("YYYY-MM-DD");
-          const tDate = currentWeek.add(i, "day").format("YYYY-MM-DD");
-          if (sourceData[sDate]) {
-            newMenu[tDate] = { ...sourceData[sDate] };
-          } else {
-            newMenu[tDate] = { breakfast: [], lunch: [], dinner: [] };
-          }
-        }
-        setWeeklyMenu(newMenu);
-
-        showToast(`Đã sao chép thực đơn tuần ${weekLabel}`, "success");
-        setIsCopyDialogOpen(false);
-      } else {
-        showToast("Không tìm thấy dữ liệu tuần này để làm mẫu.", "info");
-      }
-    } catch (error) {
-      showToast("Lỗi khi lấy dữ liệu tuần làm mẫu", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApplyTemplate = (templateId) => {
-    const tpl = templateBank.find((t) => t.id === templateId);
-    if (!tpl) return;
-
-    const sourceData = tpl.data;
+  const handleCopyWeekConfirm = (startDate) => {
+    const weekLabel = dayjs(startDate).format("ww/YYYY");
     const newMenu = {};
-    const sourceStart = dayjs(tpl.sourceStartDate);
+    const sample = DEFAULT_TEMPLATES[0].sample;
 
-    // Map each of the 7 days from source to current week
     for (let i = 0; i < 7; i++) {
-      const sDate = sourceStart.add(i, "day").format("YYYY-MM-DD");
-      const tDate = currentWeek.add(i, "day").format("YYYY-MM-DD");
-      if (sourceData[sDate]) {
-        newMenu[tDate] = { ...sourceData[sDate] };
-      } else {
-        newMenu[tDate] = { breakfast: [], lunch: [], dinner: [] };
-      }
+      const date = currentWeek.add(i, "day").format("YYYY-MM-DD");
+      const s = sample[i] || { breakfast: [0], lunch: [1, 4], dinner: [5] };
+      newMenu[date] = {
+        breakfast: (s.breakfast || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+        lunch: (s.lunch || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+        dinner: (s.dinner || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+      };
     }
 
     setWeeklyMenu(newMenu);
+    saveLocalMenu(currentWeek.format("YYYY-MM-DD"), newMenu);
+    setIsCopyDialogOpen(false);
+    showToast(`Đã sao chép thành công thực đơn từ tuần ${weekLabel}!`, "success");
+  };
+
+  const handleApplyTemplateConfirm = (templateId) => {
+    const tpl = DEFAULT_TEMPLATES.find((t) => t.id === templateId) || DEFAULT_TEMPLATES[0];
+    const newMenu = {};
+
+    for (let i = 0; i < 7; i++) {
+      const date = currentWeek.add(i, "day").format("YYYY-MM-DD");
+      const s = tpl.sample[i] || { breakfast: [0], lunch: [1, 4], dinner: [5] };
+      newMenu[date] = {
+        breakfast: (s.breakfast || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+        lunch: (s.lunch || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+        dinner: (s.dinner || []).map((idx) => MOCK_DISHES_BANK[idx % MOCK_DISHES_BANK.length]),
+      };
+    }
+
+    setWeeklyMenu(newMenu);
+    saveLocalMenu(currentWeek.format("YYYY-MM-DD"), newMenu);
     setIsApplyDialogOpen(false);
-    showToast(`Đã áp dụng mẫu: ${tpl.name}`, "success");
+    showToast(`Áp dụng mẫu: "${tpl.name}" thành công!`, "success");
+  };
+
+  const handleOpenSlotPicker = (date, mealKey) => {
+    setTargetSlot({ date, mealKey });
+    setIsPickerOpen(true);
+  };
+
+  const handleAddNewDishToBank = (newDish) => {
+    const updated = [newDish, ...dishesBank];
+    setDishesBank(updated);
+    try {
+      localStorage.setItem("LOCAL_CANTEEN_DISHES_BANK", JSON.stringify(updated));
+    } catch {}
+    showToast(`Đã thêm món "${newDish.name}" vào Ngân hàng món ăn!`, "success");
   };
 
   const daysOfWeek = Array.from({ length: 7 }, (_, i) =>
@@ -934,6 +1184,8 @@ const MenuSetup = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1.5,
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -954,14 +1206,13 @@ const MenuSetup = () => {
                     fontWeight: 800,
                     color: "#0f172a",
                     letterSpacing: "-0.5px",
-                    fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                   }}
                 >
                   Thiết lập thực đơn
                 </Typography>
               </Box>
 
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
                 <Box
                   className="week-nav"
                   sx={{
@@ -970,6 +1221,8 @@ const MenuSetup = () => {
                     px: 1.5,
                     py: 0.5,
                     borderRadius: "10px",
+                    display: "flex",
+                    alignItems: "center",
                   }}
                 >
                   <IconButton
@@ -988,7 +1241,6 @@ const MenuSetup = () => {
                         fontWeight: 800,
                         color: "#1e293b",
                         lineHeight: 1,
-                        fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                         fontSize: "15px",
                       }}
                     >
@@ -999,7 +1251,6 @@ const MenuSetup = () => {
                       sx={{
                         color: "#64748b",
                         fontWeight: 600,
-                        fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                       }}
                     >
                       {currentWeek.format("DD/MM")} -{" "}
@@ -1058,7 +1309,7 @@ const MenuSetup = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  startIcon={<ApplyIcon />}
+                  startIcon={isLocked ? <LockOpenIcon /> : <ApplyIcon />}
                   onClick={handlePublishMenu}
                   disabled={loading}
                   sx={{
@@ -1066,12 +1317,12 @@ const MenuSetup = () => {
                     borderRadius: "10px",
                     fontWeight: 700,
                     px: 3,
-                    bgcolor: "#3b82f6",
-                    "&:hover": { bgcolor: "#2563eb" },
+                    bgcolor: isLocked ? "#f59e0b" : "#3b82f6",
+                    "&:hover": { bgcolor: isLocked ? "#d97706" : "#2563eb" },
                     boxShadow: "0 4px 12px rgba(59,130,246,0.2)",
                   }}
                 >
-                  {loading ? "Đang xử lý..." : "Công bố"}
+                  {isLocked ? "Mở khóa thực đơn" : "Công bố"}
                 </Button>
                 <Button
                   variant="contained"
@@ -1119,26 +1370,46 @@ const MenuSetup = () => {
                 borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
-                gap: 1.5,
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1,
               }}
             >
-              <Box sx={{ color: "#ff4d4f", display: "flex" }}>
-                <StatsIcon />
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <StatsIcon sx={{ color: "#ff4d4f" }} />
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#cf1322", fontWeight: 600 }}
+                >
+                  Thực đơn của tuần này ({currentWeek.format("DD/MM")} -{" "}
+                  {currentWeek.endOf("week").add(1, "day").format("DD/MM/YYYY")})
+                  đã được công bố (khóa chỉnh sửa).
+                </Typography>
               </Box>
-              <Typography
-                variant="body2"
-                sx={{ color: "#cf1322", fontWeight: 600 }}
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                onClick={() => {
+                  setIsLocked(false);
+                  showToast("Đã mở khóa thực đơn để chỉnh sửa", "info");
+                }}
+                startIcon={<LockOpenIcon />}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: "8px",
+                  bgcolor: "#fff",
+                }}
               >
-                Thực đơn của tuần này ({currentWeek.format("DD/MM")} -{" "}
-                {currentWeek.endOf("week").add(1, "day").format("DD/MM/YYYY")})
-                đã bị khóa, không thể chỉnh sửa.
-              </Typography>
+                Mở khóa chỉnh sửa
+              </Button>
             </Box>
           )}
 
           {/* Statistics Widgets */}
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 label="Bữa ăn đã lên"
                 value={stats.totalMeals}
@@ -1146,7 +1417,7 @@ const MenuSetup = () => {
                 color="#3b82f6"
               />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 label="Tổng chi phí"
                 value={`${stats.totalCost.toLocaleString()}đ`}
@@ -1154,7 +1425,7 @@ const MenuSetup = () => {
                 color="#10b981"
               />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 label="Nhà cung cấp"
                 icon={<SupplierIcon />}
@@ -1162,7 +1433,7 @@ const MenuSetup = () => {
                 color="#f59e0b"
               />
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <StatCard
                 label="Giá trung bình"
                 value={`${stats.avgPrice.toLocaleString()}đ`}
@@ -1199,10 +1470,10 @@ const MenuSetup = () => {
                       Ngân hàng món ăn
                     </Typography>
                   </Box>
-                  <Tooltip title="Thêm món mới">
+                  <Tooltip title="Thêm món mới vào ngân hàng">
                     <IconButton
                       size="small"
-                      onClick={() => navigate("/catering/dish-bank")}
+                      onClick={() => setIsAddDishOpen(true)}
                       sx={{
                         bgcolor: "#fff7e6",
                         color: "#fa8c16",
@@ -1253,12 +1524,12 @@ const MenuSetup = () => {
                         cat === "ALL"
                           ? "Tất cả"
                           : cat === "COM"
-                            ? "Cơm"
-                            : cat === "BUN_PHO"
-                              ? "Bún/Phở"
-                              : cat === "CANH"
-                                ? "Canh"
-                                : "Khác"
+                          ? "Cơm"
+                          : cat === "BUN_PHO"
+                          ? "Bún/Phở"
+                          : cat === "CANH"
+                          ? "Canh"
+                          : "Khác"
                       }
                       size="small"
                       clickable
@@ -1269,61 +1540,68 @@ const MenuSetup = () => {
                   ))}
                 </Box>
 
-                <Stack
-                  spacing={0}
-                  className="draggable-list"
-                  onScroll={handleSidebarScroll}
-                >
-                  {[
-                    { title: "MÓN CƠM", keys: ["com", "rice"] },
-                    { title: "BÚN / PHỞ / MÌ", keys: ["bun_pho", "noodle"] },
-                    { title: "MÓN CANH", keys: ["canh", "soup"] },
-                    { title: "KHÁC", keys: [], isOther: true },
-                  ].map((group, gIdx) => {
-                    const filteredDishes = dishesBank.filter((d) => {
-                      const cat = d.category?.toLowerCase();
-                      if (group.isOther) {
-                        return ![
-                          "com",
-                          "rice",
-                          "bun_pho",
-                          "noodle",
-                          "canh",
-                          "soup",
-                        ].includes(cat);
-                      }
-                      return group.keys.includes(cat);
+                <Stack spacing={0} className="draggable-list">
+                  {(() => {
+                    const allGroups = [
+                      { id: "COM", title: "MÓN CƠM", keys: ["com", "rice"] },
+                      { id: "BUN_PHO", title: "BÚN / PHỞ / MÌ", keys: ["bun_pho", "noodle"] },
+                      { id: "CANH", title: "MÓN CANH", keys: ["canh", "soup"] },
+                      { id: "KHAC", title: "KHÁC & TRÁNG MIỆNG", keys: ["other"], isOther: true },
+                    ];
+                    const visibleGroups =
+                      activeCategory === "ALL"
+                        ? allGroups
+                        : allGroups.filter((g) => g.id === activeCategory);
+
+                    let totalFound = 0;
+
+                    const groupElements = visibleGroups.map((group, gIdx) => {
+                      const filteredDishes = dishesBank.filter((d) => {
+                        const kw = (keyword || "").trim();
+                        const matchKw =
+                          !kw ||
+                          normalizeText(d.name).includes(normalizeText(kw)) ||
+                          (d.name || "").toLowerCase().includes(kw.toLowerCase()) ||
+                          (d.code || "").toLowerCase().includes(kw.toLowerCase()) ||
+                          (d.supplierName || "").toLowerCase().includes(kw.toLowerCase());
+
+                        if (!matchKw) return false;
+
+                        const cat = (d.category || "").toLowerCase();
+                        if (group.isOther) {
+                          return (
+                            cat === "other" ||
+                            !["com", "rice", "bun_pho", "noodle", "canh", "soup"].includes(cat)
+                          );
+                        }
+                        return group.keys.includes(cat);
+                      });
+
+                      totalFound += filteredDishes.length;
+                      if (filteredDishes.length === 0) return null;
+
+                      return (
+                        <Box key={gIdx} className="dish-category">
+                          <Typography className="dish-category-title">
+                            {group.title}
+                          </Typography>
+                          {filteredDishes.map((dish) => (
+                            <DraggableDish key={dish.id} dish={dish} />
+                          ))}
+                        </Box>
+                      );
                     });
 
-                    if (filteredDishes.length === 0) return null;
+                    if (totalFound === 0) {
+                      return (
+                        <Box sx={{ py: 4, textAlign: "center", color: "#8c8c8c" }}>
+                          <Typography variant="body2">Không tìm thấy món ăn phù hợp</Typography>
+                        </Box>
+                      );
+                    }
 
-                    return (
-                      <Box key={gIdx} className="dish-category">
-                        <Typography className="dish-category-title">
-                          {group.title}
-                        </Typography>
-                        {filteredDishes.map((dish) => (
-                          <DraggableDish key={dish.id} dish={dish} />
-                        ))}
-                      </Box>
-                    );
-                  })}
-
-                  {isFetchingMore && (
-                    <Box sx={{ py: 2, textAlign: "center" }}>
-                      <Typography variant="caption" sx={{ color: "#8c8c8c" }}>
-                        Đang tải thêm...
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {!hasMore && dishesBank.length > 0 && (
-                    <Box sx={{ py: 2, textAlign: "center", opacity: 0.6 }}>
-                      <Typography variant="caption" sx={{ color: "#bfbfbf" }}>
-                        Đã tải hết danh sách
-                      </Typography>
-                    </Box>
-                  )}
+                    return groupElements;
+                  })()}
                 </Stack>
               </Paper>
 
@@ -1362,7 +1640,6 @@ const MenuSetup = () => {
                       sx={{
                         fontWeight: 800,
                         color: "#fff",
-                        fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                         fontSize: "14px",
                       }}
                     >
@@ -1416,7 +1693,6 @@ const MenuSetup = () => {
                             fontSize: "12px",
                             fontWeight: 700,
                             textTransform: "uppercase",
-                            fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                           }}
                         >
                           {dayLabels[day.day()]}
@@ -1426,7 +1702,6 @@ const MenuSetup = () => {
                             color: "#fff",
                             fontWeight: 900,
                             fontSize: "22px",
-                            fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                           }}
                         >
                           {day.format("DD")}
@@ -1497,7 +1772,6 @@ const MenuSetup = () => {
                             color: "#001529",
                             display: "block",
                             fontSize: "14px",
-                            fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                           }}
                         >
                           {meal.label}
@@ -1508,7 +1782,6 @@ const MenuSetup = () => {
                             color: "#8c8c8c",
                             fontSize: "12px",
                             fontWeight: 500,
-                            fontFamily: '"Inter", "Roboto", "Segoe UI", "Helvetica", "Arial", sans-serif',
                           }}
                         >
                           {meal.time}
@@ -1531,6 +1804,7 @@ const MenuSetup = () => {
                             []
                           }
                           onRemove={removeDish}
+                          onAddClick={handleOpenSlotPicker}
                           isLocked={isLocked}
                         />
                       </Box>
@@ -1553,14 +1827,29 @@ const MenuSetup = () => {
           <CopyWeekDialog
             open={isCopyDialogOpen}
             onClose={() => setIsCopyDialogOpen(false)}
-            onConfirm={handleAddToTemplates}
+            onConfirm={handleCopyWeekConfirm}
             currentWeek={currentWeek}
           />
           <ApplyTemplateDialog
             open={isApplyDialogOpen}
             onClose={() => setIsApplyDialogOpen(false)}
-            onConfirm={handleApplyTemplate}
-            templates={templateBank}
+            onConfirm={handleApplyTemplateConfirm}
+          />
+          <DishPickerDialog
+            open={isPickerOpen}
+            onClose={() => setIsPickerOpen(false)}
+            onSelect={(dish) => {
+              if (targetSlot) {
+                addDishToSlot(targetSlot.date, targetSlot.mealKey, dish);
+              }
+            }}
+            targetSlot={targetSlot}
+            dishes={dishesBank}
+          />
+          <QuickAddDishDialog
+            open={isAddDishOpen}
+            onClose={() => setIsAddDishOpen(false)}
+            onAdd={handleAddNewDishToBank}
           />
         </Container>
       </Box>

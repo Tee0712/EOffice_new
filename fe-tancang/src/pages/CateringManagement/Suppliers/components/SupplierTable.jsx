@@ -56,7 +56,8 @@ const getStatusChip = (status) => {
         />
       );
     case "EXPIRED":
-    case "� H�T H�N":
+    case "ĐÃ HẾT HẠN":
+    case "HẾT HẠN":
       return (
         <Chip
           label="Đã hết hạn"
@@ -70,7 +71,7 @@ const getStatusChip = (status) => {
         />
       );
     case "REPLACED":
-    case "� THAY TH�":
+    case "ĐÃ THAY THẾ":
       return (
         <Chip
           label="Đã thay thế"

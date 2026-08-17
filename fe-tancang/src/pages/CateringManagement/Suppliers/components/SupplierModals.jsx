@@ -376,6 +376,14 @@ export const ViewModal = ({ open, onClose, onEdit, supplier }) => {
   );
 };
 
+const DEFAULT_SUPPLIER_CATEGORIES = [
+  { code: "FOOD", name: "Suất ăn công nghiệp & Bếp nấu" },
+  { code: "FRESH_FOOD", name: "Nông sản & Thực phẩm tươi sống" },
+  { code: "MEAT_SEAFOOD", name: "Thịt, Cá & Hải sản tươi" },
+  { code: "DRY_FOOD", name: "Gia vị, Gạo & Đồ khô" },
+  { code: "BEVERAGE", name: "Nước uống & Tráng miệng" },
+];
+
 export const SupplierFormModal = ({
   open,
   onClose,
@@ -405,14 +413,16 @@ export const SupplierFormModal = ({
     },
   });
 
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(DEFAULT_SUPPLIER_CATEGORIES);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await callApi("get", API_CATERING_CATEGORIES);
-        if (res?.data) {
+        if (Array.isArray(res?.data) && res.data.length > 0) {
           setCategories(res.data);
+        } else if (Array.isArray(res) && res.length > 0) {
+          setCategories(res);
         }
       } catch (error) {
         console.error("Failed to fetch categories:", error);

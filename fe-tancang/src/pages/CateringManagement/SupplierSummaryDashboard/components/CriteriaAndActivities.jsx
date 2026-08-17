@@ -18,7 +18,26 @@ const CriteriaAndActivities = ({
   onViewAllActivities,
   onActivityClick,
 }) => {
-  if (!criteria || !activities || !alerts) return null;
+  const criteriaList = Array.isArray(criteria)
+    ? criteria
+    : typeof criteria === 'object' && criteria !== null
+    ? [
+        { code: 'taste', name: 'Khẩu vị & Hương vị', value: Number(criteria.taste) || 4.8 },
+        { code: 'hygiene', name: 'Vệ sinh An toàn Thực phẩm', value: Number(criteria.hygiene) || 4.9 },
+        { code: 'portion', name: 'Định lượng & Khẩu phần', value: Number(criteria.portion) || 4.7 },
+        { code: 'diversity', name: 'Đa dạng Thực đơn', value: Number(criteria.diversity) || 4.6 },
+        { code: 'service', name: 'Thái độ Phục vụ', value: Number(criteria.service) || 4.8 },
+      ]
+    : [
+        { code: 'taste', name: 'Khẩu vị & Hương vị', value: 4.8 },
+        { code: 'hygiene', name: 'Vệ sinh An toàn Thực phẩm', value: 4.9 },
+        { code: 'portion', name: 'Định lượng & Khẩu phần', value: 4.7 },
+        { code: 'diversity', name: 'Đa dạng Thực đơn', value: 4.6 },
+        { code: 'service', name: 'Thái độ Phục vụ', value: 4.8 },
+      ];
+
+  const activityList = Array.isArray(activities) ? activities : [];
+  const alertList = Array.isArray(alerts) ? alerts : [];
 
   return (
     <div className="dashboard-row">
@@ -31,39 +50,42 @@ const CriteriaAndActivities = ({
         </div>
         <div className="card-body">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {criteria.map((item) => (
-              <div key={item.code}>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '10px',
-                    fontSize: '14px',
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{item.name}</span>
-                  <span style={{ fontWeight: 800, color: 'var(--text-main)' }}>{item.value.toFixed(1)} / 5</span>
-                </div>
-                <div
-                  style={{
-                    height: '8px',
-                    backgroundColor: '#f1f5f9',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                  }}
-                >
+            {criteriaList.map((item) => {
+              const val = Number(item.value) || 0;
+              return (
+                <div key={item.code || item.name}>
                   <div
                     style={{
-                      width: `${(item.value / 5) * 100}%`,
-                      height: '100%',
-                      backgroundColor:
-                        item.value >= 4.5 ? '#22c55e' : item.value >= 4 ? '#3b82f6' : '#f59e0b',
-                      borderRadius: '4px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '10px',
+                      fontSize: '14px',
                     }}
-                  />
+                  >
+                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{item.name}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--text-main)' }}>{val.toFixed(1)} / 5</span>
+                  </div>
+                  <div
+                    style={{
+                      height: '8px',
+                      backgroundColor: '#f1f5f9',
+                      borderRadius: '4px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${(val / 5) * 100}%`,
+                        height: '100%',
+                        backgroundColor:
+                          val >= 4.5 ? '#22c55e' : val >= 4 ? '#3b82f6' : '#f59e0b',
+                        borderRadius: '4px',
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <Box mt={5} mb={2}>
@@ -72,7 +94,7 @@ const CriteriaAndActivities = ({
               Cảnh báo & Nhắc nhở
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {alerts.slice(0, 3).map((alert) => (
+              {alertList.slice(0, 3).map((alert) => (
                 <div
                   key={alert.id}
                   style={{

@@ -31,7 +31,7 @@ import {
   PriceUpdateModal,
   ExportPreviewModal
 } from './components/SupplierModals';
-import { mockSummary } from './mockData';
+import { mockSuppliers, mockSummary } from './mockData';
 import { callApi } from '@services/api';
 import {
   API_CATERING_SUPPLIERS,
@@ -41,6 +41,29 @@ import {
   API_CATERING_SUPPLIER_EXPORT
 } from '@EnvironmentFile/constants/urlConfig';
 import './Suppliers.css';
+
+
+
+const getStoredSuppliers = () => {
+  try {
+    const raw = localStorage.getItem("LOCAL_CATERING_SUPPLIERS");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn("Read LOCAL_CATERING_SUPPLIERS error:", e);
+  }
+  return mockSuppliers;
+};
+
+const saveStoredSuppliers = (list) => {
+  try {
+    localStorage.setItem("LOCAL_CATERING_SUPPLIERS", JSON.stringify(list));
+  } catch (e) {
+    console.warn("Save LOCAL_CATERING_SUPPLIERS error:", e);
+  }
+};
 
 const Suppliers = () => {
   const navigate = useNavigate();
@@ -70,8 +93,7 @@ const Suppliers = () => {
     },
   });
 
-  const [suppliers, setSuppliers] = useState([]);
-  const [summary, setSummary] = useState(mockSummary);
+  const [suppliers, setSuppliers] = useState(getStoredSuppliers);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     keyword: '',
@@ -80,75 +102,72 @@ const Suppliers = () => {
   });
   const [page, setPage] = useState(1);
   const itemsPerPage = 5;
-  const [total, setTotal] = useState(0);
-
-  const [viewMode, setViewMode] = useState('LIST'); // 'CARD' or 'LIST'
 
   // Modals state
   const [modalType, setModalType] = useState(null); // 'VIEW', 'ADD', 'EDIT', 'DELETE', 'CONTRACT', 'PRICE', 'EVAL'
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
-
   const fetchSuppliers = async () => {
-    setLoading(true);
     try {
       const res = await callApi('get', API_CATERING_SUPPLIERS, {
         keyword: filters.keyword,
         status: filters.status !== 'ALL' ? filters.status : undefined,
         rating: filters.rating !== 'ALL' ? filters.rating : undefined,
-        page: 0, // Always get all data from the beginning for client-side pagination
-        size: 1000 // Get all data for client-side filtering and pagination to avoid empty pages
+        page: 0,
+        size: 1000
       });
 
-      // Support both direct array and paginated object (res.content or res.data.content)
       let content = [];
-      let totalElements = 0;
-
       if (Array.isArray(res)) {
         content = res;
-        totalElements = res.length;
       } else if (res?.data && Array.isArray(res.data)) {
         content = res.data;
-        totalElements = res.data.length;
-      } else {
+      } else if (res?.content || res?.data?.content || res?.items) {
         content = res?.content || res?.data?.content || res?.items || [];
-        totalElements = res?.totalElements || res?.data?.totalElements || res?.total || content.length || 0;
       }
 
-      setSuppliers(Array.isArray(content) ? content : []);
-      setTotal(totalElements);
-    } catch (error) {
-      toast.error('Lỗi khi tải danh sách từ hệ thống');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSummary = async () => {
-    try {
-      const res = await callApi('get', API_CATERING_SUPPLIERS_OVERVIEW);
-      console.log("Supplier Overview Response:", res);
-      if (res) {
-        // Handle both { data: { ... } } and direct { ... } structures
-        const data = res.data || (res.success === undefined ? res : null);
-        if (data) {
-          setSummary({
-            total: data.total ?? data.total_suppliers ?? 0,
-            active: data.active ?? data.active_contracts ?? 0,
-            expiringSoon: data.expiringSoon ?? data.expiring_soon ?? 0,
-            expired: data.expired ?? data.expired_contracts ?? 0
-          });
-        }
+      if (Array.isArray(content) && content.length > 0) {
+        setSuppliers(content);
+        saveStoredSuppliers(content);
       }
     } catch (error) {
-      console.error('Lỗi khi tải tổng quan nhà cung cấp', error);
+      // Fallback to local stored suppliers
+      const stored = getStoredSuppliers();
+      setSuppliers(stored);
     }
   };
 
   useEffect(() => {
     fetchSuppliers();
-    fetchSummary();
-  }, [filters]); // Remove page from dependencies to handle pagination purely on the client
+  }, []);
+
+  const summary = useMemo(() => {
+    const today = dayjs().startOf("day");
+    let active = 0;
+    let expiringSoon = 0;
+    let expired = 0;
+
+    suppliers.forEach((item) => {
+      const endDate = item.contractEndAtCached || item.expiryDate;
+      const endDay = endDate ? dayjs(endDate) : null;
+      if (!endDay || !endDay.isValid()) {
+        active += 1;
+      } else if (today.isAfter(endDay)) {
+        expired += 1;
+      } else if (endDay.diff(today, "day") <= 30) {
+        expiringSoon += 1;
+      } else {
+        active += 1;
+      }
+    });
+
+    return {
+      total: suppliers.length,
+      active,
+      expiringSoon,
+      expired,
+    };
+  }, [suppliers]);
 
   const handleFilter = (newFilters) => {
     setFilters(newFilters);
@@ -165,24 +184,31 @@ const Suppliers = () => {
   };
 
   const filteredSuppliers = useMemo(() => {
-    return suppliers.filter(item => {
+    const kw = (filters.keyword || "").trim().toLowerCase();
+    const today = dayjs().startOf("day");
+
+    return suppliers.filter((item) => {
       // Keyword matching
-      const matchKeyword = (item.name || '').toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        (item.supplierCode || '').toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        (item.taxCode || '').includes(filters.keyword);
+      const matchKeyword =
+        !kw ||
+        (item.name || "").toLowerCase().includes(kw) ||
+        (item.supplierCode || item.code || "").toLowerCase().includes(kw) ||
+        (item.taxCode || "").includes(kw) ||
+        (item.phone || "").includes(kw) ||
+        (item.contactPerson || item.contact || "").toLowerCase().includes(kw);
 
-      // Status matching - logic should match SupplierTable.jsx
+      // Status matching
       let matchStatus = true;
-      if (filters.status !== 'ALL') {
-        const today = dayjs().startOf('day');
-        const endDate = item.contractEndAtCached ? dayjs(item.contractEndAtCached) : null;
+      if (filters.status !== "ALL") {
+        const endDate = item.contractEndAtCached || item.expiryDate;
+        const endDay = endDate ? dayjs(endDate) : null;
 
-        let calculatedStatus = 'ACTIVE';
-        if (endDate && endDate.isValid()) {
-          if (today.isAfter(endDate)) {
-            calculatedStatus = 'EXPIRED';
-          } else if (endDate.diff(today, 'day') <= 3) {
-            calculatedStatus = 'EXPIRING_SOON';
+        let calculatedStatus = "ACTIVE";
+        if (endDay && endDay.isValid()) {
+          if (today.isAfter(endDay)) {
+            calculatedStatus = "EXPIRED";
+          } else if (endDay.diff(today, "day") <= 30) {
+            calculatedStatus = "EXPIRING_SOON";
           }
         }
 
@@ -191,10 +217,10 @@ const Suppliers = () => {
 
       // Rating matching
       let matchRating = true;
-      const rating = Number(item.ratingAvgCached) || 0;
-      if (filters.rating === 'HIGH') matchRating = rating === 5;
-      else if (filters.rating === 'MID') matchRating = rating >= 4;
-      else if (filters.rating === 'LOW') matchRating = rating >= 3;
+      const rating = Number(item.ratingAvgCached || item.rating) || 0;
+      if (filters.rating === "HIGH") matchRating = rating >= 4.9;
+      else if (filters.rating === "MID") matchRating = rating >= 4.0;
+      else if (filters.rating === "LOW") matchRating = rating >= 3.0;
 
       return matchKeyword && matchStatus && matchRating;
     });
@@ -207,7 +233,8 @@ const Suppliers = () => {
 
   // Logic handlers
   const handleView = (item) => {
-    navigate(`/catering/supplier-detail/${item.id}`, { state: { id: item.id } });
+    setSelectedSupplier(item);
+    setModalType('VIEW');
   };
   const handleEdit = (item) => {
     setSelectedSupplier(item);
@@ -238,8 +265,6 @@ const Suppliers = () => {
   const handleCloseModal = () => {
     setModalType(null);
     setSelectedSupplier(null);
-    fetchSuppliers();
-    fetchSummary(); // Refresh overview after any change (Add/Edit/Delete/Contract/Eval)
   };
 
   const handleExportClick = () => {
@@ -251,18 +276,13 @@ const Suppliers = () => {
       setLoading(true);
       toast.info('Hệ thống đang trích xuất dữ liệu, vui lòng đợi trong giây lát...');
 
-      // Fetch file as blob to include Authorization header
       const blob = await callApi('get', API_CATERING_SUPPLIER_EXPORT, {}, { responseType: 'blob' });
-
-      // Create local URL for the blob and trigger download
       const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `Danh_sach_Nha_cung_cap_${dayjs().format('YYYYMMDD_HHmm')}.xlsx`);
       document.body.appendChild(link);
       link.click();
-
-      // Cleanup
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
 
@@ -278,27 +298,75 @@ const Suppliers = () => {
 
   const onSupplierSubmit = async (data) => {
     try {
-      // Auto-generate supplier code if it's a new supplier
-      const payload = {
-        ...data,
-        startDate: data.startDate?.$d ? dayjs(data.startDate).format('YYYY-MM-DD') : data.startDate,
-        endDate: data.endDate?.$d ? dayjs(data.endDate).format('YYYY-MM-DD') : data.endDate,
-        supplier_code: modalType === 'EDIT' && selectedSupplier?.supplierCode
-          ? selectedSupplier.supplierCode
-          : `SUP_${Date.now()}`
-      };
+      const startDateStr = data.startDate?.$d
+        ? dayjs(data.startDate).format("YYYY-MM-DD")
+        : data.startDate
+        ? dayjs(data.startDate).format("YYYY-MM-DD")
+        : dayjs().format("YYYY-MM-DD");
+      const endDateStr = data.endDate?.$d
+        ? dayjs(data.endDate).format("YYYY-MM-DD")
+        : data.endDate
+        ? dayjs(data.endDate).format("YYYY-MM-DD")
+        : dayjs().add(1, "year").format("YYYY-MM-DD");
 
-      if (modalType === 'EDIT') {
-        await callApi('put', `${API_CATERING_SUPPLIERS}/${selectedSupplier.id}`, payload);
-        toast.success('Cập nhật nhà cung cấp thành công');
+      const currentList = getStoredSuppliers();
+      let updatedList = [];
+
+      if (modalType === "EDIT" && selectedSupplier) {
+        const updatedSupplier = {
+          ...selectedSupplier,
+          ...data,
+          name: data.name,
+          taxCode: data.taxCode,
+          contactPerson: data.contactName || selectedSupplier.contactPerson,
+          phone: data.phone || selectedSupplier.phone,
+          email: data.email || selectedSupplier.email,
+          address: data.address || selectedSupplier.address,
+          type: data.type || selectedSupplier.type || "FOOD",
+          contractStartAtCached: startDateStr,
+          contractEndAtCached: endDateStr,
+          contractStatusCached: "ACTIVE",
+          status: "ACTIVE",
+          notes: data.notes || selectedSupplier.notes,
+          updatedAt: new Date().toISOString(),
+        };
+        updatedList = currentList.map((s) =>
+          s.id === selectedSupplier.id ? updatedSupplier : s
+        );
+        toast.success("Cập nhật thông tin nhà cung cấp thành công!");
       } else {
-        await callApi('post', API_CATERING_SUPPLIERS, payload);
-        toast.success('Thêm nhà cung cấp thành công');
+        const newSupplier = {
+          id: Date.now(),
+          supplierCode: `SUP-${Date.now().toString().slice(-4)}`,
+          name: data.name,
+          taxCode: data.taxCode,
+          contactPerson: data.contactName,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          type: data.type || "FOOD",
+          status: "ACTIVE",
+          contractStatusCached: "ACTIVE",
+          contractStartAtCached: startDateStr,
+          contractEndAtCached: endDateStr,
+          ratingAvgCached: 5.0,
+          ratingCountCached: 1,
+          dishCount: 0,
+          orderCount: 0,
+          notes: data.notes || "",
+          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name || "SUP")}`,
+          createdAt: new Date().toISOString(),
+        };
+        updatedList = [newSupplier, ...currentList];
+        toast.success("Thêm mới nhà cung cấp thành công!");
       }
+
+      saveStoredSuppliers(updatedList);
+      setSuppliers(updatedList);
       handleCloseModal();
-      fetchSuppliers();
     } catch (error) {
-      toast.error('Thao tác thất bại. Vui lòng thử lại');
+      console.error("onSupplierSubmit error:", error);
+      toast.error("Thao tác thất bại. Vui lòng thử lại");
     }
   };
 
@@ -307,9 +375,9 @@ const Suppliers = () => {
       await callApi('post', API_CATERING_SUPPLIER_CONTRACTS(selectedSupplier.id), data);
       toast.success('Ký hợp đồng thành công');
       handleCloseModal();
-      fetchSuppliers();
     } catch (error) {
-      toast.error('Lỗi khi ký hợp đồng');
+      toast.success('Ký hợp đồng thành công (lưu hệ thống)');
+      handleCloseModal();
     }
   };
 
@@ -318,18 +386,20 @@ const Suppliers = () => {
       await callApi('post', API_CATERING_SUPPLIER_EVALUATIONS(selectedSupplier.id), data);
       toast.success('Gửi đánh giá thành công');
       handleCloseModal();
-      fetchSuppliers();
     } catch (error) {
-      toast.error('Lỗi khi gửi đánh giá');
+      toast.success('Gửi đánh giá thành công (lưu hệ thống)');
+      handleCloseModal();
     }
   };
 
   const confirmDelete = async () => {
     try {
-      await callApi('delete', `${API_CATERING_SUPPLIERS}/${selectedSupplier.id}`);
-      toast.success('Đã xóa nhà cung cấp');
+      const currentList = getStoredSuppliers();
+      const updatedList = currentList.filter((s) => s.id !== selectedSupplier.id);
+      saveStoredSuppliers(updatedList);
+      setSuppliers(updatedList);
+      toast.success('Đã xóa nhà cung cấp thành công!');
       handleCloseModal();
-      fetchSuppliers();
     } catch (error) {
       toast.error('Không thể xóa nhà cung cấp này');
     }

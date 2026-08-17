@@ -34,10 +34,9 @@ export const ContentContainer = styled(Box, {
 export const PageContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== "$overflow",
 })(({ theme, $overflow }) => ({
-  position: "relative", // ✅ Thêm để loading tuyệt đối có thể đè lên
+  position: "relative",
   flexGrow: 1,
-  overflow: $overflow || "hidden",
-  // backgroundColor: theme.palette.background.paper, // ✅ Đổi sang background.paper để nổi lên
+  overflow: $overflow || "visible",
   backgroundColor: 'transparent !important',
   display: 'flex',
   flexDirection: 'column',

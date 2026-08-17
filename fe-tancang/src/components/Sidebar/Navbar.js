@@ -1401,7 +1401,13 @@ const Navbar = ({ isOpen, actions, toggleSidebar }) => {
                       {item?.settingIcon ? (
                         <SvgIconFromApi rawSvg={item.settingIcon} size={24} />
                       ) : item?.icon ? (
-                        item.icon
+                        React.isValidElement(item.icon) ? (
+                          item.icon
+                        ) : typeof item.icon === "function" || (typeof item.icon === "object" && item.icon.$$typeof) ? (
+                          React.createElement(item.icon)
+                        ) : (
+                          item.icon
+                        )
                       ) : (
                         <PlaceholderBox />
                       )}
@@ -1459,7 +1465,13 @@ const Navbar = ({ isOpen, actions, toggleSidebar }) => {
                   </IconSpan>
                 ) : popperParentItem?.icon ? (
                   <ModuleIconWrapper>
-                    {popperParentItem.icon}
+                    {React.isValidElement(popperParentItem.icon)
+                      ? popperParentItem.icon
+                      : typeof popperParentItem.icon === "function" ||
+                        (typeof popperParentItem.icon === "object" &&
+                          popperParentItem.icon.$$typeof)
+                      ? React.createElement(popperParentItem.icon)
+                      : popperParentItem.icon}
                   </ModuleIconWrapper>
                 ) : (
                   <BoxImg component="img" src="/menu.png" alt="Menu" />

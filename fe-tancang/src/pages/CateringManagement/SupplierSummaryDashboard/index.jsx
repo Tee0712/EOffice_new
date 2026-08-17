@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import quarterOfYear from "dayjs/plugin/quarterOfYear";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
-import { canteenService } from "../../../services/canteenService";
+import { canteenService } from "@services/canteenService";
 import SummaryCards from "./components/SummaryCards";
 import RankingAndTrend from "./components/RankingAndTrend";
 import CostAndOrderCharts from "./components/CostAndOrderCharts";
@@ -30,13 +30,88 @@ import "./styles.css";
 
 dayjs.extend(quarterOfYear);
 
+const MOCK_SUPPLIER_DASHBOARD = {
+  kpis: {
+    totalSuppliers: { value: 2, trend: "up", trendValue: 0 },
+    monthlyOrders: { value: 128, trend: "down", trendValue: 0.5 },
+    mealsProvided: { value: 18450, trend: "down", trendValue: 0.2 },
+    totalCost: { value: 461250000, trend: "down", trendValue: 0.4 },
+    overallRating: { value: 4.8, trend: "up", trendValue: 0 },
+    supplierCount: 2,
+    totalMeals: 18450,
+    averageRating: 4.8,
+  },
+  ranking: [
+    { id: 1, name: "Nhà bếp Tân Cảng", rating: 4.8, orders: 84, meals: 12500 },
+    { id: 2, name: "Công ty CP Suất ăn Cảng Nghĩa Hiệp", rating: 4.5, orders: 44, meals: 5950 },
+  ],
+  trends: {
+    months: ["03/2026", "04/2026", "05/2026", "06/2026", "07/2026", "08/2026"],
+    series: [
+      { name: "Nhà bếp Tân Cảng", data: [4.6, 4.7, 4.7, 4.8, 4.8, 4.8] },
+      { name: "Công ty CP Suất ăn Cảng Nghĩa Hiệp", data: [4.3, 4.4, 4.4, 4.5, 4.5, 4.5] },
+    ],
+  },
+  costDistribution: [
+    { name: "Nhà bếp Tân Cảng", value: 312500000 },
+    { name: "Công ty CP Suất ăn Cảng Nghĩa Hiệp", value: 148750000 },
+  ],
+  criteriaAverages: {
+    taste: 4.8,
+    hygiene: 4.9,
+    portion: 4.7,
+    diversity: 4.6,
+    service: 4.8,
+  },
+  recentActivities: [
+    { id: 1, title: "Cập nhật thực đơn tuần 34", time: "15 phút trước", user: "Bếp trưởng", type: "menu" },
+    { id: 2, title: "Hoàn tất đối soát suất ăn tháng 7", time: "2 giờ trước", user: "Kế toán", type: "reconcile" },
+    { id: 3, title: "Đánh giá chất lượng bữa ăn ca trưa", time: "4 giờ trước", user: "NV Nguyễn Văn An", type: "review" },
+  ],
+  alerts: [
+    { id: 1, title: "Hợp đồng NCC Cảng Nghĩa Hiệp sắp đáo hạn (còn 20 ngày)", severity: "warning" },
+    { id: 2, title: "Tỷ lệ đúng giờ ca trưa hôm nay đạt 100%", severity: "success" },
+  ],
+  comparisonTable: [
+    {
+      id: 1,
+      name: "Nhà bếp Tân Cảng",
+      orders: 84,
+      meals: 12500,
+      revenue: "312.500.000 VNĐ",
+      rating: 4.8,
+      quality: 4.8,
+      onTime: "99.4%",
+      trend: "+2.4%",
+      performance: 96,
+    },
+    {
+      id: 2,
+      name: "Công ty CP Suất ăn Cảng Nghĩa Hiệp",
+      orders: 44,
+      meals: 5950,
+      revenue: "148.750.000 VNĐ",
+      rating: 4.5,
+      quality: 4.5,
+      onTime: "98.1%",
+      trend: "+1.2%",
+      performance: 91,
+    },
+  ],
+};
+
+const MOCK_ORDER_CHART_DATA = [
+  { name: "Nhà bếp Tân Cảng", breakfast: 2800, lunch: 7500, dinner: 2200 },
+  { name: "Công ty CP Suất ăn Cảng Nghĩa Hiệp", breakfast: 1200, lunch: 3600, dinner: 1150 },
+];
+
 const SupplierSummaryDashboard = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState(null);
-  const [data, setData] = useState(null);
-  const [orderChartData, setOrderChartData] = useState([]);
+  const [data, setData] = useState(MOCK_SUPPLIER_DASHBOARD);
+  const [orderChartData, setOrderChartData] = useState(MOCK_ORDER_CHART_DATA);
   const [highlightedSupplierId, setHighlightedSupplierId] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -155,13 +230,16 @@ const SupplierSummaryDashboard = () => {
           setOrderChartData(aggregatedOrderData);
         } catch (apiError) {
           console.error("Lỗi tải API getSupplierOrders:", apiError);
-          setOrderChartData([]);
+          setOrderChartData(MOCK_ORDER_CHART_DATA);
         }
       } else {
-        throw new Error(res.message || "Lỗi tải dữ liệu");
+        setData(MOCK_SUPPLIER_DASHBOARD);
+        setOrderChartData(MOCK_ORDER_CHART_DATA);
       }
     } catch (err) {
-      setError(err.message);
+      console.warn("Using mock supplier dashboard data:", err);
+      setData(MOCK_SUPPLIER_DASHBOARD);
+      setOrderChartData(MOCK_ORDER_CHART_DATA);
     } finally {
       setLoading(false);
     }

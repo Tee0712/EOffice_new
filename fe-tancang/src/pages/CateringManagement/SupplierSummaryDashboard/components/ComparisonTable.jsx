@@ -42,17 +42,21 @@ const ComparisonTable = ({ data }) => {
 
   const formatCurrency = (val) => {
     if (!val) return '0 VNĐ';
-    if (val >= 1000000000) return `${(val / 1000000000).toFixed(2)} tỷ`;
-    if (val >= 1000000) return `${(val / 1000000).toFixed(0)} tr`;
-    return val.toLocaleString() + ' VNĐ';
+    if (typeof val === 'string' && val.includes('VNĐ')) return val;
+    const num = Number(val);
+    if (isNaN(num)) return String(val);
+    if (num >= 1000000000) return `${(num / 1000000000).toFixed(2)} tỷ`;
+    if (num >= 1000000) return `${(num / 1000000).toFixed(0)} tr`;
+    return num.toLocaleString() + ' VNĐ';
   };
 
   const renderTrend = (val) => {
-    const isUp = val >= 0;
+    const isUp = typeof val === 'string' ? val.startsWith('+') : val >= 0;
+    const displayVal = typeof val === 'string' ? val : `${Math.abs(val)}%`;
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: isUp ? 'var(--success)' : 'var(--error)', fontWeight: 700 }}>
         {isUp ? <TrendingUp sx={{ fontSize: 16 }} /> : <TrendingDown sx={{ fontSize: 16 }} />}
-        <span>{Math.abs(val)}%</span>
+        <span>{displayVal}</span>
       </div>
     );
   };
@@ -86,67 +90,63 @@ const ComparisonTable = ({ data }) => {
             </tr>
           </thead>
           <tbody>
-            {data.map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      backgroundColor: '#f1f5f9',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      fontWeight: 800,
-                      color: '#64748b'
-                    }}>
-                      {item.name.charAt(0).toUpperCase()}
+            {data.map((item) => {
+              const perf = item.performance || Math.round(((Number(item.rating) || 0) / 5) * 100);
+              let perfColor = 'var(--success)';
+              if (perf < 70) perfColor = 'var(--error)';
+              else if (perf < 90) perfColor = 'var(--warning)';
+
+              return (
+                <tr key={item.id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '8px',
+                        backgroundColor: '#f1f5f9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        color: '#64748b'
+                      }}>
+                        {item.name?.charAt(0).toUpperCase()}
+                      </div>
+                      <span style={{ fontWeight: 700, color: '#1e293b' }}>{item.name}</span>
                     </div>
-                    <span style={{ fontWeight: 700, color: '#1e293b' }}>{item.name}</span>
-                  </div>
-                </td>
-                <td>{item.orderCount || 0}</td>
-                <td>{(item.mealCount || 0).toLocaleString()}</td>
-                <td style={{ fontWeight: 600 }}>{formatCurrency(item.revenue || 0)}</td>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Star sx={{ fontSize: 14, color: 'var(--warning)' }} />
-                    <span style={{ fontWeight: 800 }}>{(item.rating || 0).toFixed(1)}</span>
-                  </div>
-                </td>
-                <td style={{ fontWeight: 600, color: '#64748b' }}>{(item.qualityRating || 0).toFixed(1)}</td>
-                <td style={{ fontWeight: 600, color: '#64748b' }}>{(item.ontimeRating || 0).toFixed(1)}</td>
-                <td>{renderTrend(item.trendValue || 0)}</td>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {(() => {
-                      const perf = item.performance || Math.round(((item.rating || 0) / 5) * 100);
-                      let color = 'var(--success)';
-                      if (perf < 70) color = 'var(--error)';
-                      else if (perf < 90) color = 'var(--warning)';
-                      
-                      return (
-                        <>
-                          <div style={{ flex: 1, height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{
-                              width: `${perf}%`,
-                              height: '100%',
-                              backgroundColor: color,
-                              borderRadius: '3px'
-                            }} />
-                          </div>
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: color }}>
-                            {perf}%
-                          </span>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td>{item.orderCount ?? item.orders ?? 0}</td>
+                  <td>{(item.mealCount ?? item.meals ?? 0).toLocaleString()}</td>
+                  <td style={{ fontWeight: 600 }}>{formatCurrency(item.revenue || 0)}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Star sx={{ fontSize: 14, color: 'var(--warning)' }} />
+                      <span style={{ fontWeight: 800 }}>{typeof item.rating === 'number' ? item.rating.toFixed(1) : item.rating}</span>
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 600, color: '#64748b' }}>{typeof (item.qualityRating ?? item.quality) === 'number' ? (item.qualityRating ?? item.quality).toFixed(1) : (item.qualityRating ?? item.quality ?? '5.0')}</td>
+                  <td style={{ fontWeight: 600, color: '#64748b' }}>{typeof (item.ontimeRating ?? item.onTime) === 'number' ? `${(item.ontimeRating ?? item.onTime).toFixed(1)}%` : (item.ontimeRating ?? item.onTime ?? '100%')}</td>
+                  <td>{renderTrend(item.trendValue ?? item.trend ?? 0)}</td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ flex: 1, height: '6px', backgroundColor: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${perf}%`,
+                          height: '100%',
+                          backgroundColor: perfColor,
+                          borderRadius: '3px'
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: perfColor }}>
+                        {perf}%
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -65,20 +65,44 @@ const applyPermissionRecursive = (items, parentHidden = false) => {
 };
 
 const buildMenuTree = (menuItems = []) => {
+  const IGNORED_ROOT_CODES = [
+    'MEAL_CALENDAR', 'MEAL_MY_BOOKINGS', 'MEAL_DASHBOARD', 'MEAL_CHECKIN',
+    'MEAL_MENU', 'MEAL_RECONCILIATION', 'MEAL_SUPPLIERS', 'MEAL_HISTORY', 'MEAL_SETTINGS'
+  ];
+  const IGNORED_ROOT_NAMES = [
+    'LỊCH ĐĂNG KÝ', 'ĐĂNG KÝ CỦA TÔI', 'DASHBOARD TỔNG HỢP', 'CHECK-IN SUẤT ĂN',
+    'QUẢN LÝ MENU', 'ĐỐI SOÁT SUẤT ĂN', 'QUẢN LÝ NHÀ CUNG CẤP', 'LỊCH SỬ ĐĂNG KÝ', 'CÀI ĐẶT HỆ THỐNG'
+  ];
+
+  const filteredItems = menuItems.filter(item => {
+    const parentId = item.parent || item.parent_id;
+    if (!parentId) {
+      const code = item.code || '';
+      const name = (item.name || item.title || '').trim().toUpperCase();
+      if (IGNORED_ROOT_CODES.includes(code) || IGNORED_ROOT_NAMES.includes(name)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
   const menuMap = {};
 
-  menuItems.forEach((item) => {
-    menuMap[item._id] = { ...item, subItems: [] };
+  filteredItems.forEach((item) => {
+    const key = item._id || item.id;
+    menuMap[key] = { ...item, subItems: [] };
   });
 
   const roots = [];
-  menuItems.forEach((item) => {
-    if (item.parent && menuMap[item.parent]) {
-      menuMap[item.parent].subItems.push(menuMap[item._id]);
+  filteredItems.forEach((item) => {
+    const key = item._id || item.id;
+    const parentId = item.parent || item.parent_id;
+    if (parentId && menuMap[parentId]) {
+      menuMap[parentId].subItems.push(menuMap[key]);
       return;
     }
 
-    roots.push(menuMap[item._id]);
+    roots.push(menuMap[key]);
   });
 
   return roots;
@@ -99,20 +123,22 @@ const buildStaticRouteMap = (routeItems, map = new Map()) => {
 };
 
 // Super Admin: lấy trực tiếp tất cả static routes từ RouterConfig
-const convertStaticRoutesToMenuRoutes = (routeItems, isSuperAdmin = false) => {
-  return routeItems
+const CANTEEN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-8.03c2.09-.13 3.75-1.85 3.75-3.97V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>`;
+
+const convertStaticRoutesToMenuRoutes = (staticRoutes, isSuperAdmin = false) => {
+  if (!Array.isArray(staticRoutes)) return [];
+
+  return staticRoutes
     .map((route) => {
-      // Ẩn route nếu hidden: true trong config (không phân biệt super admin)
-      if (route.hidden === true) {
-        return null;
-      }
+      if (!route || route.hidden === true) return null;
 
       const subItems = route.subItems
-        ? convertStaticRoutesToMenuRoutes(route.subItems, isSuperAdmin).filter(Boolean)
+        ? convertStaticRoutesToMenuRoutes(route.subItems, isSuperAdmin)
         : [];
 
       return {
-        path: route.path || null,
+        _id: route.path || route.codeRouter || Math.random().toString(),
+        path: route.path,
         element: route.element,
         title: route.title,
         icon: route.icon || null,
@@ -120,7 +146,7 @@ const convertStaticRoutesToMenuRoutes = (routeItems, isSuperAdmin = false) => {
         order: route.order || 0,
         subItems,
         codeRouter: route.codeRouter || null,
-        settingIcon: null,
+        settingIcon: route.settingIcon || (route.path === "/canteen" ? CANTEEN_SVG : null),
         count: null,
         parent: null,
         collapsed: false,
@@ -340,30 +366,92 @@ export function useDynamicMenuRoutes() {
       }
 
       const menuItems = sideBarMenu || [];
-      if (!isSuperAdmin && !menuItems.length) {
-        setDynamicRoutes([]);
+
+      // Lấy root Meal/Canteen route từ static routes
+      const getMealStaticRoutes = (routeItems) => {
+        const result = [];
+
+        const findMealRoute = (items) => {
+          for (const item of items) {
+            const isTopMealRoute =
+              item.path === "/canteen" ||
+              item.path === "/meals" ||
+              item.title === "Quản lý ăn ca" ||
+              item.title === "QUẢN LÝ ĂN CA" ||
+              item.codeRouter === "CANTEEN_MANAGEMENT";
+
+            if (isTopMealRoute && item.hidden !== true) {
+              const { element, ...rest } = item;
+              result.push({
+                ...rest,
+                title: "QUẢN LÝ ĂN CA",
+                name: "QUẢN LÝ ĂN CA",
+                codeRouter: item.codeRouter || "CANTEEN_MANAGEMENT",
+                hidden: false,
+                order: item.order ?? 9,
+                settingIcon: item.settingIcon || CANTEEN_SVG,
+                icon: item.icon || null,
+                subItems:
+                  item.subItems?.map((sub) => {
+                    const { element: subEl, ...subRest } = sub;
+                    return {
+                      ...subRest,
+                      hidden: false,
+                    };
+                  }) || [],
+              });
+              return;
+            }
+
+            if (item.subItems?.length) {
+              findMealRoute(item.subItems);
+            }
+          }
+        };
+
+        findMealRoute(routeItems);
+        return result;
+      };
+
+      // Super Admin: lấy trực tiếp all static routes thay vì process từ menu
+      if (isSuperAdmin) {
+        const allStaticRoutes = convertStaticRoutesToMenuRoutes(routes, isSuperAdmin);
+
+        allStaticRoutes.forEach((route) => {
+          if (route.title === "DASHBOARD" || route.title === "TRANG CHỦ") {
+            homeRoute = route;
+            return;
+          }
+          mappedRoutes.push(route);
+        });
+
+        mappedRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
+        const orderedRoutes = homeRoute ? [homeRoute, ...mappedRoutes] : mappedRoutes;
+        setDynamicRoutes(applyPermissionRecursive(orderedRoutes));
         return;
       }
 
+      // Non-super admin: vẫn cần xử lý để có permission context
+      if (!menuItems.length) {
+        // Không có menu items, chỉ hiển thị Meal routes
+        const mealStaticRoutes = getMealStaticRoutes(routes);
+        mealStaticRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
+        setDynamicRoutes(applyPermissionRecursive(mealStaticRoutes));
+        return;
+      }
+
+      // Xây dựng context cho việc map menu
       const baseRoles = userData?.roles || [];
-      const staticPermissions =
-        userData?.staticPermissions?.map((item) => item._id) || [];
+      const staticPermissions = userData?.staticPermissions?.map((item) => item._id) || [];
       const reportPermissions = userData?.reportPermission || [];
 
       let resolvedAuthorityData = authorityData;
-      if (
-        (!resolvedAuthorityData ||
-          (Array.isArray(resolvedAuthorityData.roles) &&
-            resolvedAuthorityData.roles.length === 0)) &&
-        user
-      ) {
+      if (!resolvedAuthorityData?.roles?.length && user) {
         try {
           const fetchedAuthAction = await dispatch(ensureAuthority());
-          const fetchedAuth = fetchedAuthAction?.payload || fetchedAuthAction;
-          resolvedAuthorityData = fetchedAuth || resolvedAuthorityData;
+          resolvedAuthorityData = fetchedAuthAction?.payload || fetchedAuthAction;
         } catch (err) {
           logger.error("Error fetching authority:", err);
-          resolvedAuthorityData = null;
         }
       }
 
@@ -391,25 +479,9 @@ export function useDynamicMenuRoutes() {
       let homeRoute = null;
       const mappedRoutes = [];
 
-      // Super Admin: lấy trực tiếp all static routes thay vì process từ menu
-      if (isSuperAdmin) {
-        const allStaticRoutes = convertStaticRoutesToMenuRoutes(routes, isSuperAdmin);
+      // Lấy Meal routes trước khi thêm vào mappedRoutes
+      const mealStaticRoutes = getMealStaticRoutes(routes);
 
-        allStaticRoutes.forEach((route) => {
-          if (route.title === "DASHBOARD" || route.title === "TRANG CHỦ") {
-            homeRoute = route;
-            return;
-          }
-          mappedRoutes.push(route);
-        });
-
-        mappedRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
-        const orderedRoutes = homeRoute ? [homeRoute, ...mappedRoutes] : mappedRoutes;
-        setDynamicRoutes(applyPermissionRecursive(orderedRoutes));
-        return;
-      }
-
-      // Non-super admin: process từ menu API như bình thường
       roots.forEach((root) => {
         const mapped = mapMenuToRoute(root, context);
         if (!mapped) {
@@ -424,23 +496,50 @@ export function useDynamicMenuRoutes() {
         mappedRoutes.push(mapped);
       });
 
-      // Bổ sung các static top-level routes từ RouterConfig (như Quản lý bản tin) nếu chưa có từ API
+      // Bổ sung các static top-level routes từ RouterConfig nếu chưa có từ API
       const staticMenuRoutes = convertStaticRoutesToMenuRoutes(routes, false);
       staticMenuRoutes.forEach((staticRoute) => {
         if (!staticRoute || staticRoute.hidden) return;
         const exists = mappedRoutes.some(
           (r) =>
             (r.codeRouter && r.codeRouter === staticRoute.codeRouter) ||
-            r.title === staticRoute.title
+            r.title === staticRoute.title ||
+            (r.path && staticRoute.path && r.path === staticRoute.path)
         );
         if (!exists) {
           mappedRoutes.push(staticRoute);
         }
       });
 
-      mappedRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
+      // Thêm Meal routes vào menu nếu chưa có
+      if (mealStaticRoutes.length > 0) {
+        mealStaticRoutes.forEach((mealRoute) => {
+          const exists = mappedRoutes.some(
+            (r) =>
+              (r.codeRouter && r.codeRouter === mealRoute.codeRouter) ||
+              r.title === mealRoute.title ||
+              (r.path && mealRoute.path && r.path === mealRoute.path)
+          );
+          if (!exists) {
+            mappedRoutes.push(mealRoute);
+          }
+        });
+      }
 
-      const orderedRoutes = homeRoute ? [homeRoute, ...mappedRoutes] : mappedRoutes;
+      // Deduplicate toàn bộ routes
+      const uniqueMappedRoutes = [];
+      const seenKeys = new Set();
+      mappedRoutes.forEach((route) => {
+        const key = route.codeRouter || route.title || route.path;
+        if (key && !seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueMappedRoutes.push(route);
+        }
+      });
+
+      uniqueMappedRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
+
+      const orderedRoutes = homeRoute ? [homeRoute, ...uniqueMappedRoutes] : uniqueMappedRoutes;
       setDynamicRoutes(applyPermissionRecursive(orderedRoutes));
     } catch (error) {
       logger.error("Error fetching menu routes:", error);
