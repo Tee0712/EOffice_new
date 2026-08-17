@@ -240,7 +240,7 @@ const MainMenuItem = React.memo(({
               : "div"
           }
           onClick={handleClick}
-          to={item.path}
+          to={item.path || undefined}
           $level={level}
           $isActive={isParentActive || titleParent === item.title}
           itemPath={item.path}

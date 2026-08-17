@@ -13,7 +13,7 @@ import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { extractSocketToken } from '../utils/socket.util';
 import { NewsService } from './news.service';
-import { verifyKeycloakToken } from '../utils/keycloak-verify';
+import { verifyAnyToken } from '../utils/keycloak-verify';
 
 @WebSocketGateway({
     cors: {
@@ -49,9 +49,9 @@ export class NewsGateway implements OnGatewayConnection, OnGatewayDisconnect, On
                     return next(new Error('Authentication error: Missing token'));
                 }
 
-                const payload: any = await verifyKeycloakToken(token);
+                const { payload } = await verifyAnyToken(token);
 
-                const userId = payload.sub || payload.user || payload.userId || payload.id;
+                const userId = payload.sub || payload.userId || payload.user || payload.id;
                 if (!userId) throw new Error('Invalid token payload');
 
                 socket.data.userId = userId;
@@ -149,7 +149,7 @@ export class NewsGateway implements OnGatewayConnection, OnGatewayDisconnect, On
             const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
             if (!token) throw new Error('Unauthorized');
 
-            const userFromJwt = await verifyKeycloakToken(token);
+            const { payload: userFromJwt } = await verifyAnyToken(token);
 
             // Gọi service để xử lý (Service này đã có code emit socket tới các client khác)
             const result = await this.newsService.likeNewsOrComment(payload, userFromJwt);

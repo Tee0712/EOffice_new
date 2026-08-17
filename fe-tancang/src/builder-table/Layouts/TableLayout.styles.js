@@ -116,15 +116,14 @@ export const TabLayoutStyle = styled(Box, {
 }));
 
 export const SearchChildrenBox = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'searchChildrenLength' && prop !== 'mode' && prop !== 'isDialogKey',
-})(({ theme, searchChildrenLength, mode, isDialogKey }) => ({
+  shouldForwardProp: (prop) => prop !== 'searchChildrenLength' && prop !== 'mode' && prop !== 'isDialogKey' && prop !== 'isFullscreen',
+})(({ theme, searchChildrenLength, mode, isDialogKey, isFullscreen }) => ({
   display: searchChildrenLength || mode === "builder" || isDialogKey ? "flex" : "none",
   width: "100%",
   justifyContent: isDialogKey ? "flex-end" : "space-between",
   flexWrap: "wrap",
   gap: theme.spacing(2),
-  flexShrink: 0, // ✅ Không cho co lại
-  // marginTop: theme.spacing(1), // ✅ Khoảng cách với table
+  flexShrink: 0,
   [theme.breakpoints.down('md')]: {
     flexDirection: 'column',
   },

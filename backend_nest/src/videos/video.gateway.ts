@@ -11,7 +11,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
-import { verifyKeycloakToken } from '../utils/keycloak-verify';
+import { verifyAnyToken } from '../utils/keycloak-verify';
 import { extractSocketToken } from '../utils/socket.util';
 
 @WebSocketGateway({
@@ -51,7 +51,7 @@ export class VideoGateway
               }
             }
 
-            const payload = await verifyKeycloakToken(tokenUser || token);
+            const { payload } = await verifyAnyToken(tokenUser || token);
             client.data.user = payload;
 
             const userId = payload.sub || payload.user || payload.userId || payload.id;

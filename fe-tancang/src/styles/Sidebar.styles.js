@@ -135,7 +135,7 @@ export const StyledListItemButton = styled(ListItemButton, {
       display: "flex",
       alignItems: "center",
       minWidth: "32px",
-      transition: "color 0.2s ease", 
+      transition: "color 0.2s ease",
       "& svg": {
         width: 20,
         height: 20,
@@ -203,17 +203,17 @@ export const ToggleSidebarButton = styled(IconButton)(({ theme }) => ({
   }
 }));
 
-export const StyledSvg = styled(Box)(
-  ({ styledWidth, styledHeight }) => ({
-    color: "inherit",
-    width: styledWidth,
-    height: styledHeight,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    "& svg": { width: "100%", height: "100%" },
-  })
-);
+export const StyledSvg = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "styledWidth" && prop !== "styledHeight",
+})(({ styledWidth, styledHeight }) => ({
+  color: "inherit",
+  width: styledWidth,
+  height: styledHeight,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  "& svg": { width: "100%", height: "100%" },
+}));
 
 export const StyledSvgW = styled(Box)(
   ({ theme, styledWidth, styledHeight }) => ({
@@ -227,8 +227,10 @@ export const StyledSvgW = styled(Box)(
   })
 );
 
-export const StyledContainerSvg = styled(Box)(() => ({
-  color: "inherit",
+export const StyledContainerSvg = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "styledColor",
+})(({ styledColor }) => ({
+  color: styledColor || "inherit",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -341,15 +343,15 @@ export const ModuleRailItem = styled(IconButton, {
   },
   "&::after": $isActive
     ? {
-        content: '""',
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        right: 0,
-        width: 3,
-        borderRadius: 0,
-        backgroundColor: theme.palette.primary.main,
-      }
+      content: '""',
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: 3,
+      borderRadius: 0,
+      backgroundColor: theme.palette.primary.main,
+    }
     : {},
   "& .MuiSvgIcon-root": {
     fontSize: 20,
@@ -432,7 +434,7 @@ export const ModuleNameItem = styled(Box, {
     backgroundColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : "#f4f7fc",
     color: theme.palette.primary.main,
   },
-  
+
 }));
 
 export const MenuPanel = styled(Box, {

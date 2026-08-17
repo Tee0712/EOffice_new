@@ -30,3 +30,43 @@ export function verifyKeycloakToken(token: string): Promise<any> {
     });
   });
 }
+
+/**
+ * Xác thực Local JWT (HS256) token
+ * Trả về decoded payload nếu hợp lệ, ngược lại throw error
+ */
+export function verifyLocalToken(token: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const jwtSecret = process.env.JWT_SECRET || 'EOFFICE_SECRET_KEY_2026';
+    jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }, (err, decoded) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(decoded);
+    });
+  });
+}
+
+/**
+ * Thử xác thực token với cả 2 phương pháp:
+ * 1. Local JWT (HS256) - cho local login
+ * 2. Keycloak (RS256) - cho SSO login
+ * 
+ * Trả về { type: 'local' | 'keycloak', payload: decoded }
+ */
+export async function verifyAnyToken(token: string): Promise<{ type: 'local' | 'keycloak'; payload: any }> {
+  // Thử Local JWT trước
+  try {
+    const payload = await verifyLocalToken(token);
+    return { type: 'local', payload };
+  } catch (localErr) {
+    // Thử Keycloak tiếp
+    try {
+      const payload = await verifyKeycloakToken(token);
+      return { type: 'keycloak', payload };
+    } catch (keycloakErr) {
+      // Cả 2 đều fail - throw lỗi tổng hợp
+      throw new Error(`Token verification failed: local=${localErr.message}, keycloak=${keycloakErr.message}`);
+    }
+  }
+}

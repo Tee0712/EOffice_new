@@ -18,7 +18,7 @@ import { ChatService } from '../chat/chat.service';
 import { ConversationsService } from '../conversations/conversations.service';
 
 
-import { verifyKeycloakToken } from '../utils/keycloak-verify';
+import { verifyAnyToken } from '../utils/keycloak-verify';
 import { UsersService } from '../users/users.service';
 import { validateAttachFileUrls } from '../utils/url-validator.util';
 import { NotificationGroup } from './notification.enum';
@@ -67,23 +67,35 @@ export class NotificationGateway
           return next(new Error('Authentication error: Missing token'));
         }
 
-        const decoded: any = await verifyKeycloakToken(token);
-        const keycloakUserId = decoded.sub || decoded.user || decoded.userId || decoded.id;
+        // Thử xác thực với cả Local JWT và Keycloak token
+        const { type, payload } = await verifyAnyToken(token);
 
-        if (!keycloakUserId) {
-          return next(new Error('Authentication error: Invalid token payload'));
+        if (type === 'local') {
+          // Local login - userId là local database ID
+          const userId = payload.sub || payload.userId || payload.user_id;
+          if (!userId) {
+            return next(new Error('Authentication error: Invalid local token payload'));
+          }
+          socket.data.userId = userId;
+          socket.data.keycloakUserId = null;
+        } else {
+          // Keycloak login - cần tìm user trong DB
+          const keycloakUserId = payload.sub || payload.user || payload.userId || payload.id;
+
+          if (!keycloakUserId) {
+            return next(new Error('Authentication error: Invalid token payload'));
+          }
+
+          const user = await this.usersService.findOneByKeycloakId(keycloakUserId);
+          if (!user) {
+            this.logger.error(`❌ User with keycloakUserId ${keycloakUserId} not found in database`);
+            return next(new Error('Authentication error: User not synchronized'));
+          }
+
+          socket.data.userId = user.id;
+          socket.data.keycloakUserId = keycloakUserId;
         }
 
-        // Tìm User trong DB để lấy ID gốc (internal ID)
-        const user = await this.usersService.findOneByKeycloakId(keycloakUserId);
-
-        if (!user) {
-          this.logger.error(`❌ User with keycloakUserId ${keycloakUserId} not found in database`);
-          return next(new Error('Authentication error: User not synchronized'));
-        }
-
-        socket.data.userId = user.id; // Lưu Database ID
-        socket.data.keycloakUserId = keycloakUserId; // Lưu Keycloak UUID để tham khảo
         next();
       } catch (err) {
         this.logger.error(`❌ Token verification failed for ${socket.id}: ${err.message}`);

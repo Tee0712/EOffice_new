@@ -13,7 +13,7 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { extractSocketToken } from '../utils/socket.util';
 
-import { verifyKeycloakToken } from '../utils/keycloak-verify';
+import { verifyAnyToken } from '../utils/keycloak-verify';
 
 @WebSocketGateway({
     cors: {
@@ -45,9 +45,9 @@ export class AlbumGateway implements OnGatewayConnection, OnGatewayDisconnect, O
                     return next(new Error('Authentication error: Missing token'));
                 }
 
-                const payload: any = await verifyKeycloakToken(token);
+                const { payload } = await verifyAnyToken(token);
 
-                const userId = payload.sub || payload.user || payload.userId || payload.id;
+                const userId = payload.sub || payload.userId || payload.user || payload.id;
                 if (!userId) throw new Error('Invalid token payload');
 
                 socket.data.userId = userId;
