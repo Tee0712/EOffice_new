@@ -236,8 +236,20 @@ export const BoxImg = styled(Box)(() => ({
 
 export const ListItemButtonStyled = styled(ListItemButton)(({ theme }) => ({
 	padding: "9.6px 0",
+	'& .MuiListItemText-primary': {
+		fontWeight: 500,
+		transition: 'font-weight 0.2s ease, color 0.2s ease',
+	},
 	'&:hover': {
-	backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+		backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+		'& .MuiListItemText-primary': {
+			fontWeight: 'bold',
+		},
+	},
+	'&.Mui-selected': {
+		'& .MuiListItemText-primary': {
+			fontWeight: 'bold',
+		},
 	},
 }));
 
@@ -467,16 +479,27 @@ export const ParentMenuListItemButton = styled(ListItemButton)(({ theme }) => ({
 		transform: 'scale(0)',
 		transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
 	},
+
+	'& .MuiListItemText-primary': {
+		fontWeight: 500,
+		transition: 'font-weight 0.2s ease, color 0.2s ease',
+	},
 	
 	// Hiệu ứng khi hover
 	'&:hover': {
 		backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#ddedfd',
 		transform: 'translateY(-2px)', // Giữ nguyên hiệu ứng nâng lên khi hover
 		boxShadow: theme.shadows[4],
+		'& .MuiListItemText-primary': {
+			fontWeight: 'bold',
+		},
 	},
 
 	// Hiệu ứng khi được chọn
 	'&.Mui-selected': {
+		'& .MuiListItemText-primary': {
+			fontWeight: 'bold',
+		},
 		// Hiển thị text "Đang hoạt động" và lấy lại không gian
 		'& [data-status="active"]': {
 			opacity: 1,

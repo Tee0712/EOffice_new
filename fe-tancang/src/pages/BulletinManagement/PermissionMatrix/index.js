@@ -40,6 +40,7 @@ import {
   Upload,
 } from "@mui/icons-material";
 import bulletinService from "@services/bulletinService";
+import BulletinLayout from "../components/BulletinLayout";
 
 const normalizeText = (value = "") =>
   String(value)
@@ -316,7 +317,8 @@ const PermissionMatrix = () => {
   };
 
   return (
-    <Box sx={{ p: 3, fontFamily: "'Inter', 'Roboto', sans-serif" }}>
+    <BulletinLayout activeTab="permissions">
+      <Box sx={{ p: 3, fontFamily: "'Inter', 'Roboto', sans-serif" }}>
       <Dialog open={openCreateRole} onClose={() => setOpenCreateRole(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 700 }}>Tạo vai trò mới</DialogTitle>
         <DialogContent>
@@ -682,7 +684,8 @@ const PermissionMatrix = () => {
           </Card>
         </Grid>
       </Grid>
-    </Box>
+      </Box>
+    </BulletinLayout>
   );
 };
 

@@ -449,12 +449,36 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   }, [userPermissions, isSuperAdmin, toast]);
 
   useEffect(() => {
-    if (!selectedModuleCode && moduleRoutes.length > 0) {
+    if (!moduleRoutes.length) return;
+
+    const findMatchingModule = () => {
+      for (const mod of moduleRoutes) {
+        if (mod.path === location.pathname) return mod;
+        if (mod.subItems?.length) {
+          const checkSub = (items) =>
+            items.some(
+              (sub) =>
+                sub.path === location.pathname ||
+                (sub.subItems?.length && checkSub(sub.subItems))
+            );
+          if (checkSub(mod.subItems)) return mod;
+        }
+      }
+      return null;
+    };
+
+    const activeModule = findMatchingModule();
+    if (activeModule) {
+      const code = activeModule.codeRouter || activeModule.title;
+      if (code && code !== selectedModuleCode) {
+        dispatch(setSelectedModule(code));
+      }
+    } else if (!selectedModuleCode) {
       dispatch(
         setSelectedModule(moduleRoutes[0].codeRouter || moduleRoutes[0].title)
       );
     }
-  }, [dispatch, moduleRoutes, selectedModuleCode]);
+  }, [dispatch, location.pathname, moduleRoutes, selectedModuleCode]);
 
   useEffect(() => {
     setOpenMenu({});

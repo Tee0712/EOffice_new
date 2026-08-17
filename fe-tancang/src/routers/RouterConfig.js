@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, lazy, useMemo } from "react";
 import Loading from "@components/Loading/Loading";
-import { People, ReceiptLong, Menu as MenuIcon, Restaurant, Campaign } from "@mui/icons-material";
+import { People, ReceiptLong, Menu as MenuIcon, Restaurant, Campaign, Article } from "@mui/icons-material";
 import { Navigate, useRoutes, useLocation, useNavigate } from "react-router-dom";
 import useDynamicMenuRoutes from "@hooks/useDynamicMenuRoutes";
 import ProtectedRoute from "@AuthContext/ProtectedRoute";
@@ -160,9 +160,77 @@ const CmsModuleWrapper = () => {
   );
 };
 
- 
- 
+
+
 export const routes = [
+  {
+    title: "Quản lý bản tin",
+    icon: <Article />,
+    codeRouter: "quan-ly-ban-tin",
+    path: "/bulletin/dashboard",
+    subItems: [
+      {
+        path: "/bulletin",
+        element: <Navigate to="/bulletin/dashboard" replace />,
+        hidden: true,
+      },
+      {
+        path: "/bulletin/dashboard",
+        element: <BulletinDashboard />,
+        title: "Bảng tin & Thống kê",
+        codeRouter: "bang-tin-thong-ke",
+      },
+      {
+        path: "/bulletin/workflow",
+        element: <BulletinWorkflow />,
+        title: "Quy trình Phê duyệt",
+        codeRouter: "quy-trinh-phe-duyet",
+      },
+      {
+        path: "/bulletin/departments",
+        element: <BulletinDepartments />,
+        title: "Quản lý Phòng ban",
+        codeRouter: "quan-ly-phong-ban-tin",
+      },
+      {
+        path: "/bulletin/permissions",
+        element: <BulletinPermissions />,
+        title: "Ma trận Phân quyền",
+        codeRouter: "ma-tran-phan-quyen-tin",
+      },
+      {
+        path: "/bulletin/members",
+        element: <BulletinMembers />,
+        title: "Thành viên & Vai trò",
+        codeRouter: "thanh-vien-vai-tro-tin",
+      },
+      {
+        path: "/bulletins",
+        element: <Navigate to="/bulletin/dashboard" replace />,
+        hidden: true,
+      },
+      {
+        path: "/bulletin-workflows",
+        element: <Navigate to="/bulletin/workflow" replace />,
+        hidden: true,
+      },
+      {
+        path: "/bulletin-departments",
+        element: <Navigate to="/bulletin/departments" replace />,
+        hidden: true,
+      },
+      {
+        path: "/bulletin-permissions",
+        element: <Navigate to="/bulletin/permissions" replace />,
+        hidden: true,
+      },
+      {
+        path: "/bulletin-members",
+        element: <Navigate to="/bulletin/members" replace />,
+        hidden: true,
+      },
+    ],
+  },
   {
     // title: "Quản trị hệ thống",
     title: "Quản lý phân quyền",
@@ -185,7 +253,7 @@ export const routes = [
       //   // codeRouter: "demo-kanban",
       //   codeRouter: "thong-tin-cong-dan",
       // },
-       {
+      {
         path: "/notifications",
         element: <NotificationsPage />, // Lazy component
         title: "Danh sách thông báo",
@@ -735,7 +803,7 @@ export const routes = [
         title: "Quản lý nhật ký hệ thống",
         codeRouter: "quan-ly-nhat-ky-he-thong",
       },
-        {
+      {
         path: "/category-management",
         element: <CategoryManagement />, // Lazy component
         title: "Quản lý danh mục",
@@ -1104,7 +1172,7 @@ export const routes = [
   {
     path: "/dynamic-form/add",
     title: "Thêm mới biểu mẫu", // Lazy component
-    element: <Dynamic />, 
+    element: <Dynamic />,
     hidden: true,
   },
   {
@@ -1396,7 +1464,7 @@ const RouterConfig = () => {
             </Suspense>
           ),
         },
-      {
+        {
           path: "/user/announcements/:id",
           element: (
             <Suspense fallback={<Loading />}>
@@ -1404,7 +1472,7 @@ const RouterConfig = () => {
             </Suspense>
           ),
         },
-      {
+        {
           path: "/admin/announcements/:id/stats",
           element: (
             <Suspense fallback={<Loading />}>
@@ -1412,7 +1480,7 @@ const RouterConfig = () => {
             </Suspense>
           ),
         },
-      {
+        {
           path: "/task/detail/:id",
           element: (
             <Suspense fallback={<Loading />}>

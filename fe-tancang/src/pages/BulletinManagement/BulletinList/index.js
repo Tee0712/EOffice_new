@@ -66,6 +66,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import bulletinService from "@services/bulletinService";
 import { useToast } from "@components/common/ToastProvider";
+import BulletinLayout from "../components/BulletinLayout";
 
 const TYPE_OPTIONS = [
   {
@@ -277,7 +278,7 @@ const BulletinList = () => {
         department_id: prev.department_id || deptList[0]?.id || "",
       }));
     } catch (error) {
-      toast("Không thể tải dữ liệu bản tin", "error");
+      // toast("Không thể tải dữ liệu bản tin", "error");
       console.error(error);
     }
   };
@@ -442,8 +443,8 @@ const BulletinList = () => {
       scheduled_publish_at:
         item.scheduledPublishAt || item.scheduled_publish_at
           ? new Date(item.scheduledPublishAt || item.scheduled_publish_at)
-              .toISOString()
-              .slice(0, 16)
+            .toISOString()
+            .slice(0, 16)
           : "",
       viewer_department_ids: parseMetaArr(
         item.viewerDepartmentIds || item.viewer_department_ids
@@ -516,7 +517,7 @@ const BulletinList = () => {
       setIsLoadingDetail(true);
       const [detail] = await Promise.all([
         bulletinService.getBulletinById(id),
-        bulletinService.increaseBulletinView(id).catch(() => {}), // Ignore error if view increase fails
+        bulletinService.increaseBulletinView(id).catch(() => { }), // Ignore error if view increase fails
       ]);
       setViewingBulletin(detail);
       setOpenView(true);
@@ -578,447 +579,511 @@ const BulletinList = () => {
   };
 
   return (
-    <Box sx={{ p: 3, bgcolor: "#f3f6fb", minHeight: "100vh" }}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 2.5 }}
-      >
-        <Box>
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            sx={{ mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}
-          >
-            <DescriptionOutlined color="primary" />
-            Danh sách Bản tin
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Quản lý bản tin theo phòng ban phụ trách, theo dõi trạng thái phê
-            duyệt và đăng tải
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1.5}>
-          <Button variant="outlined" startIcon={<Download />}>
-            Xuất báo cáo
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpenCreate(true)}
-          >
-            Tạo bản tin mới
-          </Button>
-        </Stack>
-      </Stack>
-
-      <Card
-        sx={{ p: 1.2, borderRadius: 2, mb: 2, border: "1px solid #dbe3ef" }}
-      >
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            size="small"
-            startIcon={<DescriptionOutlined fontSize="small" />}
-            variant={activeDept === "ALL" ? "contained" : "text"}
-            onClick={() => setActiveDept("ALL")}
-            sx={{ borderRadius: 2 }}
-          >
-            Tất cả ({bulletins.length})
-          </Button>
-          {departments.map((dept) => (
+    <BulletinLayout activeTab="dashboard">
+      <Box sx={{ p: 3, bgcolor: "#f3f6fb", minHeight: "100vh" }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 2.5 }}
+        >
+          <Box>
+            <Typography
+              variant="h4"
+              fontWeight={800}
+              sx={{ mb: 0.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <DescriptionOutlined color="primary" />
+              Danh sách Bản tin
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Quản lý bản tin theo phòng ban phụ trách, theo dõi trạng thái phê
+              duyệt và đăng tải
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1.5}>
+            <Button variant="outlined" startIcon={<Download />}>
+              Xuất báo cáo
+            </Button>
             <Button
-              key={dept.id}
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setOpenCreate(true)}
+            >
+              Tạo bản tin mới
+            </Button>
+          </Stack>
+        </Stack>
+
+        <Card
+          sx={{ p: 1.2, borderRadius: 2, mb: 2, border: "1px solid #dbe3ef" }}
+        >
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button
               size="small"
-              startIcon={
-                <Circle
-                  sx={{ fontSize: 10, color: dept.color || "primary.main" }}
-                />
-              }
-              variant={activeDept === dept.id ? "contained" : "text"}
-              onClick={() => setActiveDept(dept.id)}
+              startIcon={<DescriptionOutlined fontSize="small" />}
+              variant={activeDept === "ALL" ? "contained" : "text"}
+              onClick={() => setActiveDept("ALL")}
               sx={{ borderRadius: 2 }}
             >
-              {dept.name} ({dept.member_count || 0})
+              Tất cả ({bulletins.length})
             </Button>
-          ))}
-        </Stack>
-      </Card>
+            {departments.map((dept) => (
+              <Button
+                key={dept.id}
+                size="small"
+                startIcon={
+                  <Circle
+                    sx={{ fontSize: 10, color: dept.color || "primary.main" }}
+                  />
+                }
+                variant={activeDept === dept.id ? "contained" : "text"}
+                onClick={() => setActiveDept(dept.id)}
+                sx={{ borderRadius: 2 }}
+              >
+                {dept.name} ({dept.member_count || 0})
+              </Button>
+            ))}
+          </Stack>
+        </Card>
 
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        {[
-          {
-            label: "Tổng bản tin",
-            value: stats.total,
-            icon: <DescriptionOutlined fontSize="small" />,
-            color: "#2563eb",
-          },
-          {
-            label: "Bản nháp",
-            value: stats.draft,
-            icon: <Edit fontSize="small" />,
-            color: "#7c3aed",
-          },
-          {
-            label: "Chờ duyệt",
-            value: stats.pending,
-            icon: <PendingActions fontSize="small" />,
-            color: "#d97706",
-          },
-          {
-            label: "Đã đăng tải",
-            value: stats.published,
-            icon: <RuleFolder fontSize="small" />,
-            color: "#16a34a",
-          },
-          {
-            label: "Từ chối",
-            value: stats.rejected,
-            icon: <Block fontSize="small" />,
-            color: "#dc2626",
-          },
-        ].map((item) => (
-          <Grid key={item.label} item xs={12} sm={6} md={2.4}>
-            <Card
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: "1px solid #dbe3ef",
-                display: "flex",
-                alignItems: "center",
-                gap: 1.2,
-              }}
-            >
-              <Avatar
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {[
+            {
+              label: "Tổng bản tin",
+              value: stats.total,
+              icon: <DescriptionOutlined fontSize="small" />,
+              color: "#2563eb",
+            },
+            {
+              label: "Bản nháp",
+              value: stats.draft,
+              icon: <Edit fontSize="small" />,
+              color: "#7c3aed",
+            },
+            {
+              label: "Chờ duyệt",
+              value: stats.pending,
+              icon: <PendingActions fontSize="small" />,
+              color: "#d97706",
+            },
+            {
+              label: "Đã đăng tải",
+              value: stats.published,
+              icon: <RuleFolder fontSize="small" />,
+              color: "#16a34a",
+            },
+            {
+              label: "Từ chối",
+              value: stats.rejected,
+              icon: <Block fontSize="small" />,
+              color: "#dc2626",
+            },
+          ].map((item) => (
+            <Grid key={item.label} item xs={12} sm={6} md={2.4}>
+              <Card
                 sx={{
-                  width: 34,
-                  height: 34,
-                  bgcolor: `${item.color}20`,
-                  color: item.color,
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid #dbe3ef",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.2,
                 }}
               >
-                {item.icon}
-              </Avatar>
-              <Box>
-                <Typography
-                  variant="h5"
-                  fontWeight={800}
-                  sx={{ lineHeight: 1 }}
+                <Avatar
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    bgcolor: `${item.color}20`,
+                    color: item.color,
+                  }}
                 >
-                  {item.value}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
+                  {item.icon}
+                </Avatar>
+                <Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight={800}
+                    sx={{ lineHeight: 1 }}
+                  >
+                    {item.value}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {item.label}
+                  </Typography>
+                </Box>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={1.5}
+          sx={{ mb: 1.5 }}
+        >
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Tìm kiếm bản tin..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Trạng thái</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Trạng thái"
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="">Tất cả</MenuItem>
+              {Object.entries(STATUS_LABELS).map(([key, cfg]) => (
+                <MenuItem key={key} value={key}>
+                  {cfg.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Loại bản tin</InputLabel>
+            <Select
+              value={typeFilter}
+              label="Loại bản tin"
+              onChange={(e) => setTypeFilter(e.target.value)}
+            >
+              <MenuItem value="">Tất cả</MenuItem>
+              {TYPE_OPTIONS.map((item) => (
+                <MenuItem key={item.value} value={item.value}>
                   {item.label}
-                </Typography>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button variant="outlined" startIcon={<Sort />} sx={{ minWidth: 120 }}>
+            Mới nhất
+          </Button>
+        </Stack>
 
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={1.5}
-        sx={{ mb: 1.5 }}
-      >
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Tìm kiếm bản tin..."
-          value={searchKeyword}
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>Trạng thái</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Trạng thái"
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <MenuItem value="">Tất cả</MenuItem>
-            {Object.entries(STATUS_LABELS).map(([key, cfg]) => (
-              <MenuItem key={key} value={key}>
-                {cfg.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>Loại bản tin</InputLabel>
-          <Select
-            value={typeFilter}
-            label="Loại bản tin"
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <MenuItem value="">Tất cả</MenuItem>
-            {TYPE_OPTIONS.map((item) => (
-              <MenuItem key={item.value} value={item.value}>
-                {item.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Button variant="outlined" startIcon={<Sort />} sx={{ minWidth: 120 }}>
-          Mới nhất
-        </Button>
-      </Stack>
-
-      <Card sx={{ borderRadius: 2, border: "1px solid #dbe3ef" }}>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: "#f8fafc" }}>
-                <TableCell sx={{ fontWeight: 700 }}>TIÊU ĐỀ</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>PHÒNG BAN</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>NGƯỜI TẠO</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>TRẠNG THÁI</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>NGÀY TẠO</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>LƯỢT XEM</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>THAO TÁC</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pagedBulletins.map((item) => {
-                const typeMeta =
-                  TYPE_OPTIONS.find(
-                    (t) =>
-                      t.value ===
-                      (item.bulletinType || item.bulletin_type || "NEWS")
-                  ) || TYPE_OPTIONS[0];
-                return (
-                  <TableRow key={item.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1.2}>
-                        <Avatar
-                          sx={{
-                            width: 34,
-                            height: 34,
-                            bgcolor: `${typeMeta.color}22`,
-                            color: typeMeta.color,
-                          }}
-                        >
-                          {typeMeta.icon}
-                        </Avatar>
-                        <Box>
-                          <Typography fontWeight={700}>{item.title}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {item.id?.slice(0, 10)} • {typeMeta.label}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={item.department?.name || "--"}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
-                          {(item.author?.name || "U")[0]}
-                        </Avatar>
-                        <Typography variant="body2">
-                          {item.author?.name || "--"}
-                        </Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{statusChip(item.status)}</TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleString("vi-VN")
-                          : "--"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={700}>
-                        {item.viewCount || item.view_count || 0}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5}>
-                        <Tooltip title="Xem chi tiết">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleView(item.id)}
-                            disabled={isLoadingDetail}
-                            sx={{ color: "primary.main" }}
+        <Card sx={{ borderRadius: 2, border: "1px solid #dbe3ef" }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "#f8fafc" }}>
+                  <TableCell sx={{ fontWeight: 700 }}>TIÊU ĐỀ</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>PHÒNG BAN</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>NGƯỜI TẠO</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>TRẠNG THÁI</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>NGÀY TẠO</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>LƯỢT XEM</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>THAO TÁC</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pagedBulletins.map((item) => {
+                  const typeMeta =
+                    TYPE_OPTIONS.find(
+                      (t) =>
+                        t.value ===
+                        (item.bulletinType || item.bulletin_type || "NEWS")
+                    ) || TYPE_OPTIONS[0];
+                  return (
+                    <TableRow key={item.id} hover>
+                      <TableCell>
+                        <Stack direction="row" spacing={1.2}>
+                          <Avatar
+                            sx={{
+                              width: 34,
+                              height: 34,
+                              bgcolor: `${typeMeta.color}22`,
+                              color: typeMeta.color,
+                            }}
                           >
-                            <RemoveRedEye fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        {(item.status === "DRAFT" ||
-                          item.status === "REJECTED" ||
-                          item.status === "REQUIRE_EDIT") && (
-                          <Tooltip title="Sửa">
+                            {typeMeta.icon}
+                          </Avatar>
+                          <Box>
+                            <Typography fontWeight={700}>{item.title}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {item.id?.slice(0, 10)} • {typeMeta.label}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          label={item.department?.name || "--"}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                            {(item.author?.name || "U")[0]}
+                          </Avatar>
+                          <Typography variant="body2">
+                            {item.author?.name || "--"}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell>{statusChip(item.status)}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {item.createdAt
+                            ? new Date(item.createdAt).toLocaleString("vi-VN")
+                            : "--"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={700}>
+                          {item.viewCount || item.view_count || 0}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={0.5}>
+                          <Tooltip title="Xem chi tiết">
                             <IconButton
                               size="small"
-                              onClick={() => handleEdit(item)}
+                              onClick={() => handleView(item.id)}
+                              disabled={isLoadingDetail}
+                              sx={{ color: "primary.main" }}
                             >
-                              <Edit fontSize="small" />
+                              <RemoveRedEye fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                        )}
-                        {item.status === "PUBLISHED" &&
-                          canUnpublishBulletin(item) && (
-                            <Tooltip title="Gỡ bản tin">
-                              <IconButton
-                                size="small"
-                                color="warning"
-                                onClick={() => handleUnpublish(item.id)}
-                              >
-                                <CloudOff fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                        {(canUnpublishBulletin(item) ||
-                          item.status === "DRAFT" ||
-                          item.status === "REJECTED" ||
-                          item.status === "REQUIRE_EDIT") && (
-                          <Tooltip title="Xóa vĩnh viễn">
-                            <IconButton
-                              size="small"
-                              sx={{ color: "error.main" }}
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              <DeleteForever fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Stack>
+                          {(item.status === "DRAFT" ||
+                            item.status === "REJECTED" ||
+                            item.status === "REQUIRE_EDIT") && (
+                              <Tooltip title="Sửa">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleEdit(item)}
+                                >
+                                  <Edit fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          {item.status === "PUBLISHED" &&
+                            canUnpublishBulletin(item) && (
+                              <Tooltip title="Gỡ bản tin">
+                                <IconButton
+                                  size="small"
+                                  color="warning"
+                                  onClick={() => handleUnpublish(item.id)}
+                                >
+                                  <CloudOff fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          {(canUnpublishBulletin(item) ||
+                            item.status === "DRAFT" ||
+                            item.status === "REJECTED" ||
+                            item.status === "REQUIRE_EDIT") && (
+                              <Tooltip title="Xóa vĩnh viễn">
+                                <IconButton
+                                  size="small"
+                                  sx={{ color: "error.main" }}
+                                  onClick={() => handleDelete(item.id)}
+                                >
+                                  <DeleteForever fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!filteredBulletins.length && (
+                  <TableRow>
+                    <TableCell colSpan={7}>
+                      <Typography
+                        sx={{ py: 3, textAlign: "center" }}
+                        color="text.secondary"
+                      >
+                        Không có bản tin phù hợp
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-              {!filteredBulletins.length && (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <Typography
-                      sx={{ py: 3, textAlign: "center" }}
-                      color="text.secondary"
-                    >
-                      Không có bản tin phù hợp
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          component="div"
-          count={filteredBulletins.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50]}
-          labelRowsPerPage="Dòng/trang:"
-        />
-      </Card>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <TablePagination
+            component="div"
+            count={filteredBulletins.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50]}
+            labelRowsPerPage="Dòng/trang:"
+          />
+        </Card>
 
-      <Dialog
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        maxWidth={isEditorFullscreen ? false : "sm"}
-        fullWidth
-        fullScreen={isEditorFullscreen}
-      >
-        <DialogTitle
-          sx={{
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
+        <Dialog
+          open={openCreate}
+          onClose={() => setOpenCreate(false)}
+          maxWidth={isEditorFullscreen ? false : "sm"}
+          fullWidth
+          fullScreen={isEditorFullscreen}
         >
-          {editingId ? "Cập nhật bản tin" : "Tạo bản tin mới"}
-          <Tooltip
-            title={
-              isEditorFullscreen ? "Thoát toàn màn hình" : "Soạn toàn màn hình"
-            }
+          <DialogTitle
+            sx={{
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
           >
-            <IconButton
-              onClick={() => setIsEditorFullscreen((prev) => !prev)}
-              size="small"
-            >
-              {isEditorFullscreen ? (
-                <FullscreenExit fontSize="small" />
-              ) : (
-                <Fullscreen fontSize="small" />
-              )}
-            </IconButton>
-          </Tooltip>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={1.5}>
-            <TextField
-              label="Tiêu đề bản tin *"
-              value={createForm.title}
-              onChange={(e) =>
-                setCreateForm((p) => ({ ...p, title: e.target.value }))
+            {editingId ? "Cập nhật bản tin" : "Tạo bản tin mới"}
+            <Tooltip
+              title={
+                isEditorFullscreen ? "Thoát toàn màn hình" : "Soạn toàn màn hình"
               }
-              placeholder="Nhập tiêu đề bản tin..."
-            />
+            >
+              <IconButton
+                onClick={() => setIsEditorFullscreen((prev) => !prev)}
+                size="small"
+              >
+                {isEditorFullscreen ? (
+                  <FullscreenExit fontSize="small" />
+                ) : (
+                  <Fullscreen fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1.5}>
+              <TextField
+                label="Tiêu đề bản tin *"
+                value={createForm.title}
+                onChange={(e) =>
+                  setCreateForm((p) => ({ ...p, title: e.target.value }))
+                }
+                placeholder="Nhập tiêu đề bản tin..."
+              />
 
-            <Box>
-              <Typography variant="caption" fontWeight={700}>
-                LOẠI BẢN TIN *
-              </Typography>
-              <Grid container spacing={1} sx={{ mt: 0.5 }}>
-                {TYPE_OPTIONS.map((option) => (
-                  <Grid item xs={2.4} key={option.value}>
-                    <Card
-                      onClick={() =>
-                        setCreateForm((p) => ({
-                          ...p,
-                          bulletin_type: option.value,
-                        }))
-                      }
-                      sx={{
-                        p: 1,
-                        textAlign: "center",
-                        cursor: "pointer",
-                        border: "1px solid",
-                        borderColor:
-                          createForm.bulletin_type === option.value
-                            ? "primary.main"
-                            : "divider",
-                        bgcolor:
-                          createForm.bulletin_type === option.value
-                            ? "#eef4ff"
-                            : "#fff",
-                      }}
-                    >
-                      <Box sx={{ color: option.color }}>{option.icon}</Box>
-                      <Typography variant="caption">{option.label}</Typography>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
+              <Box>
+                <Typography variant="caption" fontWeight={700}>
+                  LOẠI BẢN TIN *
+                </Typography>
+                <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                  {TYPE_OPTIONS.map((option) => (
+                    <Grid item xs={2.4} key={option.value}>
+                      <Card
+                        onClick={() =>
+                          setCreateForm((p) => ({
+                            ...p,
+                            bulletin_type: option.value,
+                          }))
+                        }
+                        sx={{
+                          p: 1,
+                          textAlign: "center",
+                          cursor: "pointer",
+                          border: "1px solid",
+                          borderColor:
+                            createForm.bulletin_type === option.value
+                              ? "primary.main"
+                              : "divider",
+                          bgcolor:
+                            createForm.bulletin_type === option.value
+                              ? "#eef4ff"
+                              : "#fff",
+                        }}
+                      >
+                        <Box sx={{ color: option.color }}>{option.icon}</Box>
+                        <Typography variant="caption">{option.label}</Typography>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
 
-            <Stack direction="row" spacing={1.5}>
+              <Stack direction="row" spacing={1.5}>
+                <FormControl fullWidth>
+                  <InputLabel>Phòng ban phụ trách *</InputLabel>
+                  <Select
+                    value={createForm.department_id}
+                    label="Phòng ban phụ trách *"
+                    onChange={(e) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        department_id: e.target.value,
+                      }))
+                    }
+                  >
+                    {departments.map((dept) => (
+                      <MenuItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <InputLabel>Mức độ ưu tiên</InputLabel>
+                  <Select
+                    value={createForm.priority}
+                    label="Mức độ ưu tiên"
+                    onChange={(e) =>
+                      setCreateForm((p) => ({ ...p, priority: e.target.value }))
+                    }
+                  >
+                    {PRIORITY_OPTIONS.map((item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+
               <FormControl fullWidth>
-                <InputLabel>Phòng ban phụ trách *</InputLabel>
+                <InputLabel>
+                  Phạm vi hiển thị (Những phòng ban được xem) *
+                </InputLabel>
                 <Select
-                  value={createForm.department_id}
-                  label="Phòng ban phụ trách *"
+                  multiple
+                  label="Phạm vi hiển thị (Những phòng ban được xem) *"
+                  value={createForm.viewer_department_ids}
                   onChange={(e) =>
                     setCreateForm((p) => ({
                       ...p,
-                      department_id: e.target.value,
+                      viewer_department_ids: e.target.value,
                     }))
                   }
+                  renderValue={(selected) => (
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
+                      {selected.map((val) => {
+                        const dept = departments.find((d) => d.id === val);
+                        return (
+                          <Chip
+                            key={val}
+                            label={dept?.name || val}
+                            size="small"
+                          />
+                        );
+                      })}
+                    </Stack>
+                  )}
                 >
+                  <MenuItem value="ALL">
+                    <em>Tất cả phòng ban</em>
+                  </MenuItem>
                   {departments.map((dept) => (
                     <MenuItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -1027,539 +1092,477 @@ const BulletinList = () => {
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth>
-                <InputLabel>Mức độ ưu tiên</InputLabel>
-                <Select
-                  value={createForm.priority}
-                  label="Mức độ ưu tiên"
-                  onChange={(e) =>
-                    setCreateForm((p) => ({ ...p, priority: e.target.value }))
-                  }
-                >
-                  {PRIORITY_OPTIONS.map((item) => (
-                    <MenuItem key={item.value} value={item.value}>
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Stack>
-
-            <FormControl fullWidth>
-              <InputLabel>
-                Phạm vi hiển thị (Những phòng ban được xem) *
-              </InputLabel>
-              <Select
-                multiple
-                label="Phạm vi hiển thị (Những phòng ban được xem) *"
-                value={createForm.viewer_department_ids}
-                onChange={(e) =>
-                  setCreateForm((p) => ({
-                    ...p,
-                    viewer_department_ids: e.target.value,
-                  }))
-                }
-                renderValue={(selected) => (
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    flexWrap="wrap"
-                    useFlexGap
-                  >
-                    {selected.map((val) => {
-                      const dept = departments.find((d) => d.id === val);
-                      return (
-                        <Chip
-                          key={val}
-                          label={dept?.name || val}
-                          size="small"
-                        />
-                      );
-                    })}
-                  </Stack>
-                )}
-              >
-                <MenuItem value="ALL">
-                  <em>Tất cả phòng ban</em>
-                </MenuItem>
-                {departments.map((dept) => (
-                  <MenuItem key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Box>
-              <Typography variant="caption" fontWeight={700}>
-                NỘI DUNG BẢN TIN *
-              </Typography>
-              <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, mb: 0.8 }}>
-                <IconButton
-                  size="small"
-                  onClick={() => editor?.chain().focus().toggleBold().run()}
-                  color={editor?.isActive("bold") ? "primary" : "default"}
-                >
-                  <FormatBold fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => editor?.chain().focus().toggleItalic().run()}
-                  color={editor?.isActive("italic") ? "primary" : "default"}
-                >
-                  <FormatItalic fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() =>
-                    editor?.chain().focus().toggleHeading({ level: 2 }).run()
-                  }
-                  color={
-                    editor?.isActive("heading", { level: 2 })
-                      ? "primary"
-                      : "default"
-                  }
-                >
-                  <Title fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() =>
-                    editor?.chain().focus().toggleBulletList().run()
-                  }
-                  color={editor?.isActive("bulletList") ? "primary" : "default"}
-                >
-                  <FormatListBulleted fontSize="small" />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => {
-                    const url = window.prompt("Nhập liên kết:");
-                    if (!url) return;
-                    editor?.chain().focus().setLink({ href: url }).run();
-                  }}
-                  color={editor?.isActive("link") ? "primary" : "default"}
-                >
-                  <LinkIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-              <Box
-                sx={{
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 1.5,
-                  minHeight: isEditorFullscreen ? "52vh" : 220,
-                  px: 1.5,
-                  py: 1,
-                  "& .ProseMirror": {
-                    outline: "none",
-                    minHeight: isEditorFullscreen ? "48vh" : 180,
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                  },
-                }}
-              >
-                <EditorContent editor={editor} />
-              </Box>
-            </Box>
-
-            <Box>
-              <Typography variant="caption" fontWeight={700}>
-                TỪ KHÓA / TAG
-              </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                placeholder="Nhập tag rồi nhấn Enter"
-                sx={{ mt: 0.5 }}
-              />
-              <Stack
-                direction="row"
-                spacing={1}
-                flexWrap="wrap"
-                useFlexGap
-                sx={{ mt: 1 }}
-              >
-                {createForm.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    onDelete={() => removeTag(tag)}
+              <Box>
+                <Typography variant="caption" fontWeight={700}>
+                  NỘI DUNG BẢN TIN *
+                </Typography>
+                <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, mb: 0.8 }}>
+                  <IconButton
                     size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Stack>
-            </Box>
-
-            <Box>
-              <Typography variant="caption" fontWeight={700}>
-                TỆP ĐÍNH KÈM
-              </Typography>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<Upload />}
-                sx={{ mt: 0.5 }}
-              >
-                Chọn tệp
-                <input
-                  type="file"
-                  hidden
-                  multiple
-                  onChange={handleAttachmentChange}
-                />
-              </Button>
-              <Stack spacing={0.5} sx={{ mt: 1 }}>
-                {createForm.attachments.map((file) => (
-                  <Stack
-                    key={file.name}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    sx={{
-                      p: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1,
-                    }}
+                    onClick={() => editor?.chain().focus().toggleBold().run()}
+                    color={editor?.isActive("bold") ? "primary" : "default"}
                   >
-                    <Typography variant="body2">{file.name}</Typography>
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => removeAttachment(file.name)}
-                    >
-                      Xóa
-                    </Button>
-                  </Stack>
-                ))}
-              </Stack>
-            </Box>
-
-            <Card variant="outlined" sx={{ p: 1.25 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box>
-                  <Typography variant="body2" fontWeight={700}>
-                    Hẹn giờ đăng tải tự động
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Bản tin sẽ tự động publish sau khi được phê duyệt
-                  </Typography>
+                    <FormatBold fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => editor?.chain().focus().toggleItalic().run()}
+                    color={editor?.isActive("italic") ? "primary" : "default"}
+                  >
+                    <FormatItalic fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      editor?.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    color={
+                      editor?.isActive("heading", { level: 2 })
+                        ? "primary"
+                        : "default"
+                    }
+                  >
+                    <Title fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      editor?.chain().focus().toggleBulletList().run()
+                    }
+                    color={editor?.isActive("bulletList") ? "primary" : "default"}
+                  >
+                    <FormatListBulleted fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      const url = window.prompt("Nhập liên kết:");
+                      if (!url) return;
+                      editor?.chain().focus().setLink({ href: url }).run();
+                    }}
+                    color={editor?.isActive("link") ? "primary" : "default"}
+                  >
+                    <LinkIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+                <Box
+                  sx={{
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1.5,
+                    minHeight: isEditorFullscreen ? "52vh" : 220,
+                    px: 1.5,
+                    py: 1,
+                    "& .ProseMirror": {
+                      outline: "none",
+                      minHeight: isEditorFullscreen ? "48vh" : 180,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                    },
+                  }}
+                >
+                  <EditorContent editor={editor} />
                 </Box>
-                <Switch
-                  checked={createForm.auto_schedule}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({
-                      ...p,
-                      auto_schedule: e.target.checked,
-                    }))
-                  }
-                />
-              </Stack>
-              {createForm.auto_schedule && (
+              </Box>
+
+              <Box>
+                <Typography variant="caption" fontWeight={700}>
+                  TỪ KHÓA / TAG
+                </Typography>
                 <TextField
-                  type="datetime-local"
                   fullWidth
                   size="small"
-                  sx={{ mt: 1 }}
-                  value={createForm.scheduled_publish_at}
-                  onChange={(e) =>
-                    setCreateForm((p) => ({
-                      ...p,
-                      scheduled_publish_at: e.target.value,
-                    }))
-                  }
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag();
+                    }
+                  }}
+                  placeholder="Nhập tag rồi nhấn Enter"
+                  sx={{ mt: 0.5 }}
                 />
-              )}
-            </Card>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="outlined"
-            onClick={() => handleCreate("draft")}
-            disabled={isSaving}
-          >
-            Lưu nháp
-          </Button>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => handleCreate("submit")}
-            disabled={isSaving}
-          >
-            Gửi phê duyệt
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* View Bulletin Dialog */}
-      <Dialog
-        open={openView}
-        onClose={() => setOpenView(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
-      >
-        <DialogTitle sx={{ borderBottom: "1px solid #eee", pb: 2 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6" fontWeight={800} color="primary">
-              Chi tiết Bản tin
-            </Typography>
-            {statusChip(viewingBulletin?.status)}
-          </Stack>
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          {viewingBulletin && (
-            <Stack spacing={3}>
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight={800}
-                  sx={{ mb: 1, color: "#1e293b" }}
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  useFlexGap
+                  sx={{ mt: 1 }}
                 >
-                  {viewingBulletin.title}
-                </Typography>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        fontSize: 14,
-                        bgcolor: "primary.main",
-                      }}
-                    >
-                      {(viewingBulletin.author?.name || "U")[0]}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {viewingBulletin.author?.name || "Người dùng hệ thống"}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Tác giả
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Box
-                    sx={{
-                      width: 1,
-                      height: 24,
-                      bgcolor: "divider",
-                      flexShrink: 0,
-                      mx: 1,
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {viewingBulletin.department?.name || "--"}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Phòng ban phụ trách
-                    </Typography>
-                  </Box>
-                  <Box sx={{ flexGrow: 1 }} />
-                  <Typography variant="caption" color="text.secondary">
-                    Ngày tạo:{" "}
-                    {new Date(viewingBulletin.createdAt).toLocaleString(
-                      "vi-VN"
-                    )}
-                  </Typography>
+                  {createForm.tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onDelete={() => removeTag(tag)}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
                 </Stack>
               </Box>
 
-              <Card
-                variant="outlined"
-                sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}
-              >
-                <Grid container spacing={2}>
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
+              <Box>
+                <Typography variant="caption" fontWeight={700}>
+                  TỆP ĐÍNH KÈM
+                </Typography>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<Upload />}
+                  sx={{ mt: 0.5 }}
+                >
+                  Chọn tệp
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    onChange={handleAttachmentChange}
+                  />
+                </Button>
+                <Stack spacing={0.5} sx={{ mt: 1 }}>
+                  {createForm.attachments.map((file) => (
+                    <Stack
+                      key={file.name}
+                      direction="row"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      sx={{
+                        p: 1,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                      }}
                     >
-                      LOẠI BẢN TIN
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                      {TYPE_OPTIONS.find(
-                        (t) => t.value === viewingBulletin.bulletinType
-                      )?.label || viewingBulletin.bulletinType}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      MỨC ĐỘ ƯU TIÊN
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                      {PRIORITY_OPTIONS.find(
-                        (p) => p.value === viewingBulletin.priority
-                      )?.label || viewingBulletin.priority}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={4}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      LƯỢT XEM
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
-                      color="primary"
-                    >
-                      {viewingBulletin.viewCount || 0}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Card>
-
-              <Box
-                sx={{
-                  "& img": {
-                    maxWidth: "100%",
-                    height: "auto",
-                    borderRadius: 1,
-                  },
-                  "& table": {
-                    borderCollapse: "collapse",
-                    width: "100%",
-                    mb: 2,
-                  },
-                  "& th, & td": { border: "1px solid #ddd", p: 1 },
-                  "& blockquote": {
-                    borderLeft: "4px solid #ddd",
-                    pl: 2,
-                    py: 1,
-                    my: 2,
-                    color: "text.secondary",
-                  },
-                  fontSize: "1.05rem",
-                  lineHeight: 1.7,
-                  color: "#334155",
-                }}
-              >
-                <div
-                  dangerouslySetInnerHTML={{ __html: viewingBulletin.content }}
-                />
+                      <Typography variant="body2">{file.name}</Typography>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={() => removeAttachment(file.name)}
+                      >
+                        Xóa
+                      </Button>
+                    </Stack>
+                  ))}
+                </Stack>
               </Box>
 
-              {parseJsonArray(viewingBulletin.tags).length > 0 && (
+              <Card variant="outlined" sx={{ p: 1.25 }}>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Box>
+                    <Typography variant="body2" fontWeight={700}>
+                      Hẹn giờ đăng tải tự động
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Bản tin sẽ tự động publish sau khi được phê duyệt
+                    </Typography>
+                  </Box>
+                  <Switch
+                    checked={createForm.auto_schedule}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        auto_schedule: e.target.checked,
+                      }))
+                    }
+                  />
+                </Stack>
+                {createForm.auto_schedule && (
+                  <TextField
+                    type="datetime-local"
+                    fullWidth
+                    size="small"
+                    sx={{ mt: 1 }}
+                    value={createForm.scheduled_publish_at}
+                    onChange={(e) =>
+                      setCreateForm((p) => ({
+                        ...p,
+                        scheduled_publish_at: e.target.value,
+                      }))
+                    }
+                  />
+                )}
+              </Card>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="outlined"
+              onClick={() => handleCreate("draft")}
+              disabled={isSaving}
+            >
+              Lưu nháp
+            </Button>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleCreate("submit")}
+              disabled={isSaving}
+            >
+              Gửi phê duyệt
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* View Bulletin Dialog */}
+        <Dialog
+          open={openView}
+          onClose={() => setOpenView(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}
+        >
+          <DialogTitle sx={{ borderBottom: "1px solid #eee", pb: 2 }}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="h6" fontWeight={800} color="primary">
+                Chi tiết Bản tin
+              </Typography>
+              {statusChip(viewingBulletin?.status)}
+            </Stack>
+          </DialogTitle>
+          <DialogContent sx={{ mt: 2 }}>
+            {viewingBulletin && (
+              <Stack spacing={3}>
                 <Box>
                   <Typography
-                    variant="subtitle2"
-                    fontWeight={700}
-                    sx={{ mb: 1 }}
+                    variant="h4"
+                    fontWeight={800}
+                    sx={{ mb: 1, color: "#1e293b" }}
                   >
-                    Tags:
+                    {viewingBulletin.title}
                   </Typography>
-                  <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {parseJsonArray(viewingBulletin.tags).map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        size="small"
-                        variant="outlined"
-                      />
-                    ))}
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          fontSize: 14,
+                          bgcolor: "primary.main",
+                        }}
+                      >
+                        {(viewingBulletin.author?.name || "U")[0]}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle2" fontWeight={700}>
+                          {viewingBulletin.author?.name || "Người dùng hệ thống"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Tác giả
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Box
+                      sx={{
+                        width: 1,
+                        height: 24,
+                        bgcolor: "divider",
+                        flexShrink: 0,
+                        mx: 1,
+                      }}
+                    />
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        {viewingBulletin.department?.name || "--"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Phòng ban phụ trách
+                      </Typography>
+                    </Box>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Ngày tạo:{" "}
+                      {new Date(viewingBulletin.createdAt).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </Typography>
                   </Stack>
                 </Box>
-              )}
 
-              {parseJsonArray(viewingBulletin.attachments).length > 0 && (
-                <Box>
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={700}
-                    sx={{ mb: 1 }}
-                  >
-                    Tệp đính kèm:
-                  </Typography>
-                  <Grid container spacing={1}>
-                    {parseJsonArray(viewingBulletin.attachments).map(
-                      (file, idx) => (
-                        <Grid item xs={12} sm={6} key={idx}>
-                          <Card
-                            variant="outlined"
-                            sx={{
-                              p: 1.5,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1.5,
-                              "&:hover": { bgcolor: "#f1f5f9" },
-                              cursor: "pointer",
-                            }}
-                          >
-                            <Avatar
+                <Card
+                  variant="outlined"
+                  sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}
+                >
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        LOẠI BẢN TIN
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700}>
+                        {TYPE_OPTIONS.find(
+                          (t) => t.value === viewingBulletin.bulletinType
+                        )?.label || viewingBulletin.bulletinType}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        MỨC ĐỘ ƯU TIÊN
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700}>
+                        {PRIORITY_OPTIONS.find(
+                          (p) => p.value === viewingBulletin.priority
+                        )?.label || viewingBulletin.priority}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        LƯỢT XEM
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        color="primary"
+                      >
+                        {viewingBulletin.viewCount || 0}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Card>
+
+                <Box
+                  sx={{
+                    "& img": {
+                      maxWidth: "100%",
+                      height: "auto",
+                      borderRadius: 1,
+                    },
+                    "& table": {
+                      borderCollapse: "collapse",
+                      width: "100%",
+                      mb: 2,
+                    },
+                    "& th, & td": { border: "1px solid #ddd", p: 1 },
+                    "& blockquote": {
+                      borderLeft: "4px solid #ddd",
+                      pl: 2,
+                      py: 1,
+                      my: 2,
+                      color: "text.secondary",
+                    },
+                    fontSize: "1.05rem",
+                    lineHeight: 1.7,
+                    color: "#334155",
+                  }}
+                >
+                  <div
+                    dangerouslySetInnerHTML={{ __html: viewingBulletin.content }}
+                  />
+                </Box>
+
+                {parseJsonArray(viewingBulletin.tags).length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      sx={{ mb: 1 }}
+                    >
+                      Tags:
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {parseJsonArray(viewingBulletin.tags).map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {parseJsonArray(viewingBulletin.attachments).length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={700}
+                      sx={{ mb: 1 }}
+                    >
+                      Tệp đính kèm:
+                    </Typography>
+                    <Grid container spacing={1}>
+                      {parseJsonArray(viewingBulletin.attachments).map(
+                        (file, idx) => (
+                          <Grid item xs={12} sm={6} key={idx}>
+                            <Card
+                              variant="outlined"
                               sx={{
-                                bgcolor: "primary.light",
-                                width: 32,
-                                height: 32,
+                                p: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                "&:hover": { bgcolor: "#f1f5f9" },
+                                cursor: "pointer",
                               }}
                             >
-                              <Download fontSize="small" />
-                            </Avatar>
-                            <Box sx={{ overflow: "hidden" }}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                noWrap
+                              <Avatar
+                                sx={{
+                                  bgcolor: "primary.light",
+                                  width: 32,
+                                  height: 32,
+                                }}
                               >
-                                {file.name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {(file.size / 1024).toFixed(1)} KB
-                              </Typography>
-                            </Box>
-                          </Card>
-                        </Grid>
-                      )
-                    )}
-                  </Grid>
-                </Box>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 2, borderTop: "1px solid #eee" }}>
-          <Button
-            variant="contained"
-            onClick={() => setOpenView(false)}
-            size="large"
-            sx={{ px: 4 }}
-          >
-            Đóng
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+                                <Download fontSize="small" />
+                              </Avatar>
+                              <Box sx={{ overflow: "hidden" }}>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={700}
+                                  noWrap
+                                >
+                                  {file.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </Typography>
+                              </Box>
+                            </Card>
+                          </Grid>
+                        )
+                      )}
+                    </Grid>
+                  </Box>
+                )}
+              </Stack>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2, borderTop: "1px solid #eee" }}>
+            <Button
+              variant="contained"
+              onClick={() => setOpenView(false)}
+              size="large"
+              sx={{ px: 4 }}
+            >
+              Đóng
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </BulletinLayout>
   );
 };
 

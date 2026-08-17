@@ -424,6 +424,20 @@ export function useDynamicMenuRoutes() {
         mappedRoutes.push(mapped);
       });
 
+      // Bổ sung các static top-level routes từ RouterConfig (như Quản lý bản tin) nếu chưa có từ API
+      const staticMenuRoutes = convertStaticRoutesToMenuRoutes(routes, false);
+      staticMenuRoutes.forEach((staticRoute) => {
+        if (!staticRoute || staticRoute.hidden) return;
+        const exists = mappedRoutes.some(
+          (r) =>
+            (r.codeRouter && r.codeRouter === staticRoute.codeRouter) ||
+            r.title === staticRoute.title
+        );
+        if (!exists) {
+          mappedRoutes.push(staticRoute);
+        }
+      });
+
       mappedRoutes.sort((a, b) => sortByOrder(a, b, user?.user?.groupCodes || []));
 
       const orderedRoutes = homeRoute ? [homeRoute, ...mappedRoutes] : mappedRoutes;
