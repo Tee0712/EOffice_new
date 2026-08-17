@@ -104,6 +104,7 @@ export const StyledListItemButton = styled(ListItemButton, {
         : "0 4px 12px rgba(32, 105, 184, 0.08)",
       "& .MuiListItemText-primary": {
         color: theme.palette.primary.main,
+        fontWeight: 700,
       },
       "& .MuiListItemIcon-root": {
         color: theme.palette.primary.main,
@@ -121,6 +122,9 @@ export const StyledListItemButton = styled(ListItemButton, {
           ? "rgba(255, 255, 255, 0.08)"
           : "#f4f7fc",
       },
+      "& .MuiListItemText-primary": {
+        fontWeight: 700,
+      },
     },
     "& .MuiListItemText-primary": {
       fontWeight: $isActive ? 700 : 500,
@@ -128,7 +132,7 @@ export const StyledListItemButton = styled(ListItemButton, {
       textTransform: $level === 0 ? "uppercase" : "none",
       color: $isActive ? theme.palette.primary.main : "#94A3B8",
       lineHeight: 1,
-      transition: "color 0.2s ease",
+      transition: "color 0.2s ease, font-weight 0.2s ease",
     },
     "& .MuiListItemIcon-root": {
       color: $isActive ? theme.palette.primary.main : "#94A3B8",
@@ -433,6 +437,7 @@ export const ModuleNameItem = styled(Box, {
   "&:hover": {
     backgroundColor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : "#f4f7fc",
     color: theme.palette.primary.main,
+    fontWeight: 700,
   },
 
 }));

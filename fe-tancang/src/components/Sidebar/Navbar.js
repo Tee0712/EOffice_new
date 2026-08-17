@@ -1411,7 +1411,6 @@ const Navbar = ({ isOpen, actions, toggleSidebar }) => {
                   <ParentMenuTextWrapper>
                     <ListItemText
                       primary={capitalizeFirstLetter(item.title)}
-                      primaryTypographyProps={{ fontWeight: "bold" }}
                     />
                     <ParentMenuStatusText
                       data-status="active"
