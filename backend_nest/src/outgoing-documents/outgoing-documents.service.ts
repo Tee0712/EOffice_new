@@ -368,42 +368,46 @@ export class OutgoingDocumentsService {
   private async attachExecutionModeToOutgoingDetail(documentId: string, result: any): Promise<any> {
     if (!result?.document) return result;
 
-    const signers = await this.sqlRepo.getAllSignersFromOutgoingDocumentUsers(documentId);
-    const executionModeBySignerType = new Map<string, Map<string, string>>();
+    try {
+      const signers = await this.sqlRepo.getAllSignersFromOutgoingDocumentUsers(documentId);
+      const executionModeBySignerType = new Map<string, Map<string, string>>();
 
-    for (const entry of signers) {
-      const signerType = String(entry?.signer_type || '').trim();
-      const signerUserId = String(entry?.user_id || '').trim();
-      const executionMode = String(entry?.execution_mode || '').trim();
+      for (const entry of signers) {
+        const signerType = String(entry?.signer_type || '').trim();
+        const signerUserId = String(entry?.user_id || '').trim();
+        const executionMode = String(entry?.execution_mode || '').trim();
 
-      if (!signerType || !signerUserId || !executionMode) continue;
+        if (!signerType || !signerUserId || !executionMode) continue;
 
-      if (!executionModeBySignerType.has(signerType)) {
-        executionModeBySignerType.set(signerType, new Map<string, string>());
+        if (!executionModeBySignerType.has(signerType)) {
+          executionModeBySignerType.set(signerType, new Map<string, string>());
+        }
+        executionModeBySignerType.get(signerType)!.set(signerUserId, executionMode);
       }
-      executionModeBySignerType.get(signerType)!.set(signerUserId, executionMode);
-    }
 
-    const signerFields = [
-      'confirmer',
-      'paraphSigner',
-      'officialSigner1',
-      'officialSigner2',
-      'officialSigner3',
-    ];
+      const signerFields = [
+        'confirmer',
+        'paraphSigner',
+        'officialSigner1',
+        'officialSigner2',
+        'officialSigner3',
+      ];
 
-    for (const signerType of signerFields) {
-      if (!Array.isArray(result.document[signerType])) continue;
+      for (const signerType of signerFields) {
+        if (!Array.isArray(result.document[signerType])) continue;
 
-      const executionModeMap = executionModeBySignerType.get(signerType) || new Map<string, string>();
-      result.document[signerType] = result.document[signerType].map((user: any) => {
-        const mappedUserId = String(user?.id || user?._id || user?.userId || '').trim();
-        return {
-          ...user,
-          signUserType: signerType,
-          executionMode: executionModeMap.get(mappedUserId) ?? null,
-        };
-      });
+        const executionModeMap = executionModeBySignerType.get(signerType) || new Map<string, string>();
+        result.document[signerType] = result.document[signerType].map((user: any) => {
+          const mappedUserId = String(user?.id || user?._id || user?.userId || '').trim();
+          return {
+            ...user,
+            signUserType: signerType,
+            executionMode: executionModeMap.get(mappedUserId) ?? null,
+          };
+        });
+      }
+    } catch (err) {
+      console.warn('[attachExecutionModeToOutgoingDetail] Failed to attach execution mode:', err?.message || err);
     }
 
     return result;
