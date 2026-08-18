@@ -28340,15 +28340,31 @@ FETCH NEXT @limit ROWS ONLY
   async getAllSignersFromOutgoingDocumentUsers(
     documentId: string
   ): Promise<Array<{ user_id: string; sign_order: number; signer_type: string; is_signed: number; execution_mode: string | null }>> {
-    const request = await this.getRequest();
-    request.input('documentId', documentId);
-    const sql = `
-      SELECT user_id, sign_order, signer_type, is_signed, execution_mode
-      FROM ${this.dbname}.dbo.outgoing_document_users
-      WHERE document_id = @documentId
-    `;
-    const res = await request.query(sql);
-    return res.recordset || [];
+    try {
+      const request = await this.getRequest();
+      request.input('documentId', documentId);
+      const sql = `
+        SELECT user_id, sign_order, signer_type, is_signed, execution_mode
+        FROM ${this.dbname}.dbo.outgoing_document_users
+        WHERE document_id = @documentId
+      `;
+      const res = await request.query(sql);
+      return res.recordset || [];
+    } catch (error) {
+      try {
+        const request = await this.getRequest();
+        request.input('documentId', documentId);
+        const sqlFallback = `
+          SELECT user_id, sign_order, signer_type, is_signed, NULL AS execution_mode
+          FROM ${this.dbname}.dbo.outgoing_document_users
+          WHERE document_id = @documentId
+        `;
+        const res = await request.query(sqlFallback);
+        return res.recordset || [];
+      } catch (fallbackError) {
+        return [];
+      }
+    }
   }
 
   /**
